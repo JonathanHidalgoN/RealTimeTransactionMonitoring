@@ -3,6 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E31073F4-01E3-4B35-AA81-7D681E6CFE8E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransactionSimulator", "src\TransactionSimulator\TransactionSimulator.csproj", "{1F58ED7F-EAD3-4841-8E8F-BB58A2506F9C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransactionProcessor", "src\TransactionProcessor\TransactionProcessor.csproj", "{AFEB8D75-BCB5-43D5-B9FA-1B4558876256}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -10,5 +16,19 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1F58ED7F-EAD3-4841-8E8F-BB58A2506F9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F58ED7F-EAD3-4841-8E8F-BB58A2506F9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F58ED7F-EAD3-4841-8E8F-BB58A2506F9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F58ED7F-EAD3-4841-8E8F-BB58A2506F9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFEB8D75-BCB5-43D5-B9FA-1B4558876256}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFEB8D75-BCB5-43D5-B9FA-1B4558876256}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFEB8D75-BCB5-43D5-B9FA-1B4558876256}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFEB8D75-BCB5-43D5-B9FA-1B4558876256}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1F58ED7F-EAD3-4841-8E8F-BB58A2506F9C} = {E31073F4-01E3-4B35-AA81-7D681E6CFE8E}
+		{AFEB8D75-BCB5-43D5-B9FA-1B4558876256} = {E31073F4-01E3-4B35-AA81-7D681E6CFE8E}
 	EndGlobalSection
 EndGlobal
