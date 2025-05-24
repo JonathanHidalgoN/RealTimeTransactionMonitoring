@@ -1,0 +1,24 @@
+# .editorconfig
+
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+dotnet_diagnostic.IDE0055.severity = warning
+
+dotnet_diagnostic.IDE0040.severity = warning
+
+dotnet_naming_symbols.instance_fields.applicable_kinds = field
+dotnet_naming_symbols.instance_fields.applicable_accessibilities = private, internal, protected, public
+dotnet_naming_symbols.instance_fields.required_prefix = _
+dotnet_naming_style.private_field_style.capitalization = camel_case
+dotnet_naming_rule.private_fields.symbols = instance_fields
+dotnet_naming_rule.private_fields.style = private_field_style
+dotnet_naming_rule.private_fields.severity = warning
