@@ -1,6 +1,7 @@
 namespace FinancialMonitoring.Models;
 
-public record Transaction{
+public record Transaction
+{
     public string TransactionId { get; init; }
     public double Amount { get; init; }
     public long Timestamp { get; init; }
@@ -20,7 +21,7 @@ public record Transaction{
             throw new ArgumentException("Transaction ID cannot be null or whitespace.", nameof(transactionId));
         if (amount < 0)
             throw new ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
-        
+
         // The Account objects themselves should be validated upon their creation.
         ArgumentNullException.ThrowIfNull(sourceAccount);
         ArgumentNullException.ThrowIfNull(destinationAccount);
