@@ -8,3 +8,5 @@
 # Rider
 .idea/
 *.sln.iml
+
+docs/tmp.txt
