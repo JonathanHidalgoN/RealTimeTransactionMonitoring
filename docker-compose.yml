@@ -1,0 +1,76 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - financial_monitoring_network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_INTERNAL://kafka:29092,LISTENER_EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_INTERNAL:PLAINTEXT,LISTENER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CREATE_TOPICS: "transactions:1:1"
+    networks:
+      - financial_monitoring_network
+
+  transactionsimulator:
+    container_name: transaction_simulator
+    build:
+      context: ./src/TransactionSimulator
+      dockerfile: Dockerfile.dev
+    command: dotnet watch run
+    volumes:
+      - ./src/TransactionSimulator:/app
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+      DOTNET_ENVIRONMENT: "Development"
+      #Needed when using hot reload in docker
+      #https://learn.microsoft.com/en-us/aspnet/core/tutorials/dotnet-watch?view=aspnetcore-8.0
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    networks:
+      - financial_monitoring_network
+    stdin_open: true
+    tty: true
+
+  transactionprocessor:
+    container_name: transaction_processor
+    build:
+      context: ./src/TransactionProcessor
+      dockerfile: Dockerfile.dev
+    command: dotnet watch run
+    volumes:
+      - ./src/TransactionProcessor:/app
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+      DOTNET_ENVIRONMENT: "Development"
+      #Needed when using hot reload in docker
+      #https://learn.microsoft.com/en-us/aspnet/core/tutorials/dotnet-watch?view=aspnetcore-8.0
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    networks:
+      - financial_monitoring_network
+    stdin_open: true
+    tty: true
+
+networks:
+  financial_monitoring_network:
+    driver: bridge
