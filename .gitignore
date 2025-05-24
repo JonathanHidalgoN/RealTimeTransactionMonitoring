@@ -9,4 +9,4 @@
 .idea/
 *.sln.iml
 
-docs/tmp.txt
+*.hidden
