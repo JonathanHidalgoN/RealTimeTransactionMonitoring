@@ -1,0 +1,10 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+WORKDIR /app
+
+COPY TransactionSimulator.csproj .
+RUN dotnet restore TransactionSimulator.csproj
+
+COPY . .
+
+CMD ["dotnet", "run", "--project", "./TransactionSimulator.csproj"]
