@@ -18,14 +18,14 @@ namespace TransactionProcessor
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("Transaction Processor Worker starting at: {time}", DateTimeOffset.Now);
-            string? kafkaServer = Environment.GetEnvironmentVariable("KAFKA_BOOTSTRAP_SERVERS");
+            string? kafkaServer = Environment.GetEnvironmentVariable(AppConstants.KafkaBootstrapServersEnvVarName);
             if (string.IsNullOrEmpty(kafkaServer))
             {
-                throw new Exception("No 'KAFKA_BOOTSTRAP_SERVERS' env variable");
+                throw new Exception($"No '{AppConstants.KafkaBootstrapServersEnvVarName}' env variable");
             }
             else
             {
-                _logger.LogInformation($"KAFKA_BOOTSTRAP_SERVERS info from env: {kafkaServer}");
+                _logger.LogInformation($"{AppConstants.KafkaBootstrapServersEnvVarName} info from env: {kafkaServer}");
             }
 
             //Kafka class to config consumer
@@ -38,14 +38,11 @@ namespace TransactionProcessor
                 EnableAutoCommit = false
             };
 
-            //Id that comsumer group will consume
-            const string topic = "transactions";
-
             //To leverage disposal connection of Kafka consumer
             using (var consumer = new ConsumerBuilder<Ignore, string>(consumerConfig).Build())
             {
-                consumer.Subscribe(topic);
-                _logger.LogInformation("Subscribed to topic: {topic}", topic);
+                consumer.Subscribe(AppConstants.TransactionsTopicName);
+                _logger.LogInformation("Subscribed to topic: {topic}", AppConstants.TransactionsTopicName);
 
                 try
                 {

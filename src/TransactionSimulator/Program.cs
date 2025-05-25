@@ -11,16 +11,16 @@ Console.CancelKeyPress += (sender, eventArgs) =>
     eventArgs.Cancel = true;
 };
 
-var kafkaBootstrapServers = Environment.GetEnvironmentVariable("KAFKA_BOOTSTRAP_SERVERS");
+var kafkaBootstrapServers = Environment.GetEnvironmentVariable(AppConstants.KafkaBootstrapServersEnvVarName);
 
 
 if (string.IsNullOrEmpty(kafkaBootstrapServers))
 {
-    throw new Exception("No 'KAFKA_BOOTSTRAP_SERVERS' env variable");
+    throw new Exception($"No '{AppConstants.KafkaBootstrapServersEnvVarName}' env variable");
 }
 else
 {
-    Console.WriteLine($"KAFKA_BOOTSTRAP_SERVERS info from env: {kafkaBootstrapServers}");
+    Console.WriteLine($"{AppConstants.KafkaBootstrapServersEnvVarName} info from env: {kafkaBootstrapServers}");
 }
 
 ProducerConfig producerConfig = new ProducerConfig
@@ -28,7 +28,6 @@ ProducerConfig producerConfig = new ProducerConfig
     BootstrapServers = kafkaBootstrapServers
 };
 
-const string topic = "transactions";
 int transactionCounter = 0;
 
 using (var producer = new ProducerBuilder<Null, string>(producerConfig).Build())
@@ -51,7 +50,7 @@ using (var producer = new ProducerBuilder<Null, string>(producerConfig).Build())
 
         try
         {
-            var deliveryResult = await producer.ProduceAsync(topic, new Message<Null, string> { Value = jsonTransaction });
+            var deliveryResult = await producer.ProduceAsync(AppConstants.TransactionsTopicName, new Message<Null, string> { Value = jsonTransaction });
             Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Produced message {transactionCounter} to {deliveryResult.TopicPartitionOffset}: {jsonTransaction}");
         }
         catch (ProduceException<Null, string> e)
