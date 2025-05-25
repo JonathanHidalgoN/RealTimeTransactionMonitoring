@@ -1,10 +1,19 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0
 
-WORKDIR /app
+#Same name as docker compose
+WORKDIR /source
 
-COPY TransactionProcessor.csproj .
-RUN dotnet restore TransactionProcessor.csproj
+#Imitate dir structure with src dir and dir names
+COPY FinancialMonitoringSolution.sln .
+COPY src/TransactionProcessor/TransactionProcessor.csproj ./src/TransactionProcessor/
+COPY src/FinancialMonitoring.Models/FinancialMonitoring.Models.csproj ./src/FinancialMonitoring.Models/
 
-COPY . .
+RUN dotnet restore ./src/TransactionProcessor/TransactionProcessor.csproj
 
-CMD ["dotnet", "run", "--project", "./TransactionProcessor.csproj"]
+COPY ./src/TransactionProcessor/ ./src/TransactionProcessor/
+COPY ./src/FinancialMonitoring.Models/ ./src/FinancialMonitoring.Models/
+
+#Use this file to run commands
+WORKDIR /source/src/TransactionProcessor
+
+CMD ["dotnet", "run"]

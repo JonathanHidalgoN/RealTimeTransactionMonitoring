@@ -1,15 +1,18 @@
-# Stage 1: Build the application
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
+WORKDIR /source
 
-COPY TransactionSimulator.csproj .
-RUN dotnet restore TransactionSimulator.csproj
+COPY FinancialMonitoringSolution.sln .
+COPY src/TransactionSimulator/TransactionSimulator.csproj ./src/TransactionSimulator/
+COPY src/FinancialMonitoring.Models/FinancialMonitoring.Models.csproj ./src/FinancialMonitoring.Models/
 
-COPY . .
-RUN dotnet publish TransactionSimulator.csproj -c Release -o /app/publish
+# RUN dotnet restore FinancialMonitoringSolution.sln
+RUN dotnet restore ./src/TransactionSimulator/TransactionSimulator.csproj
 
-# Stage 2: Create the runtime image
-FROM mcr.microsoft.com/dotnet/runtime:8.0 AS final
+COPY ./src/ ./src/
+
+RUN dotnet publish ./src/TransactionSimulator/TransactionSimulator.csproj -c Release -o /app/publish --no-restore
+
+FROM mcr.microsoft.com/dotnet/runtime:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "TransactionSimulator.dll"]

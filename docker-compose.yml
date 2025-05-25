@@ -32,11 +32,13 @@ services:
   transactionsimulator:
     container_name: transaction_simulator
     build:
-      context: ./src/TransactionSimulator
-      dockerfile: Dockerfile.dev
-    command: dotnet watch run
+    #https://stackoverflow.com/questions/65622477/what-is-context-in-docker-compose
+      context: .
+      dockerfile: ./src/TransactionSimulator/Dockerfile.dev
+    command: dotnet watch run --project ./src/TransactionSimulator/TransactionSimulator.csproj
     volumes:
-      - ./src/TransactionSimulator:/app
+      - ./src:/source/src
+    working_dir: /source
     depends_on:
       - kafka
     environment:
@@ -53,11 +55,13 @@ services:
   transactionprocessor:
     container_name: transaction_processor
     build:
-      context: ./src/TransactionProcessor
-      dockerfile: Dockerfile.dev
-    command: dotnet watch run
+    #https://stackoverflow.com/questions/65622477/what-is-context-in-docker-compose
+      context: .
+      dockerfile: ./src/TransactionProcessor/Dockerfile.dev
+    command: dotnet watch run --project ./src/TransactionProcessor/TransactionProcessor.csproj
     volumes:
-      - ./src/TransactionProcessor:/app
+      - ./src:/source/src
+    working_dir: /source
     depends_on:
       - kafka
     environment:
