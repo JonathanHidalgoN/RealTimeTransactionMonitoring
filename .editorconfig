@@ -1,5 +1,3 @@
-# .editorconfig
-
 root = true
 
 [*]
@@ -11,14 +9,60 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 
 [*.cs]
-dotnet_diagnostic.IDE0055.severity = warning
+dotnet_diagnostic.IDE0055.severity = warning # Fix formatting
+dotnet_diagnostic.IDE0040.severity = warning # Add accessibility modifiers
 
-dotnet_diagnostic.IDE0040.severity = warning
+# Naming Rules
+# We will define symbols, then styles, then rules that connect them.
 
-dotnet_naming_symbols.instance_fields.applicable_kinds = field
-dotnet_naming_symbols.instance_fields.applicable_accessibilities = private, internal, protected, public
-dotnet_naming_symbols.instance_fields.required_prefix = _
-dotnet_naming_style.private_field_style.capitalization = camel_case
-dotnet_naming_rule.private_fields.symbols = instance_fields
-dotnet_naming_rule.private_fields.style = private_field_style
-dotnet_naming_rule.private_fields.severity = warning
+# --- Symbol Groups ---
+# Private instance fields (non-static)
+dotnet_naming_symbols.private_instance_fields.applicable_kinds = field
+dotnet_naming_symbols.private_instance_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_instance_fields.required_modifiers = 
+
+# Private static fields
+dotnet_naming_symbols.private_static_fields.applicable_kinds = field
+dotnet_naming_symbols.private_static_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_static_fields.required_modifiers = static
+
+# Public constant fields
+dotnet_naming_symbols.public_constant_fields.applicable_kinds = field
+dotnet_naming_symbols.public_constant_fields.applicable_accessibilities = public
+dotnet_naming_symbols.public_constant_fields.required_modifiers = const
+
+# Public static readonly fields (often treated like constants)
+dotnet_naming_symbols.public_static_readonly_fields.applicable_kinds = field
+dotnet_naming_symbols.public_static_readonly_fields.applicable_accessibilities = public
+dotnet_naming_symbols.public_static_readonly_fields.required_modifiers = static, readonly
+
+
+# --- Naming Styles ---
+# Style for private fields: _camelCase
+dotnet_naming_style.private_field_with_underscore_style.capitalization = camel_case
+dotnet_naming_style.private_field_with_underscore_style.required_prefix = _
+
+# Style for public constants and public static readonly: PascalCase
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case
+
+
+# --- Naming Rules (Connect Symbols to Styles) ---
+# Rule for private instance fields
+dotnet_naming_rule.private_instance_fields_should_have_underscore.symbols = private_instance_fields
+dotnet_naming_rule.private_instance_fields_should_have_underscore.style = private_field_with_underscore_style
+dotnet_naming_rule.private_instance_fields_should_have_underscore.severity = warning
+
+# Rule for private static fields
+dotnet_naming_rule.private_static_fields_should_have_underscore.symbols = private_static_fields
+dotnet_naming_rule.private_static_fields_should_have_underscore.style = private_field_with_underscore_style # Also _camelCase
+dotnet_naming_rule.private_static_fields_should_have_underscore.severity = warning
+
+# Rule for public constant fields
+dotnet_naming_rule.public_constant_fields_should_be_pascal_case.symbols = public_constant_fields
+dotnet_naming_rule.public_constant_fields_should_be_pascal_case.style = pascal_case_style
+dotnet_naming_rule.public_constant_fields_should_be_pascal_case.severity = warning
+
+# Rule for public static readonly fields
+dotnet_naming_rule.public_static_readonly_fields_should_be_pascal_case.symbols = public_static_readonly_fields
+dotnet_naming_rule.public_static_readonly_fields_should_be_pascal_case.style = pascal_case_style
+dotnet_naming_rule.public_static_readonly_fields_should_be_pascal_case.severity = warning
