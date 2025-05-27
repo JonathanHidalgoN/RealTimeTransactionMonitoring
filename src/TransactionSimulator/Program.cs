@@ -1,70 +1,60 @@
-using Confluent.Kafka;
-using System.Text.Json;
 using FinancialMonitoring.Models;
+using TransactionSimulator;
 
-bool running = true;
-
-Console.CancelKeyPress += (sender, eventArgs) =>
+public class Program
 {
-    Console.WriteLine("Exit requested...");
-    running = false;
-    eventArgs.Cancel = true;
-};
-
-var kafkaBootstrapServers = Environment.GetEnvironmentVariable(AppConstants.KafkaBootstrapServersEnvVarName);
-
-
-if (string.IsNullOrEmpty(kafkaBootstrapServers))
-{
-    throw new Exception($"No '{AppConstants.KafkaBootstrapServersEnvVarName}' env variable");
-}
-else
-{
-    Console.WriteLine($"{AppConstants.KafkaBootstrapServersEnvVarName} info from env: {kafkaBootstrapServers}");
-}
-
-ProducerConfig producerConfig = new ProducerConfig
-{
-    BootstrapServers = kafkaBootstrapServers
-};
-
-int transactionCounter = 0;
-
-using (var producer = new ProducerBuilder<Null, string>(producerConfig).Build())
-{
-    while (running)
+    public static async Task Main(string[] args)
     {
-        transactionCounter++;
-        string sourceAccId = "ACC" + new Random().Next(1000, 9999);
-        string destAccId = "ACC" + new Random().Next(1000, 9999);
+        Console.WriteLine("Transaction Simulator Application starting...");
+        var kafkaBootstrapServers = Environment.GetEnvironmentVariable(AppConstants.KafkaBootstrapServersEnvVarName);
 
-        Transaction transaction = new Transaction(
-            transactionId: Guid.NewGuid().ToString(),
-            amount: Math.Round(new Random().NextDouble() * 1000, 2),
-            timestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            sourceAccount: new Account(sourceAccId),
-            destinationAccount: new Account(destAccId)
-        );
+        if (string.IsNullOrEmpty(kafkaBootstrapServers))
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"CRITICAL: Environment variable '{AppConstants.KafkaBootstrapServersEnvVarName}' is not set. This app needs it to connect to Kafka.");
+            return;
+        }
 
-        string jsonTransaction = JsonSerializer.Serialize(transaction);
+        Simulator simulator = new Simulator(kafkaBootstrapServers);
+        //https://learn.microsoft.com/es-es/dotnet/api/system.threading.cancellationtokensource?view=net-8.0
+        CancellationTokenSource cts = new CancellationTokenSource();
+        //https://learn.microsoft.com/en-us/dotnet/api/system.console.cancelkeypress?view=net-8.0
+        Console.CancelKeyPress += (sender, eventArgs) =>
+        {
+            Console.WriteLine("Ctrl+C detected. Initiating shutdown...");
+            cts.Cancel();
+            //Tell OS we are closing, don't kill us
+            eventArgs.Cancel = true;
+        };
+        //Occurs when the default application domain's parent process exits.
+        AppDomain.CurrentDomain.ProcessExit += (sender, eventArgs) =>
+        {
+            Console.WriteLine("Process exit detected. Initiating shutdown...");
+            if (!cts.IsCancellationRequested)
+            {
+                cts.Cancel();
+            }
+        };
 
         try
         {
-            var deliveryResult = await producer.ProduceAsync(AppConstants.TransactionsTopicName, new Message<Null, string> { Value = jsonTransaction });
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Produced message {transactionCounter} to {deliveryResult.TopicPartitionOffset}: {jsonTransaction}");
+            await simulator.StartAsync(cts.Token);
         }
-        catch (ProduceException<Null, string> e)
+        catch (OperationCanceledException)
         {
-            Console.WriteLine($"Failed to deliver message: {e.Message} [Reason: {e.Error.Reason}]");
+            Console.WriteLine("Simulator operation was canceled.");
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"An unexpected error occurred in the simulator: {ex}");
+            Console.ResetColor();
+        }
+        finally
+        {
+            cts.Dispose();
+            Console.WriteLine("Transaction Simulator Application finished.");
         }
 
-        try
-        {
-            // Wait before sending the next message
-            await Task.Delay(TimeSpan.FromSeconds(2), CancellationToken.None);
-        }
-        catch (TaskCanceledException) { running = false; }
     }
-    producer.Flush(TimeSpan.FromSeconds(10));
 }
-Console.WriteLine("Transaction Simulator shutting down.");
