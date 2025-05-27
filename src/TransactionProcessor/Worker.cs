@@ -36,7 +36,7 @@ namespace TransactionProcessor
                 EnableAutoCommit = false
             };
 
-            //To leverage disposal connection of Kafka consumer
+            //To leverage disposal connection of Kafka consumer()
             using (var consumer = new ConsumerBuilder<Ignore, string>(consumerConfig).Build())
             {
                 consumer.Subscribe(AppConstants.TransactionsTopicName);
