@@ -23,7 +23,7 @@ namespace TransactionSimulator
             _producer = new ProducerBuilder<Null, string>(producerConfig).Build();
         }
 
-        private static Transaction GenerateTransaction()
+        internal static Transaction GenerateTransaction()
         {
             string sourceAccId = "ACC" + _random.Next(1000, 9999);
             string destAccId = "ACC" + _random.Next(1000, 9999);

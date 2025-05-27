@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransactionProcessor", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialMonitoring.Models", "src\FinancialMonitoring.Models\FinancialMonitoring.Models.csproj", "{6CC73AC6-4E25-4471-83C5-89B7B8A91D0F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F147598D-0407-472A-9363-61DD9E832158}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransactionSimulator.Tests", "tests\TransactionSimulator.Tests\TransactionSimulator.Tests.csproj", "{06BF3026-A806-4691-B4E3-7DAD9C1AF224}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,10 +36,15 @@ Global
 		{6CC73AC6-4E25-4471-83C5-89B7B8A91D0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6CC73AC6-4E25-4471-83C5-89B7B8A91D0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6CC73AC6-4E25-4471-83C5-89B7B8A91D0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06BF3026-A806-4691-B4E3-7DAD9C1AF224}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06BF3026-A806-4691-B4E3-7DAD9C1AF224}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06BF3026-A806-4691-B4E3-7DAD9C1AF224}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06BF3026-A806-4691-B4E3-7DAD9C1AF224}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1F58ED7F-EAD3-4841-8E8F-BB58A2506F9C} = {E31073F4-01E3-4B35-AA81-7D681E6CFE8E}
 		{AFEB8D75-BCB5-43D5-B9FA-1B4558876256} = {E31073F4-01E3-4B35-AA81-7D681E6CFE8E}
 		{6CC73AC6-4E25-4471-83C5-89B7B8A91D0F} = {E31073F4-01E3-4B35-AA81-7D681E6CFE8E}
+		{06BF3026-A806-4691-B4E3-7DAD9C1AF224} = {F147598D-0407-472A-9363-61DD9E832158}
 	EndGlobalSection
 EndGlobal

@@ -16,4 +16,8 @@
     <ProjectReference Include="..\FinancialMonitoring.Models\FinancialMonitoring.Models.csproj" />
   </ItemGroup>
 
+<ItemGroup>
+    <InternalsVisibleTo Include="TransactionSimulator.Tests" />
+</ItemGroup>
+
 </Project>
