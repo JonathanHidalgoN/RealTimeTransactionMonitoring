@@ -1,12 +1,23 @@
 {
-   "$schema": "https://alirezanet.github.io/Husky.Net/schema.json",
-   "tasks": [
-{
-         "name": "dotnet-format",
-         "group": "pre-commit",
-         "command": "dotnet",
-         "args": ["dotnet-format", "--include", "${staged}"],
-         "include": ["**/*.cs", "**/*.vb"]
-      },
-   ]
+  "$schema": "https://alirezanet.github.io/Husky.Net/schema.json",
+  "tasks": [
+    {
+      "name": "dotnet-format",
+      "group": "pre-commit",
+      "command": "dotnet",
+      "args": ["dotnet-format", "--include", "${staged}"],
+      "include": ["**/*.cs", "**/*.vb"]
+    },
+    {
+      "name": "Hook Ran Confirmation",
+      "group": "pre-commit",
+      "output": "always",
+      "command": "bash",
+      "args": ["-c", "echo 'Git pre-commit hook is running... 🚀' && sleep 1"],
+      "windows": {
+        "command": "cmd",
+        "args": ["/c", "echo Git pre-commit hook is running... && timeout /t 1"]
+      }
+    }
+  ]
 }
