@@ -63,7 +63,10 @@ services:
       - ./src:/source/src
     working_dir: /source
     depends_on:
-      - kafka
+      kafka:
+        condition: service_started
+      cosmosdb-emulator:
+        condition: service_healthy
     environment:
       KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
       DOTNET_ENVIRONMENT: "Development"
@@ -75,6 +78,34 @@ services:
     stdin_open: true
     tty: true
 
+  #https://learn.microsoft.com/en-us/azure/cosmos-db/emulator-linux
+  #https://blog.hungovercoders.com/datagriff/2024/06/29/cosmos-emulator-docker-local.html
+  cosmosdb-emulator:
+    container_name: cosmosdb-emulator
+    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
+    ports:
+      - "8081:8081"
+      - "10251:10251"
+      - "10252:10252"
+      - "10253:10253"
+      - "10254:10254"
+    environment:
+      AZURE_COSMOS_EMULATOR_PARTITION_COUNT: 1
+      AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE: "true"
+    volumes:
+      - cosmosdb_emulator_data:/tmp/cosmos/appdata
+    networks:
+      - financial_monitoring_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-k", "https://localhost:8081/_explorer/emulator.pem"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 50s
+
 networks:
   financial_monitoring_network:
     driver: bridge
+
+volumes:
+  cosmosdb_emulator_data: {}
