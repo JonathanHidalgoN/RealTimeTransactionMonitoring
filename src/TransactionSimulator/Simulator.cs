@@ -67,7 +67,7 @@ namespace TransactionSimulator
                         Console.WriteLine("Message production was canceled.");
                         break;
                     }
-                    await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+                    await Task.Delay(TimeSpan.FromSeconds(15), cancellationToken);
                 }
             }
             catch (TaskCanceledException)
@@ -81,6 +81,7 @@ namespace TransactionSimulator
                 Console.WriteLine("Transaction Simulator engine stopped.");
             }
         }
-
     }
+
+
 }

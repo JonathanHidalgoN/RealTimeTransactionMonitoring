@@ -1,4 +1,4 @@
-﻿namespace FinancialMonitoring.Abstractions;
+namespace FinancialMonitoring.Abstractions;
 
 public class Class1
 {
