@@ -10,8 +10,8 @@ public class SimulatorTests
         Transaction generatedTransaction = Simulator.GenerateTransaction();
         Assert.NotNull(generatedTransaction);
 
-        // 2. Check TransactionId
-        Assert.False(string.IsNullOrWhiteSpace(generatedTransaction.TransactionId));
+        // 2. Check id
+        Assert.False(string.IsNullOrWhiteSpace(generatedTransaction.Id));
         // 3. Check Amount
         Assert.True(generatedTransaction.Amount >= 0, "Amount should be non-negative.");
         Assert.True(generatedTransaction.Amount <= 1000, "Amount should be less than or equal to 1000 (based on generation logic).");
