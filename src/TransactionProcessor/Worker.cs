@@ -1,17 +1,23 @@
 using Confluent.Kafka;
 using System.Text.Json;
 using FinancialMonitoring.Models;
+using FinancialMonitoring.Abstractions.Persistence;
 
 namespace TransactionProcessor
 {
     public class Worker : BackgroundService
     {
         private readonly ILogger<Worker> _logger;
+        private readonly ICosmosDbService _cosmosDbService;
+        private readonly IConfiguration _configuration;
 
-        public Worker(ILogger<Worker> logger)
+        public Worker(ILogger<Worker> logger, IConfiguration configuration, ICosmosDbService cosmosDbService)
         {
             _logger = logger;
+            _configuration = configuration;
+            _cosmosDbService = cosmosDbService;
         }
+
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -63,7 +69,9 @@ namespace TransactionProcessor
                                 var transaction = JsonSerializer.Deserialize<Transaction>(consumeResult.Message.Value);
                                 if (transaction != null)
                                 {
-                                    _logger.LogInformation($"Deserialized Transaction: ID={transaction.TransactionId}, Amount={transaction.Amount}, From={transaction.SourceAccount}");
+                                    _logger.LogInformation($"Deserialized Transaction: ID={transaction.Id}, Amount={transaction.Amount}, From={transaction.SourceAccount}");
+                                    TransactionForCosmos cosmosTransaction = TransactionForCosmos.FromDomainTransaction(transaction);
+                                    await _cosmosDbService.AddTransactionAsync(cosmosTransaction);
                                     // TODO: Add processing logic here (e.g., anomaly detection)
                                     // TODO: Add persistence logic here (e.g., save to database)
                                 }
