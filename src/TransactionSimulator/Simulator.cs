@@ -29,7 +29,7 @@ namespace TransactionSimulator
             string destAccId = "ACC" + _random.Next(1000, 9999);
 
             return new Transaction(
-                transactionId: Guid.NewGuid().ToString(),
+                id: Guid.NewGuid().ToString(),
                 amount: Math.Round(_random.NextDouble() * 1000, 2),
                 timestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 sourceAccount: new Account(sourceAccId),
