@@ -7,11 +7,13 @@ WORKDIR /source
 COPY FinancialMonitoringSolution.sln .
 COPY src/TransactionProcessor/TransactionProcessor.csproj ./src/TransactionProcessor/
 COPY src/FinancialMonitoring.Models/FinancialMonitoring.Models.csproj ./src/FinancialMonitoring.Models/
+COPY src/FinancialMonitoring.Abstractions/FinancialMonitoring.Abstractions.csproj ./src/FinancialMonitoring.Abstractions/
 
 RUN dotnet restore ./src/TransactionProcessor/TransactionProcessor.csproj
 
 COPY ./src/TransactionProcessor/ ./src/TransactionProcessor/
 COPY ./src/FinancialMonitoring.Models/ ./src/FinancialMonitoring.Models/
+COPY ./src/FinancialMonitoring.Abstractions/ ./src/FinancialMonitoring.Abstractions/
 
 #Use this file to run commands
 WORKDIR /source/src/TransactionProcessor

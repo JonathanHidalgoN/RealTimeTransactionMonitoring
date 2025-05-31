@@ -4,6 +4,7 @@ WORKDIR /source
 COPY FinancialMonitoringSolution.sln .
 COPY src/TransactionSimulator/TransactionSimulator.csproj ./src/TransactionSimulator/
 COPY src/FinancialMonitoring.Models/FinancialMonitoring.Models.csproj ./src/FinancialMonitoring.Models/
+COPY src/FinancialMonitoring.Abstractions/FinancialMonitoring.Abstractions.csproj ./src/FinancialMonitoring.Abstractions/
 
 # RUN dotnet restore FinancialMonitoringSolution.sln
 RUN dotnet restore ./src/TransactionSimulator/TransactionSimulator.csproj
