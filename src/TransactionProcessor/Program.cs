@@ -1,6 +1,8 @@
 using TransactionProcessor;
 using TransactionProcessor.Services;
 using FinancialMonitoring.Abstractions.Persistence;
+using TransactionProcessor.AnomalyDetection;
+using FinancialMonitoring.Abstractions.Services;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -11,6 +13,7 @@ builder.Services.Configure<CosmosDbSettings>(
 
 //Take configs, declare as singleton 
 builder.Services.AddSingleton<ICosmosDbService, CosmosDbService>();
+builder.Services.AddScoped<ITransactionAnomalyDetector, AnomalyDetector>();
 //Hosted to control how to end
 builder.Services.AddHostedService<CosmosDbInitializerHostedService>();
 builder.Services.AddHostedService<Worker>();

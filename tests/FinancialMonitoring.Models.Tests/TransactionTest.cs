@@ -49,28 +49,28 @@ public class TransactionTests
     [Fact]
     public void Constructor_WithNullSourceAccount_ShouldThrowArgumentNullException()
     {
-        #pragma warning disable CS8600 
+#pragma warning disable CS8600
         Account nullSourceAccount = null;
-        #pragma warning restore CS8600
-        
+#pragma warning restore CS8600
+
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            #pragma warning disable CS8604
+#pragma warning disable CS8604
             new Transaction(Guid.NewGuid().ToString(), 100, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), nullSourceAccount, ValidDestinationAccount()));
-            #pragma warning restore CS8604
+#pragma warning restore CS8604
         Assert.Equal("sourceAccount", exception.ParamName);
     }
 
     [Fact]
     public void Constructor_WithNullDestinationAccount_ShouldThrowArgumentNullException()
     {
-        #pragma warning disable CS8600
+#pragma warning disable CS8600
         Account nullDestinationAccount = null;
-        #pragma warning restore CS8600
+#pragma warning restore CS8600
 
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            #pragma warning disable CS8604
+#pragma warning disable CS8604
             new Transaction(Guid.NewGuid().ToString(), 100, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), ValidSourceAccount(), nullDestinationAccount));
-            #pragma warning restore CS8604
+#pragma warning restore CS8604
         Assert.Equal("destinationAccount", exception.ParamName);
     }
 

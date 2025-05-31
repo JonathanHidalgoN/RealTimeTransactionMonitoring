@@ -2,6 +2,7 @@ using Confluent.Kafka;
 using System.Text.Json;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Abstractions.Persistence;
+using FinancialMonitoring.Abstractions.Services;
 
 namespace TransactionProcessor
 {
@@ -10,12 +11,16 @@ namespace TransactionProcessor
         private readonly ILogger<Worker> _logger;
         private readonly ICosmosDbService _cosmosDbService;
         private readonly IConfiguration _configuration;
+        private readonly IServiceProvider _serviceProvider;
 
-        public Worker(ILogger<Worker> logger, IConfiguration configuration, ICosmosDbService cosmosDbService)
+
+
+        public Worker(ILogger<Worker> logger, IConfiguration configuration, ICosmosDbService cosmosDbService, IServiceProvider serviceProvider)
         {
             _logger = logger;
             _configuration = configuration;
             _cosmosDbService = cosmosDbService;
+            _serviceProvider = serviceProvider;
         }
 
 
@@ -70,10 +75,23 @@ namespace TransactionProcessor
                                 if (transaction != null)
                                 {
                                     _logger.LogInformation($"Deserialized Transaction: ID={transaction.Id}, Amount={transaction.Amount}, From={transaction.SourceAccount}");
-                                    TransactionForCosmos cosmosTransaction = TransactionForCosmos.FromDomainTransaction(transaction);
-                                    await _cosmosDbService.AddTransactionAsync(cosmosTransaction);
-                                    // TODO: Add processing logic here (e.g., anomaly detection)
-                                    // TODO: Add persistence logic here (e.g., save to database)
+                                    using (var scope = _serviceProvider.CreateScope())
+                                    {
+                                        var anomalyDetector = scope.ServiceProvider.GetRequiredService<ITransactionAnomalyDetector>();
+                                        string? anomalyFlag = await anomalyDetector.DetectAsync(transaction);
+                                        Transaction processedTransaction = transaction;
+                                        TransactionForCosmos cosmosTransaction;
+                                        if (!string.IsNullOrEmpty(anomalyFlag))
+                                        {
+                                            processedTransaction = transaction with { AnomalyFlag = anomalyFlag };
+                                            cosmosTransaction = TransactionForCosmos.FromDomainTransaction(processedTransaction);
+                                        }
+                                        else
+                                        {
+                                            cosmosTransaction = TransactionForCosmos.FromDomainTransaction(transaction);
+                                        }
+                                        await _cosmosDbService.AddTransactionAsync(cosmosTransaction);
+                                    }
                                 }
                                 else
                                 {
