@@ -1,0 +1,18 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+WORKDIR /source
+
+COPY FinancialMonitoringSolution.sln .
+COPY src/FinancialMonitoring.Api/FinancialMonitoring.Api.csproj ./src/FinancialMonitoring.Api/
+COPY src/FinancialMonitoring.Models/FinancialMonitoring.Models.csproj ./src/FinancialMonitoring.Models/
+COPY src/FinancialMonitoring.Abstractions/FinancialMonitoring.Abstractions.csproj ./src/FinancialMonitoring.Abstractions/
+
+RUN dotnet restore ./src/FinancialMonitoring.Api/FinancialMonitoring.Api.csproj
+
+COPY ./src/FinancialMonitoring.Api/ ./src/FinancialMonitoring.Api/
+COPY ./src/FinancialMonitoring.Models/ ./src/FinancialMonitoring.Models/
+COPY ./src/FinancialMonitoring.Abstractions/ ./src/FinancialMonitoring.Abstractions/
+
+WORKDIR /source/src/FinancialMonitoring.Api
+
+CMD ["dotnet", "run"]
