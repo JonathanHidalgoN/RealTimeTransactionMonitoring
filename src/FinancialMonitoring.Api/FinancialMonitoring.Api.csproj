@@ -8,7 +8,13 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.16" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.51.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FinancialMonitoring.Models\FinancialMonitoring.Models.csproj" />
+    <ProjectReference Include="..\FinancialMonitoring.Abstractions\FinancialMonitoring.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>
