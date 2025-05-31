@@ -103,6 +103,30 @@ services:
       retries: 10
       start_period: 50s
 
+  financialmonitoring-api:
+    container_name: financialmonitoring_api
+    build:
+      context: .
+      dockerfile: ./src/FinancialMonitoring.Api/Dockerfile.dev
+    command: dotnet watch run --no-launch-profile
+    ports:
+      - "5100:8080"
+      # - "7100:8081" # HTTPS
+    volumes:
+      - ./src:/source/src
+    working_dir: /source/src/FinancialMonitoring.Api
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      # ASPNETCORE_URLS: "http://+:8080;https://+:8081"
+      ASPNETCORE_URLS: "http://+:8080"
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    depends_on:
+      cosmosdb-emulator:
+        condition: service_healthy # API depends on the database emulator being ready
+    networks:
+      - financial_monitoring_network
+
+
 networks:
   financial_monitoring_network:
     driver: bridge
