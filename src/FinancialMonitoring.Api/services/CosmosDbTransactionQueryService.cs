@@ -7,7 +7,7 @@ using System.Net;
 
 namespace FinancialMonitoring.Api.Services;
 
-public class CosmosDbTransactionQueryService : ITransactionQueryService, IAsyncDisposable 
+public class CosmosDbTransactionQueryService : ITransactionQueryService, IAsyncDisposable
 {
     private readonly CosmosClient _cosmosClient;
     private readonly CosmosDbSettings _settings;
@@ -83,8 +83,8 @@ public class CosmosDbTransactionQueryService : ITransactionQueryService, IAsyncD
         _logger.LogInformation("Fetching transaction by ID: {Id}", id);
         try
         {
-             ItemResponse<Transaction> response = await _container.ReadItemAsync<Transaction>(id, new PartitionKey(id));
-             return response.Resource;
+            ItemResponse<Transaction> response = await _container.ReadItemAsync<Transaction>(id, new PartitionKey(id));
+            return response.Resource;
         }
         catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
         {
@@ -107,7 +107,7 @@ public class CosmosDbTransactionQueryService : ITransactionQueryService, IAsyncD
         var query = new QueryDefinition("SELECT * FROM c WHERE c.AnomalyFlag != null OFFSET @offset LIMIT @limit")
                         .WithParameter("@offset", (pageNumber - 1) * pageSize)
                         .WithParameter("@limit", pageSize);
-        
+
         var results = new List<Transaction>();
         using (FeedIterator<Transaction> feed = _container.GetItemQueryIterator<Transaction>(query))
         {
@@ -119,7 +119,7 @@ public class CosmosDbTransactionQueryService : ITransactionQueryService, IAsyncD
         }
         return results;
     }
-     
+
     public async ValueTask DisposeAsync()
     {
         _logger.LogInformation("Disposing CosmosClient in QueryService.");
