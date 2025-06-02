@@ -2,6 +2,7 @@ using FinancialMonitoring.Abstractions.Persistence;
 using FinancialMonitoring.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddApplicationInsightsTelemetry();
 
 builder.Services.Configure<CosmosDbSettings>(
     builder.Configuration.GetSection("CosmosDb")
