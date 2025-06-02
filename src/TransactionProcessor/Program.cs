@@ -5,7 +5,7 @@ using TransactionProcessor.AnomalyDetection;
 using FinancialMonitoring.Abstractions.Services;
 
 var builder = Host.CreateApplicationBuilder(args);
-
+builder.Services.AddApplicationInsightsTelemetryWorkerService();
 builder.Services.Configure<CosmosDbSettings>(
     //Take settings from appsettings
     builder.Configuration.GetSection("CosmosDb")
