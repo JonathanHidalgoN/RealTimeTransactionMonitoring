@@ -13,3 +13,7 @@
 
 *tmp*
 .terraform*
+
+
+**/appsettings.Development.json
+**/appsettings.Production.json
