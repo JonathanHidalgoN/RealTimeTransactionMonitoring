@@ -9,7 +9,6 @@ public class Program
         var builder = Host.CreateApplicationBuilder(args);
 
         builder.Services.AddApplicationInsightsTelemetryWorkerService();
-        // -----------------------------------------------------------
 
         builder.Services.AddHostedService<Simulator>();
 

@@ -45,7 +45,7 @@ public class Simulator : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) // Implement ExecuteAsync
     {
         _logger.LogInformation("Transaction Simulator engine starting (as BackgroundService)...");
-        
+
         var producerConfig = new ProducerConfig { BootstrapServers = _kafkaBootstrapServers };
         int transactionCounter = 0;
 
@@ -74,7 +74,7 @@ public class Simulator : BackgroundService
                 catch (OperationCanceledException)
                 {
                     _logger.LogInformation("Message production was canceled.");
-                    break; 
+                    break;
                 }
 
                 try
