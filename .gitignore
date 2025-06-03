@@ -19,3 +19,7 @@
 **/appsettings.Production.json
 
 *.tfstate
+envs/
+.env.dev
+.env.prod
+.env
