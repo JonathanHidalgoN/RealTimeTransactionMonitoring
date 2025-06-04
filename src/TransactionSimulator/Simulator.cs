@@ -28,7 +28,7 @@ public class Simulator : BackgroundService
         }
     }
 
-    private static Transaction GenerateTransaction()
+    public static Transaction GenerateTransaction()
     {
         string sourceAccId = "ACC" + _random.Next(1000, 9999);
         string destAccId = "ACC" + _random.Next(1000, 9999);
