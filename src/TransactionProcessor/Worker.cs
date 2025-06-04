@@ -3,6 +3,7 @@ using System.Text.Json;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Abstractions.Persistence;
 using FinancialMonitoring.Abstractions.Services;
+using Microsoft.Extensions.Options;
 
 namespace TransactionProcessor
 {
@@ -10,37 +11,36 @@ namespace TransactionProcessor
     {
         private readonly ILogger<Worker> _logger;
         private readonly ICosmosDbService _cosmosDbService;
-        private readonly IConfiguration _configuration;
         private readonly IServiceProvider _serviceProvider;
+        private readonly string _kafkaBootstrapServers;
 
 
-
-        public Worker(ILogger<Worker> logger, IConfiguration configuration, ICosmosDbService cosmosDbService, IServiceProvider serviceProvider)
+        public Worker(ILogger<Worker> logger, ICosmosDbService cosmosDbService, IServiceProvider serviceProvider,
+        IOptions<KafkaSettings> kafkaSettingsOptions
+        )
         {
             _logger = logger;
-            _configuration = configuration;
             _cosmosDbService = cosmosDbService;
             _serviceProvider = serviceProvider;
+            KafkaSettings kafkaSettings = kafkaSettingsOptions.Value;
+            _kafkaBootstrapServers = kafkaSettings.BootstrapServers ?? "localhost:9092";
+
+            _logger.LogInformation($"{AppConstants.KafkaConfigPrefix}:{nameof(KafkaSettings.BootstrapServers)} configured via IOptions to: {_kafkaBootstrapServers}");
+            if (_kafkaBootstrapServers == "localhost:9092")
+            {
+                _logger.LogWarning("Using fallback Kafka bootstrap servers: localhost:9092");
+            }
         }
 
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("Transaction Processor Worker starting at: {time}", DateTimeOffset.Now);
-            string? kafkaServer = Environment.GetEnvironmentVariable(AppConstants.KafkaBootstrapServersEnvVarName);
-            if (string.IsNullOrEmpty(kafkaServer))
-            {
-                throw new Exception($"No '{AppConstants.KafkaBootstrapServersEnvVarName}' env variable");
-            }
-            else
-            {
-                _logger.LogInformation($"{AppConstants.KafkaBootstrapServersEnvVarName} info from env: {kafkaServer}");
-            }
 
             //Kafka class to config consumer
             ConsumerConfig consumerConfig = new ConsumerConfig
             {
-                BootstrapServers = kafkaServer,
+                BootstrapServers = _kafkaBootstrapServers,
                 //Consumer group 
                 GroupId = "transaction-processor-group",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
