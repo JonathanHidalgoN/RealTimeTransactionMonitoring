@@ -79,7 +79,7 @@ public class Simulator : BackgroundService
 
                 try
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
+                    await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
                 }
                 catch (TaskCanceledException)
                 {
