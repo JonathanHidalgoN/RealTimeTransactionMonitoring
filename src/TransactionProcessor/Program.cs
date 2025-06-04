@@ -3,13 +3,36 @@ using TransactionProcessor.Services;
 using FinancialMonitoring.Abstractions.Persistence;
 using TransactionProcessor.AnomalyDetection;
 using FinancialMonitoring.Abstractions.Services;
+using Azure.Identity;
+using FinancialMonitoring.Models;
 
 var builder = Host.CreateApplicationBuilder(args);
+
+builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection(AppConstants.KafkaConfigPrefix));
+builder.Services.Configure<ApplicationInsightsSettings>(builder.Configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix));
+builder.Services.Configure<CosmosDbSettings>(builder.Configuration.GetSection(AppConstants.CosmosDbConfigPrefix));
+var keyVaultUri = builder.Configuration["KEY_VAULT_URI"];
+
+if (!string.IsNullOrEmpty(keyVaultUri) && Uri.TryCreate(keyVaultUri, UriKind.Absolute, out var vaultUri))
+{
+    Console.WriteLine($"Attempting to load configuration from Azure Key Vault: {vaultUri}");
+    try
+    {
+        builder.Configuration.AddAzureKeyVault(vaultUri, new DefaultAzureCredential());
+        Console.WriteLine("Successfully configured to load secrets from Azure Key Vault.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error connecting to Azure Key Vault: {ex.Message}");
+    }
+}
+else
+{
+    Console.WriteLine("KEY_VAULT_URI not configured. Key Vault secrets will not be loaded.");
+}
+
+
 builder.Services.AddApplicationInsightsTelemetryWorkerService();
-builder.Services.Configure<CosmosDbSettings>(
-    //Take settings from appsettings
-    builder.Configuration.GetSection("CosmosDb")
-);
 
 //Take configs, declare as singleton 
 builder.Services.AddSingleton<ICosmosDbService, CosmosDbService>();
