@@ -4,6 +4,7 @@ using FinancialMonitoring.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace TransactionSimulator;
 
@@ -14,14 +15,13 @@ public class Simulator : BackgroundService
     private readonly string _kafkaBootstrapServers;
     private static readonly Random _random = new Random();
 
-    public Simulator(ILogger<Simulator> logger, IConfiguration configuration)
+    public Simulator(ILogger<Simulator> logger, IOptions<KafkaSettings> kafkaSettingsOptions)
     {
         _logger = logger;
-        _kafkaBootstrapServers = configuration[AppConstants.KafkaBootstrapServersEnvVarName]
-                                ?? configuration[$"Values:{AppConstants.KafkaBootstrapServersEnvVarName}"]
-                                ?? "localhost:9092";
+        KafkaSettings kafkaSettings = kafkaSettingsOptions.Value;
+        _kafkaBootstrapServers = kafkaSettings.BootstrapServers ?? "localhost:9092";
 
-        _logger.LogInformation($"{AppConstants.KafkaBootstrapServersEnvVarName} configured to: {_kafkaBootstrapServers}");
+        _logger.LogInformation($"{AppConstants.KafkaConfigPrefix}:{nameof(KafkaSettings.BootstrapServers)} configured via IOptions to: {_kafkaBootstrapServers}");
         if (_kafkaBootstrapServers == "localhost:9092")
         {
             _logger.LogWarning("Using fallback Kafka bootstrap servers: localhost:9092");
