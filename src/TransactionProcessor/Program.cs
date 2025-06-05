@@ -8,11 +8,7 @@ using FinancialMonitoring.Models;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection(AppConstants.KafkaConfigPrefix));
-builder.Services.Configure<ApplicationInsightsSettings>(builder.Configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix));
-builder.Services.Configure<CosmosDbSettings>(builder.Configuration.GetSection(AppConstants.CosmosDbConfigPrefix));
 var keyVaultUri = builder.Configuration["KEY_VAULT_URI"];
-
 if (!string.IsNullOrEmpty(keyVaultUri) && Uri.TryCreate(keyVaultUri, UriKind.Absolute, out var vaultUri))
 {
     Console.WriteLine($"Attempting to load configuration from Azure Key Vault: {vaultUri}");
@@ -31,6 +27,18 @@ else
     Console.WriteLine("KEY_VAULT_URI not configured. Key Vault secrets will not be loaded.");
 }
 
+builder.Services.AddOptions<KafkaSettings>()
+    .Bind(builder.Configuration.GetSection(AppConstants.KafkaConfigPrefix))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddOptions<ApplicationInsightsSettings>()
+    .Bind(builder.Configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddOptions<CosmosDbSettings>()
+    .Bind(builder.Configuration.GetSection(AppConstants.CosmosDbConfigPrefix))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 builder.Services.AddApplicationInsightsTelemetryWorkerService();
 

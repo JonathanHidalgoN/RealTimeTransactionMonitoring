@@ -5,8 +5,6 @@ using FinancialMonitoring.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<CosmosDbSettings>(builder.Configuration.GetSection(AppConstants.CosmosDbConfigPrefix));
-
 var keyVaultUri = builder.Configuration["KEY_VAULT_URI"];
 if (!string.IsNullOrEmpty(keyVaultUri) && Uri.TryCreate(keyVaultUri, UriKind.Absolute, out var vaultUri))
 {
@@ -25,6 +23,15 @@ else
 {
     Console.WriteLine("KEY_VAULT_URI not configured. Key Vault secrets will not be loaded.");
 }
+
+builder.Services.AddOptions<ApplicationInsightsSettings>()
+    .Bind(builder.Configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddOptions<CosmosDbSettings>()
+    .Bind(builder.Configuration.GetSection(AppConstants.CosmosDbConfigPrefix))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 builder.Services.AddApplicationInsightsTelemetry();
 
 builder.Services.AddSingleton<ITransactionQueryService, CosmosDbTransactionQueryService>();

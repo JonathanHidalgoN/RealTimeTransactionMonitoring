@@ -10,8 +10,6 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = Host.CreateApplicationBuilder(args);
-        builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection(AppConstants.KafkaConfigPrefix));
-        builder.Services.Configure<ApplicationInsightsSettings>(builder.Configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix));
 
         var keyVaultUri = builder.Configuration["KEY_VAULT_URI"];
 
@@ -32,6 +30,15 @@ public class Program
         {
             Console.WriteLine("KEY_VAULT_URI not configured. Key Vault secrets will not be loaded.");
         }
+
+        builder.Services.AddOptions<KafkaSettings>()
+            .Bind(builder.Configuration.GetSection(AppConstants.KafkaConfigPrefix))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        builder.Services.AddOptions<ApplicationInsightsSettings>()
+            .Bind(builder.Configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
         builder.Services.AddApplicationInsightsTelemetryWorkerService();
 
