@@ -7,6 +7,7 @@ using FinancialMonitoring.Abstractions.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
+using Microsoft.Extensions.Configuration;
 
 namespace FinancialMonitoring.Api.Tests;
 
@@ -19,9 +20,24 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
     public TransactionsControllerTests(WebApplicationFactory<Program> factory)
     {
         _mockQueryService = new Mock<ITransactionQueryService>();
-
         _factory = factory.WithWebHostBuilder(builder =>
         {
+            builder.ConfigureAppConfiguration((context, configBuilder) =>
+            {
+                configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    { "KEY_VAULT_URI", "https://dummy.keyvault.uri" },
+
+                    { "ApplicationInsights:ConnectionString", "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://test.in.ai.azure.com/" },
+                    { "CosmosDb:EndpointUri", "https://localhost:8081" },
+                    { "CosmosDb:PrimaryKey", "Cy236yDjf5/R+ob7XIw/Jw==" },
+                    { "CosmosDb:DatabaseName", "TestDb" },
+                    { "CosmosDb:ContainerName", "TestContainer" },
+                    { "CosmosDb:PartitionKeyPath", "/id" },
+                    { "Kafka:BootstrapServers", "test-kafka:9092" }
+                });
+            });
+
             builder.ConfigureServices(services =>
             {
                 services.RemoveAll<ITransactionQueryService>();
