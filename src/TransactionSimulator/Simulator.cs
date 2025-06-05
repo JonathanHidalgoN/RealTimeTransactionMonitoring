@@ -19,13 +19,8 @@ public class Simulator : BackgroundService
     {
         _logger = logger;
         KafkaSettings kafkaSettings = kafkaSettingsOptions.Value;
-        _kafkaBootstrapServers = kafkaSettings.BootstrapServers ?? "localhost:9092";
-
+        _kafkaBootstrapServers = kafkaSettings.BootstrapServers!;
         _logger.LogInformation($"{AppConstants.KafkaConfigPrefix}:{nameof(KafkaSettings.BootstrapServers)} configured via IOptions to: {_kafkaBootstrapServers}");
-        if (_kafkaBootstrapServers == "localhost:9092")
-        {
-            _logger.LogWarning("Using fallback Kafka bootstrap servers: localhost:9092");
-        }
     }
 
     public static Transaction GenerateTransaction()
