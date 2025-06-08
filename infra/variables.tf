@@ -1,16 +1,21 @@
 variable "azure_location" {
   description = "The Azure region where resources will be created."
   type        = string
-  default     = "Mexico Central"
+  default     = "mexicocentral"
 }
 
 variable "resource_prefix" {
   description = "A unique prefix for naming resources."
   type        = string
-  default     = "prealtimef"
+  default     = "finmon"
 }
 
 variable "app_service_principal_object_id" {
-  description = "The Object ID of the Service Principal used by the application."
+  description = "The Object ID of the Azure Active Directory"
+  type        = string
+}
+
+variable "admin_user_object_id" {
+  description = "The Object ID of the administrator user to grant Key Vault admin rights."
   type        = string
 }

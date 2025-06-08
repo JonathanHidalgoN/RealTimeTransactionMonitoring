@@ -7,5 +7,5 @@ resource "azurerm_role_assignment" "app_sp_kv_secrets_user" {
 resource "azurerm_role_assignment" "admin_user_kv_admin" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Administrator"
-  principal_id         = data.azurerm_client_config.current.object_id
+  principal_id         = var.admin_user_object_id
 }
