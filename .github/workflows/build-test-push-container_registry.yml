@@ -2,7 +2,6 @@ name: Build, Test, and Push Docker Images to ACR
 
 on:
   push:
-    branches: [ main ]
 
 env:
   ACR_LOGIN_SERVER: ${{ vars.ACR_LOGIN_SERVER || 'finmonacr06afc572.azurecr.io' }} #from terraform output acr_login_server
