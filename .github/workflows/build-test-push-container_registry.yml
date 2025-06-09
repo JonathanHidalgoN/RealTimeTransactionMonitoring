@@ -1,0 +1,75 @@
+name: Build, Test, and Push Docker Images to ACR
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  ACR_LOGIN_SERVER: ${{ vars.ACR_LOGIN_SERVER || 'finmonacr06afc572.azurecr.io' }} #from terraform output acr_login_server
+  RESOURCE_GROUP_NAME: ${{ vars.RESOURCE_GROUP_NAME || 'finmon-rg' }} #Hardcoded for now
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore
+
+    - name: Check Formatting
+      run: dotnet format --verify-no-changes
+
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+
+    #https://learn.microsoft.com/en-us/azure/container-instances/container-instances-github-action
+    - name: 'Azure Login'
+      uses: azure/login@v1
+      with:
+        creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ vars.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
+
+    - name: 'Login to ACR'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.ACR_LOGIN_SERVER }}
+        username: ${{ secrets.AZURE_CLIENT_ID }}
+        password: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+    - name: 'Build and Push API Image'
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./src/FinancialMonitoring.Api/Dockerfile
+        push: true
+        tags: ${{ env.ACR_LOGIN_SERVER }}/financialmonitoring-api:${{ github.sha }}
+
+    - name: 'Build and Push Processor Image'
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./src/TransactionProcessor/Dockerfile
+        push: true
+        tags: ${{ env.ACR_LOGIN_SERVER }}/transactionprocessor:${{ github.sha }}
+
+    - name: 'Build and Push Simulator Image'
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./src/TransactionSimulator/Dockerfile
+        push: true
+        tags: ${{ env.ACR_LOGIN_SERVER }}/transactionsimulator:${{ github.sha }}
+
+    - name: 'Azure Logout'
+      run: az logout
+      if: always()
