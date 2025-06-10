@@ -6,7 +6,7 @@ COPY src/FinancialMonitoring.Api/FinancialMonitoring.Api.csproj ./src/FinancialM
 COPY src/FinancialMonitoring.Models/FinancialMonitoring.Models.csproj ./src/FinancialMonitoring.Models/
 COPY src/FinancialMonitoring.Abstractions/FinancialMonitoring.Abstractions.csproj ./src/FinancialMonitoring.Abstractions/
 
-RUN dotnet restore FinancialMonitoringSolution.sln
+RUN dotnet restore ./src/FinancialMonitoring.Api/FinancialMonitoring.Api.csproj
 
 COPY ./src/ ./src/
 
