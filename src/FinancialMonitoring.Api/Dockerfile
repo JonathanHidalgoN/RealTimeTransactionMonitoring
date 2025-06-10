@@ -1,23 +1,24 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /source
 
-COPY FinancialMonitoringSolution.sln .
-COPY src/FinancialMonitoring.Api/FinancialMonitoring.Api.csproj ./src/FinancialMonitoring.Api/
-COPY src/FinancialMonitoring.Models/FinancialMonitoring.Models.csproj ./src/FinancialMonitoring.Models/
-COPY src/FinancialMonitoring.Abstractions/FinancialMonitoring.Abstractions.csproj ./src/FinancialMonitoring.Abstractions/
+COPY *.sln .
+COPY src/*/*.csproj ./src/
+COPY tests/*/*.csproj ./tests/
+RUN for f in $(find . -name '*.csproj'); do mkdir -p $(dirname $f); done
+RUN for f in $(find . -name '*.csproj'); do mv $(basename $f) $(dirname $f); done
 
-RUN dotnet restore ./src/FinancialMonitoring.Api/FinancialMonitoring.Api.csproj
+RUN dotnet restore "FinancialMonitoringSolution.sln"
 
-COPY ./src/ ./src/
+COPY . .
 
-RUN dotnet publish ./src/FinancialMonitoring.Api/FinancialMonitoring.Api.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish "src/FinancialMonitoring.Api/FinancialMonitoring.Api.csproj" -c Release -o /app/publish
+
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
 
 EXPOSE 8080
-
 ENV ASPNETCORE_URLS=http://+:8080
 
 ENTRYPOINT ["dotnet", "FinancialMonitoring.Api.dll"]

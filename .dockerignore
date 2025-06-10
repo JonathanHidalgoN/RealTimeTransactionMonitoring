@@ -1,0 +1,12 @@
+**/bin
+**/obj
+.dockerignore
+.env
+.terraform.env
+.git
+.github
+.gitignore
+.vs
+.vscode
+*.tfstate
+*.tfstate.backup
