@@ -37,7 +37,7 @@ public class Simulator : BackgroundService
         );
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken) // Implement ExecuteAsync
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Transaction Simulator engine starting (as BackgroundService)...");
 
