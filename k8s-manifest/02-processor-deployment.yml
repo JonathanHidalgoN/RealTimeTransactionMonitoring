@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: processor-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transaction-processor
+  template:
+    metadata:
+      labels:
+        app: transaction-processor
+    spec:
+      containers:
+      - name: processor
+        image: finmonacr06afc572.azurecr.io/transactionprocessor:67c443ba3751a176bb9f9e73e3eb179942f17b6d
+        envFrom:
+        - secretRef:
+            name: app-secrets
+        - configMapRef:
+            name: env-config

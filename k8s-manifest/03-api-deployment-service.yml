@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: financial-api
+  template:
+    metadata:
+      labels:
+        app: financial-api
+    spec:
+      containers:
+      - name: api
+        image: finmonacr06afc572.azurecr.io/financialmonitoring-api:67c443ba3751a176bb9f9e73e3eb179942f17b6d
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - secretRef:
+            name: app-secrets
+        - configMapRef:
+            name: env-config
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+  namespace: finmon-app
+spec:
+  type: LoadBalancer
+  selector:
+    app: financial-api
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
