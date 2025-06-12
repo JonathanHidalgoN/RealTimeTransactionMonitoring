@@ -6,3 +6,8 @@ data:
   CosmosDb__DatabaseName: "FinancialTransactionsDb"
   CosmosDb__ContainerName: "Transactions"
   CosmosDb__PartitionKeyPath: "/id"
+
+  EventHubs__EventHubName: "transactions"
+  EventHubs__BlobContainerName: "eh-checkpoints"
+
+  Messaging__Provider: "eventhubs"
