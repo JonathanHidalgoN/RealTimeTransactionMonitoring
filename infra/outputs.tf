@@ -51,3 +51,24 @@ output "cosmosdb_primary_key" {
   sensitive   = true
 }
 
+output "eventhub_checkpoint_storage_connection_string" {
+  description = "The connection string for the Event Hubs checkpoint storage account."
+  value       = azurerm_storage_account.eh_checkpoints.primary_connection_string
+  sensitive   = true
+}
+
+output "eventhubs_namespace_connection_string" {
+  description = "The primary connection string for the Event Hubs Namespace."
+  value       = azurerm_eventhub_namespace.eh_namespace.default_primary_connection_string
+  sensitive   = true
+}
+
+output "eventhub_name" {
+  description = "The name of the transactions Event Hub."
+  value       = azurerm_eventhub.transactions.name
+}
+
+output "eventhub_checkpoint_container_name" {
+  description = "The name of the blob container for Event Hubs checkpoints."
+  value       = azurerm_storage_container.eh_checkpoints.name
+}
