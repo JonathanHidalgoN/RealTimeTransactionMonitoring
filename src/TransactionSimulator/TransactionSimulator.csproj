@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FinancialMonitoring.Models\FinancialMonitoring.Models.csproj" />
+    <ProjectReference Include="..\FinancialMonitoring.Abstractions\FinancialMonitoring.Abstractions.csproj" />
   </ItemGroup>
 
 <ItemGroup>

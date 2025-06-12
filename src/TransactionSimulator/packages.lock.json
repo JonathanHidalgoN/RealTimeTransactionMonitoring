@@ -788,6 +788,12 @@
           "System.Drawing.Common": "6.0.0"
         }
       },
+      "financialmonitoring.abstractions": {
+        "type": "Project",
+        "dependencies": {
+          "FinancialMonitoring.Models": "[1.0.0, )"
+        }
+      },
       "financialmonitoring.models": {
         "type": "Project"
       }
