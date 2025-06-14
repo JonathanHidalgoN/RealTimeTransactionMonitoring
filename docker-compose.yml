@@ -49,6 +49,9 @@ services:
       AZURE_TENANT_ID: "${AZURE_TENANT_ID}"
       APPLICATIONINSIGHTS_CONNECTION_STRING: ""
       KAFKA_BOOTSTRAP_SERVERS: ""
+      EventHubs__EventHubName: "${EVENTHUBS_EVENTHUB_NAME}"
+      EventHubs__BlobContainerName: "${EVENTHUBS_BLOB_CONTAINER_NAME}"
+      Messaging__Provider: "${MESSAGE_PROVIDER}"
       #Needed when using hot reload in docker
       #https://learn.microsoft.com/en-us/aspnet/core/tutorials/dotnet-watch?view=aspnetcore-8.0
       DOTNET_USE_POLLING_FILE_WATCHER: "true"
@@ -78,13 +81,12 @@ services:
       AZURE_CLIENT_ID: "${AZURE_CLIENT_ID}"
       AZURE_CLIENT_SECRET: "${AZURE_CLIENT_SECRET}"
       AZURE_TENANT_ID: "${AZURE_TENANT_ID}"
-      APPLICATIONINSIGHTS_CONNECTION_STRING: ""
-      KAFKA_BOOTSTRAP_SERVERS: ""
-      CosmosDb__EndpointUri: ""
-      CosmosDb__PrimaryKey: ""
       CosmosDb__DatabaseName: "${COSMOSDB_DATABASE_NAME}"
       CosmosDb__ContainerName: "${COSMOSDB_CONTAINER_NAME}"
       CosmosDb__PartitionKeyPath: "${COSMOSDB_PARTITION_KEY_PATH}"
+      EventHubs__EventHubName: "${EVENTHUBS_EVENTHUB_NAME}"
+      EventHubs__BlobContainerName: "${EVENTHUBS_BLOB_CONTAINER_NAME}"
+      Messaging__Provider: "${MESSAGE_PROVIDER}"
       #Needed when using hot reload in docker
       #https://learn.microsoft.com/en-us/aspnet/core/tutorials/dotnet-watch?view=aspnetcore-8.0
       DOTNET_USE_POLLING_FILE_WATCHER: "true"
