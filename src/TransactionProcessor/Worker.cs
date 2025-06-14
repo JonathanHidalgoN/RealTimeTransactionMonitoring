@@ -1,138 +1,67 @@
-using Confluent.Kafka;
-using System.Text.Json;
-using FinancialMonitoring.Models;
-using FinancialMonitoring.Abstractions.Persistence;
+using FinancialMonitoring.Abstractions.Messaging;
 using FinancialMonitoring.Abstractions.Services;
-using Microsoft.Extensions.Options;
+using FinancialMonitoring.Models;
+using System.Text.Json;
+using Confluent.Kafka;
+using FinancialMonitoring.Abstractions.Persistence;
 
-namespace TransactionProcessor
+namespace TransactionProcessor;
+
+public class Worker : BackgroundService
 {
-    public class Worker : BackgroundService
+    private readonly ILogger<Worker> _logger;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly IMessageConsumer<Null, string> _messageConsumer;
+
+    public Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IMessageConsumer<Null, string> messageConsumer)
     {
-        private readonly ILogger<Worker> _logger;
-        private readonly ICosmosDbService _cosmosDbService;
-        private readonly IServiceProvider _serviceProvider;
-        private readonly string _kafkaBootstrapServers;
+        _logger = logger;
+        _serviceProvider = serviceProvider;
+        _messageConsumer = messageConsumer;
+    }
 
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        _logger.LogInformation("Worker starting consumption loop.");
+        await _messageConsumer.ConsumeAsync(ProcessMessageAsync, stoppingToken);
+        _logger.LogInformation("Worker consumption loop finished.");
+    }
 
-        public Worker(ILogger<Worker> logger, ICosmosDbService cosmosDbService, IServiceProvider serviceProvider,
-        IOptions<KafkaSettings> kafkaSettingsOptions
-        )
+    private async Task ProcessMessageAsync(ReceivedMessage<Null, string> message)
+    {
+        _logger.LogInformation("Received message: {MessageValue}", message.Value);
+
+        using var scope = _serviceProvider.CreateScope();
+        var anomalyDetector = scope.ServiceProvider.GetRequiredService<ITransactionAnomalyDetector>();
+        var cosmosDbService = scope.ServiceProvider.GetRequiredService<ICosmosDbService>();
+
+        try
         {
-            _logger = logger;
-            _cosmosDbService = cosmosDbService;
-            _serviceProvider = serviceProvider;
-            KafkaSettings kafkaSettings = kafkaSettingsOptions.Value;
-            _kafkaBootstrapServers = kafkaSettings.BootstrapServers!;
-            _logger.LogInformation($"{AppConstants.KafkaConfigPrefix}:{nameof(KafkaSettings.BootstrapServers)} configured via IOptions to: {_kafkaBootstrapServers}");
-        }
-
-
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            _logger.LogInformation("Transaction Processor Worker starting at: {time}", DateTimeOffset.Now);
-
-            //Kafka class to config consumer
-            ConsumerConfig consumerConfig = new ConsumerConfig
+            Transaction? kafkaTransaction = JsonSerializer.Deserialize<Transaction>(message.Value);
+            if (kafkaTransaction is not null)
             {
-                BootstrapServers = _kafkaBootstrapServers,
-                //Consumer group 
-                GroupId = "transaction-processor-group",
-                AutoOffsetReset = AutoOffsetReset.Earliest,
-                EnableAutoCommit = false
-            };
+                string? anomalyFlag = await anomalyDetector.DetectAsync(kafkaTransaction);
+                var processedTransaction = kafkaTransaction with { AnomalyFlag = anomalyFlag };
+                TransactionForCosmos transactionForCosmos = TransactionForCosmos.FromDomainTransaction(processedTransaction);
 
-            //To leverage disposal connection of Kafka consumer()
-            using (var consumer = new ConsumerBuilder<Ignore, string>(consumerConfig).Build())
-            {
-                consumer.Subscribe(AppConstants.TransactionsTopicName);
-                _logger.LogInformation("Subscribed to topic: {topic}", AppConstants.TransactionsTopicName);
-
-                try
-                {
-                    while (!stoppingToken.IsCancellationRequested)
-                    {
-                        try
-                        {
-                            var consumeResult = consumer.Consume(TimeSpan.FromSeconds(1));
-
-                            if (consumeResult == null)
-                            {
-                                await Task.Delay(100, stoppingToken);
-                                continue;
-                            }
-
-                            _logger.LogInformation($"Consumed message from {consumeResult.TopicPartitionOffset}: {consumeResult.Message.Value}");
-
-                            try
-                            {
-                                var transaction = JsonSerializer.Deserialize<Transaction>(consumeResult.Message.Value);
-                                if (transaction != null)
-                                {
-                                    _logger.LogInformation($"Deserialized Transaction: ID={transaction.Id}, Amount={transaction.Amount}, From={transaction.SourceAccount}");
-                                    using (var scope = _serviceProvider.CreateScope())
-                                    {
-                                        var anomalyDetector = scope.ServiceProvider.GetRequiredService<ITransactionAnomalyDetector>();
-                                        string? anomalyFlag = await anomalyDetector.DetectAsync(transaction);
-                                        Transaction processedTransaction = transaction;
-                                        TransactionForCosmos cosmosTransaction;
-                                        if (!string.IsNullOrEmpty(anomalyFlag))
-                                        {
-                                            processedTransaction = transaction with { AnomalyFlag = anomalyFlag };
-                                            cosmosTransaction = TransactionForCosmos.FromDomainTransaction(processedTransaction);
-                                        }
-                                        else
-                                        {
-                                            cosmosTransaction = TransactionForCosmos.FromDomainTransaction(transaction);
-                                        }
-                                        await _cosmosDbService.AddTransactionAsync(cosmosTransaction);
-                                    }
-                                }
-                                else
-                                {
-                                    _logger.LogWarning("Failed to deserialize message or message was null: {messageValue}", consumeResult.Message.Value);
-                                }
-                            }
-                            catch (JsonException jsonEx)
-                            {
-                                _logger.LogError(jsonEx, "Error deserializing message: {messageValue}", consumeResult.Message.Value);
-                            }
-
-
-                            try
-                            {
-                                consumer.Commit(consumeResult);
-                                _logger.LogDebug("Offset committed: {offset}", consumeResult.TopicPartitionOffset);
-                            }
-                            catch (KafkaException e)
-                            {
-                                _logger.LogError(e, "Error committing offset: {offset}", consumeResult.TopicPartitionOffset);
-                            }
-
-                        }
-                        catch (ConsumeException e)
-                        {
-                            _logger.LogError(e, "Error consuming message: {reason}", e.Error.Reason);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            _logger.LogInformation("Consume loop canceled.");
-                            break;
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Unexpected error in consume loop.");
-                            await Task.Delay(5000, stoppingToken);
-                        }
-                    }
-                }
-                finally
-                {
-                    _logger.LogInformation("Closing Kafka consumer.");
-                    consumer.Close();
-                }
+                await cosmosDbService.AddTransactionAsync(transactionForCosmos);
+                _logger.LogInformation("Successfully processed and stored transaction {TransactionId}", transactionForCosmos.id);
             }
-            _logger.LogInformation("Transaction Processor Worker stopping at: {time}", DateTimeOffset.Now);
         }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Error deserializing message: {MessageValue}", message.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An unexpected error occurred while processing message.");
+        }
+    }
+
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Worker is stopping. Disposing message consumer.");
+        await _messageConsumer.DisposeAsync();
+        await base.StopAsync(cancellationToken);
     }
 }

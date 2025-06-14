@@ -1,29 +1,25 @@
-using Confluent.Kafka;
-using System.Text.Json;
+using FinancialMonitoring.Abstractions.Messaging;
 using FinancialMonitoring.Models;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using Confluent.Kafka;
 
 namespace TransactionSimulator;
-
 
 public class Simulator : BackgroundService
 {
     private readonly ILogger<Simulator> _logger;
-    private readonly string _kafkaBootstrapServers;
+    private readonly IMessageProducer<Null, string> _messageProducer;
     private static readonly Random _random = new Random();
 
-    public Simulator(ILogger<Simulator> logger, IOptions<KafkaSettings> kafkaSettingsOptions)
+    public Simulator(ILogger<Simulator> logger, IMessageProducer<Null, string> messageProducer)
     {
         _logger = logger;
-        KafkaSettings kafkaSettings = kafkaSettingsOptions.Value;
-        _kafkaBootstrapServers = kafkaSettings.BootstrapServers!;
-        _logger.LogInformation($"{AppConstants.KafkaConfigPrefix}:{nameof(KafkaSettings.BootstrapServers)} configured via IOptions to: {_kafkaBootstrapServers}");
+        _messageProducer = messageProducer;
     }
 
-    public static Transaction GenerateTransaction()
+    private static Transaction GenerateTransaction()
     {
         string sourceAccId = "ACC" + _random.Next(1000, 9999);
         string destAccId = "ACC" + _random.Next(1000, 9999);
@@ -40,51 +36,49 @@ public class Simulator : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Transaction Simulator engine starting (as BackgroundService)...");
-
-        var producerConfig = new ProducerConfig { BootstrapServers = _kafkaBootstrapServers };
         int transactionCounter = 0;
 
-        using (var producer = new ProducerBuilder<Null, string>(producerConfig).Build())
+        while (!stoppingToken.IsCancellationRequested)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            transactionCounter++;
+            Transaction transaction = GenerateTransaction();
+            string jsonTransaction = JsonSerializer.Serialize(transaction);
+
+            try
             {
-                transactionCounter++;
-                Transaction transaction = GenerateTransaction();
-                string jsonTransaction = JsonSerializer.Serialize(transaction);
+                await _messageProducer.ProduceAsync(null, jsonTransaction, stoppingToken);
 
-                try
-                {
-                    var deliveryResult = await producer.ProduceAsync(
-                        AppConstants.TransactionsTopicName,
-                        new Message<Null, string> { Value = jsonTransaction },
-                        stoppingToken); // Pass stoppingToken
-
-                    _logger.LogInformation("[{Timestamp:HH:mm:ss}] Produced message {Counter} to {TopicPartitionOffset}: {JsonTransaction}",
-                        DateTime.Now, transactionCounter, deliveryResult.TopicPartitionOffset, jsonTransaction);
-                }
-                catch (ProduceException<Null, string> e)
-                {
-                    _logger.LogError(e, "Failed to deliver message: {Reason}", e.Error.Reason);
-                }
-                catch (OperationCanceledException)
-                {
-                    _logger.LogInformation("Message production was canceled.");
-                    break;
-                }
-
-                try
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
-                }
-                catch (TaskCanceledException)
-                {
-                    _logger.LogInformation("Simulation delay canceled. Exiting loop.");
-                    break;
-                }
+                _logger.LogInformation("[{Timestamp:HH:mm:ss}] Produced message {Counter} on topic '{TopicName}'",
+                    DateTime.Now, transactionCounter, AppConstants.TransactionsTopicName);
             }
-            _logger.LogInformation("Flushing producer...");
-            producer.Flush(TimeSpan.FromSeconds(10));
+            catch (Exception ex) when (ex is OperationCanceledException or TaskCanceledException)
+            {
+                _logger.LogInformation("Message production loop was canceled.");
+                break;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to produce message.");
+            }
+
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(200), stoppingToken);
+            }
+            catch (TaskCanceledException)
+            {
+                _logger.LogInformation("Simulation delay canceled. Exiting loop.");
+                break;
+            }
         }
+        
         _logger.LogInformation("Transaction Simulator engine stopped.");
+    }
+
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Disposing message producer...");
+        await _messageProducer.DisposeAsync();
+        await base.StopAsync(cancellationToken);
     }
 }

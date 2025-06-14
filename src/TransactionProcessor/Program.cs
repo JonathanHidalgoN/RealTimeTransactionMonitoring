@@ -5,6 +5,9 @@ using TransactionProcessor.AnomalyDetection;
 using FinancialMonitoring.Abstractions.Services;
 using Azure.Identity;
 using FinancialMonitoring.Models;
+using FinancialMonitoring.Abstractions.Messaging;
+using TransactionProcessor.Messaging;
+using Confluent.Kafka;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -27,8 +30,8 @@ else
     Console.WriteLine("KEY_VAULT_URI not configured. Key Vault secrets will not be loaded.");
 }
 
-builder.Services.AddOptions<KafkaSettings>()
-    .Bind(builder.Configuration.GetSection(AppConstants.KafkaConfigPrefix))
+builder.Services.AddOptions<MessagingSettings>()
+    .Bind(builder.Configuration.GetSection(AppConstants.EventHubsConfigPrefix))
     .ValidateDataAnnotations()
     .ValidateOnStart();
 builder.Services.AddOptions<ApplicationInsightsSettings>()
@@ -39,6 +42,26 @@ builder.Services.AddOptions<CosmosDbSettings>()
     .Bind(builder.Configuration.GetSection(AppConstants.CosmosDbConfigPrefix))
     .ValidateDataAnnotations()
     .ValidateOnStart();
+
+var messagingProvider = builder.Configuration["Messaging:Provider"]?.ToLowerInvariant() ?? AppConstants.KafkaDefaultName;
+Console.WriteLine($"Configuring messaging provider: {messagingProvider}");
+
+if (messagingProvider == "eventhubs")
+{
+    builder.Services.AddOptions<EventHubsSettings>()
+        .Bind(builder.Configuration.GetSection(AppConstants.EventHubsConfigPrefix))
+        .ValidateDataAnnotations()
+        .ValidateOnStart();
+    builder.Services.AddSingleton<IMessageConsumer<Null, string>, EventHubsConsumer>();
+}
+else
+{
+    builder.Services.AddOptions<KafkaSettings>()
+        .Bind(builder.Configuration.GetSection(AppConstants.KafkaConfigPrefix))
+        .ValidateDataAnnotations()
+        .ValidateOnStart();
+    builder.Services.AddSingleton<IMessageConsumer<Null, string>, KafkaConsumer>();
+}
 
 builder.Services.AddApplicationInsightsTelemetryWorkerService();
 

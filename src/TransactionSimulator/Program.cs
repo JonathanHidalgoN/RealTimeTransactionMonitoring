@@ -4,6 +4,9 @@ using TransactionSimulator;
 using Azure.Identity;
 using Microsoft.Extensions.Configuration;
 using FinancialMonitoring.Models;
+using FinancialMonitoring.Abstractions.Messaging;
+using TransactionSimulator.Messaging;
+using Confluent.Kafka;
 
 public class Program
 {
@@ -31,14 +34,34 @@ public class Program
             Console.WriteLine("KEY_VAULT_URI not configured. Key Vault secrets will not be loaded.");
         }
 
-        builder.Services.AddOptions<KafkaSettings>()
-            .Bind(builder.Configuration.GetSection(AppConstants.KafkaConfigPrefix))
+        builder.Services.AddOptions<MessagingSettings>()
+            .Bind(builder.Configuration.GetSection(AppConstants.EventHubsConfigPrefix))
             .ValidateDataAnnotations()
             .ValidateOnStart();
         builder.Services.AddOptions<ApplicationInsightsSettings>()
             .Bind(builder.Configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+
+        var messagingProvider = builder.Configuration["Messaging:Provider"]?.ToLowerInvariant() ?? AppConstants.KafkaDefaultName;
+        Console.WriteLine($"Configuring messaging provider: {messagingProvider}");
+
+        if (messagingProvider == "eventhubs")
+        {
+            builder.Services.AddOptions<EventHubsSettings>()
+                .Bind(builder.Configuration.GetSection(AppConstants.EventHubsConfigPrefix))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+            builder.Services.AddSingleton<IMessageProducer<Null, string>, EventHubsProducer>();
+        }
+        else
+        {
+            builder.Services.AddOptions<KafkaSettings>()
+                .Bind(builder.Configuration.GetSection(AppConstants.KafkaConfigPrefix))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+            builder.Services.AddSingleton<IMessageProducer<Null, string>, KafkaProducer>();
+        }
 
         builder.Services.AddApplicationInsightsTelemetryWorkerService();
 
