@@ -1,7 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 
+namespace FinancialMonitoring.Models;
+
 public class KafkaSettings
 {
-    [Required(AllowEmptyStrings = false, ErrorMessage = "Kafka:BootstrapServers is required and cannot be empty. Check Key Vault secret 'Kafka--BootstrapServers' or ENV var 'Kafka__BootstrapServers'.")]
+    [Required(AllowEmptyStrings = false)]
     public string? BootstrapServers { get; set; }
+
+    [Required(AllowEmptyStrings = false)]
+    public string? ConsumerGroupId { get; set; } = "transaction-processor-group";
 }
