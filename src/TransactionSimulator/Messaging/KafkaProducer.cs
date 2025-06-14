@@ -17,7 +17,7 @@ public class KafkaProducer : IMessageProducer<Null, string>
 
     public async Task ProduceAsync(Null? key, string value, CancellationToken cancellationToken)
     {
-        await _producer.ProduceAsync(AppConstants.TransactionsTopicName, 
+        await _producer.ProduceAsync(AppConstants.TransactionsTopicName,
             new Message<Null, string> { Value = value }, cancellationToken);
     }
 

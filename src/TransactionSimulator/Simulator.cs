@@ -71,7 +71,7 @@ public class Simulator : BackgroundService
                 break;
             }
         }
-        
+
         _logger.LogInformation("Transaction Simulator engine stopped.");
     }
 
