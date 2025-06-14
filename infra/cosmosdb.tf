@@ -6,7 +6,7 @@ resource "azurerm_cosmosdb_account" "db" {
   offer_type          = "Standard"
   kind                = "GlobalDocumentDB"
 
-  free_tier_enabled    = true
+  free_tier_enabled = true
 
   consistency_policy {
     consistency_level = "Session"
@@ -30,9 +30,9 @@ resource "azurerm_cosmosdb_sql_database" "db" {
 }
 
 resource "azurerm_cosmosdb_sql_container" "transactions" {
-  name                  = "Transactions"
-  resource_group_name   = azurerm_resource_group.rg.name
-  account_name          = azurerm_cosmosdb_account.db.name
-  database_name         = azurerm_cosmosdb_sql_database.db.name
-  partition_key_paths    = ["/id"]
+  name                = "Transactions"
+  resource_group_name = azurerm_resource_group.rg.name
+  account_name        = azurerm_cosmosdb_account.db.name
+  database_name       = azurerm_cosmosdb_sql_database.db.name
+  partition_key_paths = ["/id"]
 }
