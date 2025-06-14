@@ -1,6 +1,6 @@
 namespace FinancialMonitoring.Abstractions.Messaging;
 
-public record ReceivedMessage<TKey, TValue>(TKey Key, TValue Value);
+public record ReceivedMessage<TKey, TValue>(TKey? Key, TValue Value);
 
 public interface IMessageConsumer<TKey, TValue> : IAsyncDisposable
 {
