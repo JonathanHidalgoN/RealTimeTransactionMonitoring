@@ -33,7 +33,7 @@ fi
 #===================================================================================
 # VARIABLES TO EDIT - Please customize these before running
 #===================================================================================
-AZURE_SUBSCRIPTION_ID="f63a3101-1c47-49c1-ac68-b51aea53046c"
+AZURE_SUBSCRIPTION_ID="97479738-fc74-450b-999d-9a7567849002"
 AZURE_LOCATION="mexicocentral"
 RESOURCE_GROUP_NAME_BASE="finmon"
 SERVICE_PRINCIPAL_NAME="FinMonInfraAppSP"
