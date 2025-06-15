@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: api
-        image: finmonacr06afc572.azurecr.io/financialmonitoring-api:67c443ba3751a176bb9f9e73e3eb179942f17b6d
+        image: finmonacrfcea527d.azurecr.io/financialmonitoring-api:5795ea6a53e15bf956dc455ea4a0ae9f2112ba61
         ports:
         - containerPort: 8080
         envFrom:
@@ -22,6 +22,8 @@ spec:
             name: app-secrets
         - configMapRef:
             name: env-config
+
+---
 
 apiVersion: v1
 kind: Service
