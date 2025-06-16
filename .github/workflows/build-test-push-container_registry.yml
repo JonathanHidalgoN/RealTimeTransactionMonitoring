@@ -3,7 +3,6 @@ name: Build, Test, Push, and Deploy to AKS
 
 on:
   push:
-    branches: [ main ]
 
 env:
   ACR_LOGIN_SERVER: ${{ vars.ACR_LOGIN_SERVER || 'your_acr_name.azurecr.io' }}
