@@ -6,6 +6,7 @@ namespace: finmon-app
 resources:
 - 01-namespace.yml
 - 02-processor-deployment.yml
+- 04-simulator-deployment.yml
 - 03-api-deployment-service.yml
 - 06-env-configmap.yml
 
