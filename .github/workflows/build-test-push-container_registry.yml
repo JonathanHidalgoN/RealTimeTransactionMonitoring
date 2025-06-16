@@ -5,15 +5,23 @@ on:
 
 env:
   ACR_LOGIN_SERVER: ${{ vars.ACR_LOGIN_SERVER || 'finmonacr06afc572.azurecr.io' }} #from terraform output acr_login_server
-  RESOURCE_GROUP_NAME: ${{ vars.RESOURCE_GROUP_NAME || 'finmon-rg' }} #Hardcoded for now
+  RESOURCE_GROUP_NAME: ${{ vars.RESOURCE_GROUP_NAME || 'finmon-rg' }}
+  AKS_CLUSTER_NAME: ${{ vars.AKS_CLUSTER_NAME || 'finmon-aks' }}
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
+    outputs:
+        image_tag: ${{ steps.get_sha.outputs.sha }}
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+
+    - name: Get commit SHA
+      id: get_sha
+      run: echo "sha=$(echo ${GITHUB_SHA::7})" >> $GITHUB_OUTPUT
 
     - name: Set up .NET
       uses: actions/setup-dotnet@v4
@@ -70,5 +78,37 @@ jobs:
         tags: ${{ env.ACR_LOGIN_SERVER }}/transactionsimulator:${{ github.sha }}
 
     - name: 'Azure Logout'
+      run: az logout
+      if: always()
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
+
+    - name: Set kubectl context to AKS cluster
+      run: az aks get-credentials --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
+
+    - name: Set Kustomize image tags
+      run: |
+        cd k8s-manifests
+        kustomize edit set image ${{ env.ACR_NAME }}.azurecr.io/financialmonitoring-api:${{ needs.build-and-push.outputs.image_tag }}
+        kustomize edit set image ${{ env.ACR_NAME }}.azurecr.io/transactionprocessor:${{ needs.build-and-push.outputs.image_tag }}
+        kustomize edit set image ${{ env.ACR_NAME }}.azurecr.io/transactionsimulator:${{ needs.build-and-push.outputs.image_tag }}
+
+    - name: Deploy to AKS
+      run: |
+        cd k8s-manifests
+        kubectl apply -k .
+
+    - name: Azure Logout
       run: az logout
       if: always()
