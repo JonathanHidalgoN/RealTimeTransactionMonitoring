@@ -4,3 +4,4 @@
  - Add event hub config to script to automatic setup
  - Add variables to take the value from .env for event hub name and container name into terraform
  - Make boostrap take variables from env
+ - The values of images on kubernetes are static, can this be made automatic?
