@@ -98,11 +98,12 @@ jobs:
       run: az aks get-credentials --resource-group finmon-rg --name ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
 
     - name: Set Kustomize image tags
+      working-directory: ./k8s-manifests
       run: |
-        cd k8s-manifests
-        kustomize edit set image ${{ env.ACR_NAME }}.azurecr.io/financialmonitoring-api:${{ needs.build-and-push.outputs.image_tag }}
-        kustomize edit set image ${{ env.ACR_NAME }}.azurecr.io/transactionprocessor:${{ needs.build-and-push.outputs.image_tag }}
-        kustomize edit set image ${{ env.ACR_NAME }}.azurecr.io/transactionsimulator:${{ needs.build-and-push.outputs.image_tag }}
+        kustomize edit set image ${{ env.ACR_NAME }}.azurecr.io/financialmonitoring-api=:${{ needs.build-and-push.outputs.image_tag }}
+        kustomize edit set image ${{ env.ACR_NAME }}.azurecr.io/transactionprocessor=:${{ needs.build-and-push.outputs.image_tag }}
+        kustomize edit set image ${{ env.ACR_NAME }}.azurecr.io/transactionsimulator=:${{ needs.build-and-push.outputs.image_tag }}
+
 
     - name: Deploy to AKS
       run: |
