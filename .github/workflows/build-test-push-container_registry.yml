@@ -95,7 +95,7 @@ jobs:
         creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ vars.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
 
     - name: Set kubectl context to AKS cluster
-      run: az aks get-credentials --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
+      run: az aks get-credentials --resource-group finmon-rg --name ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
 
     - name: Set Kustomize image tags
       run: |
