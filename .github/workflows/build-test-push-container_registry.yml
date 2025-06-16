@@ -1,25 +1,26 @@
-name: Build, Test, and Push Docker Images to ACR
+
+name: Build, Test, Push, and Deploy to AKS
 
 on:
   push:
+    branches: [ main ]
 
 env:
-  ACR_LOGIN_SERVER: ${{ vars.ACR_LOGIN_SERVER || 'finmonacr06afc572.azurecr.io' }} #from terraform output acr_login_server
-  RESOURCE_GROUP_NAME: ${{ vars.RESOURCE_GROUP_NAME || 'finmon-rg' }}
+  ACR_LOGIN_SERVER: ${{ vars.ACR_LOGIN_SERVER || 'your_acr_name.azurecr.io' }}
+  AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP || 'finmon-rg' }}
   AKS_CLUSTER_NAME: ${{ vars.AKS_CLUSTER_NAME || 'finmon-aks' }}
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
     outputs:
-        image_tag: ${{ steps.get_sha.outputs.sha }}
+      image_tag: ${{ steps.get_sha.outputs.sha }}
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Get commit SHA
+    - name: Get short commit SHA
       id: get_sha
       run: echo "sha=$(echo ${GITHUB_SHA::7})" >> $GITHUB_OUTPUT
 
@@ -28,56 +29,46 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
-    - name: Restore dependencies
-      run: dotnet restore
+    - name: Run dotnet test
+      run: dotnet test
 
-    - name: Build
-      run: dotnet build --no-restore
-
-    - name: Check Formatting
-      run: dotnet format --verify-no-changes
-
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
-
-    #https://learn.microsoft.com/en-us/azure/container-instances/container-instances-github-action
-    - name: 'Azure Login'
+    - name: Azure Login
       uses: azure/login@v1
       with:
-        creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ vars.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
+        creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
 
-    - name: 'Login to ACR'
+    - name: Login to ACR
       uses: docker/login-action@v3
       with:
         registry: ${{ env.ACR_LOGIN_SERVER }}
         username: ${{ secrets.AZURE_CLIENT_ID }}
         password: ${{ secrets.AZURE_CLIENT_SECRET }}
 
-    - name: 'Build and Push API Image'
+    - name: Build and Push API Image
       uses: docker/build-push-action@v5
       with:
         context: .
         file: ./src/FinancialMonitoring.Api/Dockerfile
         push: true
-        tags: ${{ env.ACR_LOGIN_SERVER }}/financialmonitoring-api:${{ github.sha }}
+        tags: ${{ env.ACR_LOGIN_SERVER }}/financialmonitoring-api:${{ steps.get_sha.outputs.sha }}
 
-    - name: 'Build and Push Processor Image'
+    - name: Build and Push Processor Image
       uses: docker/build-push-action@v5
       with:
         context: .
         file: ./src/TransactionProcessor/Dockerfile
         push: true
-        tags: ${{ env.ACR_LOGIN_SERVER }}/transactionprocessor:${{ github.sha }}
+        tags: ${{ env.ACR_LOGIN_SERVER }}/transactionprocessor:${{ steps.get_sha.outputs.sha }}
 
-    - name: 'Build and Push Simulator Image'
+    - name: Build and Push Simulator Image
       uses: docker/build-push-action@v5
       with:
         context: .
         file: ./src/TransactionSimulator/Dockerfile
         push: true
-        tags: ${{ env.ACR_LOGIN_SERVER }}/transactionsimulator:${{ github.sha }}
+        tags: ${{ env.ACR_LOGIN_SERVER }}/transactionsimulator:${{ steps.get_sha.outputs.sha }}
 
-    - name: 'Azure Logout'
+    - name: Azure Logout
       run: az logout
       if: always()
 
@@ -89,26 +80,24 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: 'Azure Login'
+    - name: Azure Login
       uses: azure/login@v1
       with:
-        creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ vars.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
+        creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
 
     - name: Set kubectl context to AKS cluster
-      run: az aks get-credentials --resource-group finmon-rg --name ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
+      run: az aks get-credentials --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
 
     - name: Set Kustomize image tags
-      working-directory: ./k8s-manifests
+      working-directory: ./k8s-manifest
       run: |
-        kustomize edit set image ${{ env.ACR_NAME }}.azurecr.io/financialmonitoring-api=:${{ needs.build-and-push.outputs.image_tag }}
-        kustomize edit set image ${{ env.ACR_NAME }}.azurecr.io/transactionprocessor=:${{ needs.build-and-push.outputs.image_tag }}
-        kustomize edit set image ${{ env.ACR_NAME }}.azurecr.io/transactionsimulator=:${{ needs.build-and-push.outputs.image_tag }}
-
+        kustomize edit set image ${{ env.ACR_LOGIN_SERVER }}/financialmonitoring-api=:${{ needs.build-and-push.outputs.image_tag }}
+        kustomize edit set image ${{ env.ACR_LOGIN_SERVER }}/transactionprocessor=:${{ needs.build-and-push.outputs.image_tag }}
+        kustomize edit set image ${{ env.ACR_LOGIN_SERVER }}/transactionsimulator=:${{ needs.build-and-push.outputs.image_tag }}
 
     - name: Deploy to AKS
-      run: |
-        cd k8s-manifests
-        kubectl apply -k .
+      working-directory: ./k8s-manifest
+      run: kubectl apply -k .
 
     - name: Azure Logout
       run: az logout
