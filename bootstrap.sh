@@ -11,16 +11,17 @@ echo -e "${YELLOW}  Azure Infrastructure Bootstrap for RealTimeFinancialMonitori
 echo -e "${YELLOW}======================================================${NC}"
 echo ""
 echo "This script will:"
-echo "1. Log into Azure and set your active subscription."
-echo "2. Create a dedicated Resource Group for your project."
-echo "3. Create a Storage Account and Blob Container for Terraform remote state."
-echo "4. Create a single Service Principal (SP) for both Terraform automation and application access."
-echo "5. Assign the necessary RBAC roles to the SP for its tasks."
-echo "6. Generate two files:"
-echo -e "   - ${CYAN}infra/backend.tf${NC} (to configure Terraform's remote state)"
-echo -e "   - ${CYAN}.terraform.env${NC} (with SP credentials for Terraform to use)"
+echo "1. Read configuration variables from your root '.env' file."
+echo "    - AZURE_SUBSCRIPTION_ID=\"<your-subscription-id>\""
+echo "    - AZURE_LOCATION=\"<your-azure-region, e.g., mexicocentral>\""
+echo "    - RESOURCE_GROUP_NAME_BASE=\"<your-resource-group-base-name, e.g., finmon>\""
+echo "    - SERVICE_PRINCIPAL_NAME=\"<your-service-principal-name, e.g., FinMonInfraAppSP>\""
+echo "    - TF_STATE_STORAGE_ACCOUNT_NAME_BASE=\"<your-terraform-state-storage-account-base-name, e.g., finmontfstate>\""
+echo "2. Log into Azure and set your active subscription."
+echo "3. Create a Resource Group, Storage Account for Terraform state, and a Service Principal."
+echo "4. Assign necessary RBAC roles to the Service Principal."
+echo "5. Generate helper files ('infra/backend.tf' and '.terraform.env')."
 echo ""
-echo -e "${CYAN}After this script completes, you will be given clear manual steps to run Terraform and configure your application.${NC}"
 echo -e "${YELLOW}WARNING: This script will create Azure resources which may incur costs.${NC}"
 echo ""
 
@@ -30,15 +31,37 @@ if [[ $confirm != "yes" ]]; then
     exit 1
 fi
 
-#===================================================================================
-# VARIABLES TO EDIT - Please customize these before running
-#===================================================================================
-AZURE_SUBSCRIPTION_ID="97479738-fc74-450b-999d-9a7567849002"
-AZURE_LOCATION="mexicocentral"
-RESOURCE_GROUP_NAME_BASE="finmon"
-SERVICE_PRINCIPAL_NAME="FinMonInfraAppSP"
-TF_STATE_STORAGE_ACCOUNT_NAME_BASE="finmontfstate"
-#===================================================================================
+echo -e "\n${YELLOW}--- Step 1: Loading and Validating Configuration from .env File ---${NC}"
+if [ ! -f "./.env" ]; then
+    echo -e "${YELLOW}Error: .env file not found in the project root.${NC}" >&2
+    echo "Please create a '.env' file with the required variables before running." >&2
+    exit 1
+fi
+
+source ./.env
+
+if [ -z "$AZURE_SUBSCRIPTION_ID" ]; then
+    echo "Error: AZURE_SUBSCRIPTION_ID is not set in your .env file." >&2
+    exit 1
+fi
+if [ -z "$AZURE_LOCATION" ]; then
+    echo "Error: AZURE_LOCATION is not set in your .env file." >&2
+    exit 1
+fi
+if [ -z "$RESOURCE_GROUP_NAME_BASE" ]; then
+    echo "Error: RESOURCE_GROUP_NAME_BASE is not set in your .env file." >&2
+    exit 1
+fi
+if [ -z "$SERVICE_PRINCIPAL_NAME" ]; then
+    echo "Error: SERVICE_PRINCIPAL_NAME is not set in your .env file." >&2
+    exit 1
+fi
+if [ -z "$TF_STATE_STORAGE_ACCOUNT_NAME_BASE" ]; then
+    echo "Error: TF_STATE_STORAGE_ACCOUNT_NAME_BASE is not set in your .env file." >&2
+    exit 1
+fi
+
+echo -e "${GREEN}✓ Successfully loaded and validated configuration from .env file.${NC}"
 
 # --- Derived Names ---
 RESOURCE_GROUP_NAME="${RESOURCE_GROUP_NAME_BASE}-rg"
