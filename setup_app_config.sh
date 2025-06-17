@@ -33,10 +33,10 @@ if [ ! -f "$ENV_FILE" ]; then
     echo "Please create a file named '${ENV_FILE}' in the project root with the following format:" >&2
     echo "" >&2
     echo -e "${CYAN}# ${ENV_FILE} Contents" >&2
-    echo 'SECRETS_KAFKA_BOOTSTRAP_SERVERS=""' >&2
-    echo 'SECRETS_COSMOSDB_ENDPOINT_URI="' >&2
-    echo 'SECRETS_COSMOSDB_PRIMARY_KEY=""' >&2
-    echo 'SECRETS_COSMOSDB_PRIMARY_KEY=""' >&2
+    echo 'KAFKA_BOOTSTRAP_SERVERS=""' >&2
+    echo 'COSMOSDB_ENDPOINT_URI="' >&2
+    echo 'COSMOSDB_PRIMARY_KEY=""' >&2
+    echo 'COSMOSDB_PRIMARY_KEY=""' >&2
     echo "" >&2
     echo "Then add this file to your .gitignore and run this script again." >&2
     exit 1
@@ -107,10 +107,10 @@ echo -e "\n${YELLOW}--- Step 4: Populating Secrets in Azure Key Vault ---${NC}"
 echo "Setting ApplicationInsights--ConnectionString secret..."
 az keyvault secret set --vault-name "$KV_NAME" --name "ApplicationInsights--ConnectionString" --value "$AI_CS" --output none
 echo "Setting Kafka--BootstrapServers secret..."
-az keyvault secret set --vault-name "$KV_NAME" --name "Kafka--BootstrapServers" --value "$SECRETS_KAFKA_BOOTSTRAP_SERVERS" --output none
+az keyvault secret set --vault-name "$KV_NAME" --name "Kafka--BootstrapServers" --value "$KAFKA_BOOTSTRAP_SERVERS" --output none
 echo "Setting CosmosDb secrets..."
-az keyvault secret set --vault-name "$KV_NAME" --name "CosmosDb--EndpointUri" --value "$SECRETS_COSMOSDB_ENDPOINT_URI" --output none
-az keyvault secret set --vault-name "$KV_NAME" --name "CosmosDb--PrimaryKey" --value "$SECRETS_COSMOSDB_PRIMARY_KEY" --output none
+az keyvault secret set --vault-name "$KV_NAME" --name "CosmosDb--EndpointUri" --value "$COSMOSDB_ENDPOINT_URI" --output none
+az keyvault secret set --vault-name "$KV_NAME" --name "CosmosDb--PrimaryKey" --value "$COSMOSDB_PRIMARY_KEY" --output none
 echo -e "${GREEN}✓ All application secrets have been set in Key Vault '${KV_NAME}'.${NC}"
 
 # --- Step 5: Generate .env File ---
