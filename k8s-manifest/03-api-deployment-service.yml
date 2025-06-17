@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: api
-        image: finmonacrfcea527d.azurecr.io/financialmonitoring-api:5795ea6a53e15bf956dc455ea4a0ae9f2112ba61
+        image: finmonacrd86a5e25.azurecr.io/financialmonitoring-api:latest
         ports:
         - containerPort: 8080
         envFrom:
