@@ -48,8 +48,8 @@ if [ -z "$AZURE_LOCATION" ]; then
     echo "Error: AZURE_LOCATION is not set in your .env file." >&2
     exit 1
 fi
-if [ -z "$RESOURCE_GROUP_NAME_BASE" ]; then
-    echo "Error: RESOURCE_GROUP_NAME_BASE is not set in your .env file." >&2
+if [ -z "$RESOURCE_GROUP_NAME" ]; then
+    echo "Error: RESOURCE_GROUP_NAME is not set in your .env file." >&2
     exit 1
 fi
 if [ -z "$SERVICE_PRINCIPAL_NAME" ]; then
@@ -64,7 +64,6 @@ fi
 echo -e "${GREEN}✓ Successfully loaded and validated configuration from .env file.${NC}"
 
 # --- Derived Names ---
-RESOURCE_GROUP_NAME="${RESOURCE_GROUP_NAME_BASE}-rg"
 RANDOM_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
 TF_STATE_STORAGE_ACCOUNT_NAME_RAW="${TF_STATE_STORAGE_ACCOUNT_NAME_BASE}${RANDOM_SUFFIX}"
 TF_STATE_STORAGE_ACCOUNT_NAME=$(echo "${TF_STATE_STORAGE_ACCOUNT_NAME_RAW}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]//g' | cut -c 1-24)
@@ -215,14 +214,14 @@ echo "   Run this command from the project root to add them to .gitignore:"
 echo -e "   ${GREEN}echo '${TF_ENV_FILE}' >> .gitignore && echo '${PROJECT_ENV_FILE}' >> .gitignore${NC}"
 echo ""
 echo -e "${CYAN}2. Authenticate as the Terraform SP in your current shell session:${NC}"
-echo "   Run: ${GREEN}source ./${TF_ENV_FILE}${NC}"
+echo -e "   Run: ${GREEN}source ./${TF_ENV_FILE}${NC}"
 echo ""
 echo -e "${CYAN}3. Initialize Terraform with the Remote Backend:${NC}"
-echo "   Run: ${GREEN}cd ${TERRAFORM_DIR}${NC}"
+echo -e "   Run: ${GREEN}cd ${TERRAFORM_DIR}${NC}"
 echo -e "   Run: ${GREEN}terraform init -upgrade${NC}"
 echo ""
 echo -e "${CYAN}4. (First time only) Import the Resource Group into Terraform state:${NC}"
-echo "   Run: ${GREEN}terraform import azurerm_resource_group.rg \"${RESOURCE_GROUP_ID}\"${NC}"
+echo -e "   Run: ${GREEN}terraform import azurerm_resource_group.rg \"${RESOURCE_GROUP_ID}\"${NC}"
 echo ""
 echo -e "${CYAN}5. Run Terraform Plan & Apply:${NC}"
 echo "   This creates your Key Vault, Application Insights, etc."
