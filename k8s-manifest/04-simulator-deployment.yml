@@ -16,6 +16,16 @@ spec:
       containers:
       - name: simulator
         image: finmonacrd86a5e25.azurecr.io/transactionsimulator:latest
+        livenessProbe:
+          exec:
+            # This command checks if the /tmp/healthy file has been modified in the last minute.
+            command:
+            - find
+            - /tmp/healthy
+            - -mmin
+            - "-1"
+          initialDelaySeconds: 60
+          periodSeconds: 30
         envFrom:
         - secretRef:
             name: app-secrets

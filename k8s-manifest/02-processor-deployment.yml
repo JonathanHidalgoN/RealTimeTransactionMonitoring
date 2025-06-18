@@ -15,6 +15,21 @@ spec:
       containers:
       - name: processor
         image: finmonacrd86a5e25.azurecr.io/transactionprocessor:latest
+        #https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/
+        livenessProbe:
+          exec:
+            command:
+            - pgrep
+            - dotnet
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          exec:
+            command:
+            - pgrep
+            - dotnet
+          initialDelaySeconds: 20
+          periodSeconds: 10
         envFrom:
         - secretRef:
             name: app-secrets
