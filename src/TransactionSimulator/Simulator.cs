@@ -70,6 +70,8 @@ public class Simulator : BackgroundService
                 _logger.LogInformation("Simulation delay canceled. Exiting loop.");
                 break;
             }
+            try { File.SetLastWriteTimeUtc("/tmp/healthy", DateTime.UtcNow); }
+            catch (Exception ex) { _logger.LogWarning(ex, "Failed to update liveness probe timestamp."); }
         }
 
         _logger.LogInformation("Transaction Simulator engine stopped.");
