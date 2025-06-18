@@ -28,13 +28,8 @@ spec:
             command:
             - pidof
             - dotnet
-        initialDelaySeconds: 20
-        periodSeconds: 10
-        envFrom:
-        - secretRef:
-            name: app-secrets
-        - configMapRef:
-            name: env-config
+          initialDelaySeconds: 20
+          periodSeconds: 10
         resources:
           requests:
             cpu: "100m"
@@ -42,3 +37,8 @@ spec:
           limits:
             cpu: "500m"
             memory: "256Mi"
+        envFrom:
+        - secretRef:
+            name: app-secrets
+        - configMapRef:
+            name: env-config
