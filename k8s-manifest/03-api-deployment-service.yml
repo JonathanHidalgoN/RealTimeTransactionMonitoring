@@ -17,6 +17,18 @@ spec:
         image: finmonacrd86a5e25.azurecr.io/financialmonitoring-api:latest
         ports:
         - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds:
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
         envFrom:
         - secretRef:
             name: app-secrets
