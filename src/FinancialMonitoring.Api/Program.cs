@@ -33,7 +33,7 @@ builder.Services.AddOptions<CosmosDbSettings>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 builder.Services.AddApplicationInsightsTelemetry();
-
+builder.Services.AddHealthChecks();
 builder.Services.AddSingleton<ITransactionQueryService, CosmosDbTransactionQueryService>();
 
 builder.Services.AddControllers();
@@ -53,6 +53,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
+app.MapHealthChecks("/healthz");
 app.UseAuthorization();
 app.MapControllers();
 
