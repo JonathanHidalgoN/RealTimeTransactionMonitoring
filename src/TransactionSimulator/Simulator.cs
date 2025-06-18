@@ -45,6 +45,9 @@ public class Simulator : BackgroundService
             Transaction transaction = GenerateTransaction();
             string jsonTransaction = JsonSerializer.Serialize(transaction);
 
+            try { File.SetLastWriteTimeUtc("/tmp/healthy", DateTime.UtcNow); }
+            catch (Exception ex) { _logger.LogWarning(ex, "Failed to update liveness probe timestamp."); }
+
             try
             {
                 await _messageProducer.ProduceAsync(null, jsonTransaction, stoppingToken);
@@ -64,15 +67,13 @@ public class Simulator : BackgroundService
 
             try
             {
-                await Task.Delay(TimeSpan.FromSeconds(200), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
             }
             catch (TaskCanceledException)
             {
                 _logger.LogInformation("Simulation delay canceled. Exiting loop.");
                 break;
             }
-            try { File.SetLastWriteTimeUtc("/tmp/healthy", DateTime.UtcNow); }
-            catch (Exception ex) { _logger.LogWarning(ex, "Failed to update liveness probe timestamp."); }
         }
 
         _logger.LogInformation("Transaction Simulator engine stopped.");
