@@ -45,8 +45,14 @@ public class Simulator : BackgroundService
             Transaction transaction = GenerateTransaction();
             string jsonTransaction = JsonSerializer.Serialize(transaction);
 
-            try { File.SetLastWriteTimeUtc("/tmp/healthy", DateTime.UtcNow); }
-            catch (Exception ex) { _logger.LogWarning(ex, "Failed to update liveness probe timestamp."); }
+            try
+            {
+                File.AppendAllText("/tmp/healthy", string.Empty);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to update liveness probe timestamp file.");
+            }
 
             try
             {
