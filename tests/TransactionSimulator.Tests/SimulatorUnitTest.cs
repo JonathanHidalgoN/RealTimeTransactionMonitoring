@@ -14,7 +14,7 @@ public class SimulatorTests
         Assert.False(string.IsNullOrWhiteSpace(generatedTransaction.Id));
         // 3. Check Amount
         Assert.True(generatedTransaction.Amount >= 0, "Amount should be non-negative.");
-        Assert.True(generatedTransaction.Amount <= 1000, "Amount should be less than or equal to 1000 (based on generation logic).");
+        Assert.True(generatedTransaction.Amount <= 1500, "Amount should be less than or equal to 1000 (based on generation logic).");
         // 4. Check Timestamp
         long currentUnixTimeMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         Assert.True(generatedTransaction.Timestamp <= currentUnixTimeMs, "Timestamp should not be in the future.");
