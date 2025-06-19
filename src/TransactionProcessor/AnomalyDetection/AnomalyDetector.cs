@@ -8,7 +8,7 @@ public class AnomalyDetector : ITransactionAnomalyDetector
 {
     private readonly ILogger<AnomalyDetector> _logger;
     private readonly IAnomalyEventPublisher _eventPublisher;
-    private const double _highValueThreshold = 10000.00;
+    private const double _highValueThreshold = 1000.00;
 
     public AnomalyDetector(ILogger<AnomalyDetector> logger, IAnomalyEventPublisher publisher)
     {
