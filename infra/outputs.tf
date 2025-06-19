@@ -72,3 +72,13 @@ output "eventhub_checkpoint_container_name" {
   description = "The name of the blob container for Event Hubs checkpoints."
   value       = azurerm_storage_container.eh_checkpoints.name
 }
+
+output "anomalies_eventhub_name" {
+  description = "The name of the anomalies Event Hub."
+  value       = azurerm_eventhub.anomalies.name
+}
+
+output "logic_app_name" {
+  description = "The name of the notification Logic App."
+  value       = azurerm_logic_app_workflow.notification_workflow.name
+}
