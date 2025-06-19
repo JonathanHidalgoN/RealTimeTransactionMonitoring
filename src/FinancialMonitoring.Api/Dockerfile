@@ -10,6 +10,7 @@ COPY src/TransactionSimulator/TransactionSimulator.csproj ./src/TransactionSimul
 COPY tests/FinancialMonitoring.Api.Tests/FinancialMonitoring.Api.Tests.csproj ./tests/FinancialMonitoring.Api.Tests/
 COPY tests/FinancialMonitoring.Models.Tests/FinancialMonitoring.Models.Tests.csproj ./tests/FinancialMonitoring.Models.Tests/
 COPY tests/TransactionSimulator.Tests/TransactionSimulator.Tests.csproj ./tests/TransactionSimulator.Tests/
+COPY tests/TransactionProcessor.Tests/TransactionProcessor.Tests.csproj ./tests/TransactionProcessor.Tests/
 
 RUN dotnet restore "FinancialMonitoringSolution.sln"
 
