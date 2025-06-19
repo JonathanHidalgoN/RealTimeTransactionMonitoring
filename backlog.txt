@@ -5,3 +5,5 @@
  - Add variables to take the value from .env for event hub name and container name into terraform
  - Make boostrap take variables from env
  - The values of images on kubernetes are static, can this be made automatic?
+ - Remove "secrets" from variable names
+ - Remove kafka configs from azure

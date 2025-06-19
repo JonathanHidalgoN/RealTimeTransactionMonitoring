@@ -27,9 +27,9 @@ public class HighValueTransactionAnomalyDetectorTests
         var result = await _detector.DetectAsync(highValueTransaction);
 
         Assert.Equal("HighValueAnomaly", result);
-        
+
         _mockEventPublisher.Verify(
-            publisher => publisher.PublishAsync(highValueTransaction), 
+            publisher => publisher.PublishAsync(highValueTransaction),
             Times.Once()
         );
     }
@@ -44,7 +44,7 @@ public class HighValueTransactionAnomalyDetectorTests
         Assert.Null(result);
 
         _mockEventPublisher.Verify(
-            publisher => publisher.PublishAsync(It.IsAny<Transaction>()), 
+            publisher => publisher.PublishAsync(It.IsAny<Transaction>()),
             Times.Never()
         );
     }
