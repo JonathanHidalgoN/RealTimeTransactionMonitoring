@@ -70,6 +70,7 @@ builder.Services.AddSingleton<ICosmosDbService, CosmosDbService>();
 builder.Services.AddScoped<ITransactionAnomalyDetector, AnomalyDetector>();
 //Hosted to control how to end
 builder.Services.AddHostedService<CosmosDbInitializerHostedService>();
+builder.Services.AddSingleton<IAnomalyEventPublisher, EventHubsAnomalyEventPublisher>(); 
 builder.Services.AddHostedService<Worker>();
 
 var host = builder.Build();
