@@ -33,6 +33,10 @@ if [ ! -f "$SECRETS_ENV_FILE" ]; then
     exit 1
 fi
 source "./${SECRETS_ENV_FILE}"
+if [ -z "$API_KEY" ]; then
+    echo "Error: API_KEY is not set in your .env file." >&2
+    exit 1
+fi
 echo -e "${GREEN}✓ Successfully loaded static config from '${SECRETS_ENV_FILE}'.${NC}"
 
 if ! az account show >/dev/null 2>&1; then
@@ -97,6 +101,7 @@ az keyvault secret set --vault-name "$KV_NAME" --name "CosmosDb--EndpointUri" --
 az keyvault secret set --vault-name "$KV_NAME" --name "CosmosDb--PrimaryKey" --value "$COSMOS_KEY" --output none
 az keyvault secret set --vault-name "$KV_NAME" --name "EventHubs--ConnectionString" --value "$EH_CS" --output none
 az keyvault secret set --vault-name "$KV_NAME" --name "EventHubs--BlobStorageConnectionString" --value "$EH_STORAGE_CS" --output none
+az keyvault secret set --vault-name "$KV_NAME" --name "ApiSettings--ApiKey" --value "$API_KEY" --output none
 echo -e "${GREEN}✓ All application secrets have been set in Key Vault '${KV_NAME}'.${NC}"
 
 # --- Step 6: Generate .env File ---
