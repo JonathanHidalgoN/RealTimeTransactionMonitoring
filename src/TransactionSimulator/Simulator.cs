@@ -27,7 +27,7 @@ public class Simulator : BackgroundService
 
         return new Transaction(
             id: Guid.NewGuid().ToString(),
-            amount: Math.Round(_random.NextDouble() * 1000, 2),
+            amount: Math.Round(_random.NextDouble() * 1500, 2),
             timestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             sourceAccount: new Account(sourceAccId),
             destinationAccount: new Account(destAccId)
