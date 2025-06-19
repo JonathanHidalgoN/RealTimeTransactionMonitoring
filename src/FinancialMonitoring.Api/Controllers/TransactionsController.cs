@@ -1,5 +1,7 @@
 using FinancialMonitoring.Abstractions.Persistence;
+using FinancialMonitoring.Api.Authentication;
 using FinancialMonitoring.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -7,6 +9,7 @@ namespace FinancialMonitoring.Api.Controllers;
 
 [ApiController]
 [Route("api/transactions")]
+[Authorize(AuthenticationSchemes = ApiKeyAuthenticationDefaults.SchemeName)]
 public class TransactionsController : ControllerBase
 {
     private readonly ITransactionQueryService _queryService;

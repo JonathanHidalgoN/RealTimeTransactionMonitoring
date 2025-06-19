@@ -1,7 +1,9 @@
 using Azure.Identity;
 using FinancialMonitoring.Abstractions.Persistence;
+using FinancialMonitoring.Api.Authentication;
 using FinancialMonitoring.Api.Services;
 using FinancialMonitoring.Models;
+using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,12 +26,24 @@ else
     Console.WriteLine("KEY_VAULT_URI not configured. Key Vault secrets will not be loaded.");
 }
 
+
+
+builder.Services.AddAuthentication()
+    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(
+        ApiKeyAuthenticationDefaults.SchemeName,
+        options => { });
+
+builder.Services.AddAuthorization();
 builder.Services.AddOptions<ApplicationInsightsSettings>()
     .Bind(builder.Configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix))
     .ValidateDataAnnotations()
     .ValidateOnStart();
 builder.Services.AddOptions<CosmosDbSettings>()
     .Bind(builder.Configuration.GetSection(AppConstants.CosmosDbConfigPrefix))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddOptions<ApiSettings>()
+    .Bind(builder.Configuration.GetSection("ApiSettings"))
     .ValidateDataAnnotations()
     .ValidateOnStart();
 builder.Services.AddApplicationInsightsTelemetry();
@@ -52,7 +66,8 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
-
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapHealthChecks("/healthz");
 app.UseAuthorization();
 app.MapControllers();
