@@ -19,9 +19,9 @@ graph TD
     end
 
     subgraph "Azure Runtime Infrastructure"
-        G[Transaction Simulator on AKS] -- Produces Events --> H[Azure Event Hubs (transactions)];
+        G[Transaction Simulator on AKS] -- Produces Events --> H["Azure Event Hubs (transactions)"];
         H -- Streams Data --> I[Transaction Processor on AKS];
-        I -- Publishes Anomaly --> N[Azure Event Hubs (anomalies)];
+        I -- Publishes Anomaly --> N["Azure Event Hubs (anomalies)"];
         N -- Triggers --> O[Azure Logic App];
         O -- Sends Email --> P([Email Notification]);
         I -- Checks for Anomalies & Stores Data --> J[Azure Cosmos DB];
