@@ -82,3 +82,9 @@ output "logic_app_name" {
   description = "The name of the notification Logic App."
   value       = azurerm_logic_app_workflow.notification_workflow.name
 }
+
+output "redis_connection_string" {
+  description = "The primary connection string for the Azure Cache for Redis instance."
+  value       = azurerm_redis_cache.cache.primary_connection_string
+  sensitive   = true
+}
