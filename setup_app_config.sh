@@ -55,6 +55,7 @@ COSMOS_URI=$(terraform output -raw cosmosdb_endpoint)
 COSMOS_KEY=$(terraform output -raw cosmosdb_primary_key)
 EH_CS=$(terraform output -raw eventhubs_namespace_connection_string)
 EH_STORAGE_CS=$(terraform output -raw eventhub_checkpoint_storage_connection_string)
+AZ_REDIS=$(terraform output -raw redis_connection_string)
 cd ..
 echo -e "${GREEN}✓ Successfully retrieved infrastructure details from Terraform state.${NC}"
 
@@ -102,6 +103,7 @@ az keyvault secret set --vault-name "$KV_NAME" --name "CosmosDb--PrimaryKey" --v
 az keyvault secret set --vault-name "$KV_NAME" --name "EventHubs--ConnectionString" --value "$EH_CS" --output none
 az keyvault secret set --vault-name "$KV_NAME" --name "EventHubs--BlobStorageConnectionString" --value "$EH_STORAGE_CS" --output none
 az keyvault secret set --vault-name "$KV_NAME" --name "ApiSettings--ApiKey" --value "$API_KEY" --output none
+az keyvault secret set --vault-name "$KV_NAME" --name "Redis--ConnectionString" --value "$AZ_REDIS" --output none
 echo -e "${GREEN}✓ All application secrets have been set in Key Vault '${KV_NAME}'.${NC}"
 
 # --- Step 6: Generate .env File ---
