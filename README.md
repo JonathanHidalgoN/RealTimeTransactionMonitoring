@@ -2,7 +2,7 @@
 
 This project is a complete, cloud-native backend system designed to ingest, process, and monitor financial transaction data in real-time. It leverages a modern microservices-style architecture deployed on Azure Kubernetes Service (AKS), with a full CI/CD pipeline for automated builds, testing, and deployment.
 
-The primary goal is to identify and flag anomalous transactions (e.g., high-value transfers) and provide a queryable API for the results. The entire infrastructure is managed as code using Terraform.
+The primary goal is to identify and flag anomalous transactions (e.g., high-value transfers), provide a queryable API for the results, and send notifications when an anomaly is detected. The entire infrastructure is managed as code using Terraform.
 
 ## Architecture
 
@@ -19,8 +19,11 @@ graph TD
     end
 
     subgraph "Azure Runtime Infrastructure"
-        G[Transaction Simulator on AKS] -- Produces Events --> H[Azure Event Hubs];
+        G[Transaction Simulator on AKS] -- Produces Events --> H[Azure Event Hubs (transactions)];
         H -- Streams Data --> I[Transaction Processor on AKS];
+        I -- Publishes Anomaly --> N[Azure Event Hubs (anomalies)];
+        N -- Triggers --> O[Azure Logic App];
+        O -- Sends Email --> P([Email Notification]);
         I -- Checks for Anomalies & Stores Data --> J[Azure Cosmos DB];
         I -- Reads Secrets --> K[Azure Key Vault];
         L[API Service on AKS] -- Queries Data --> J;
@@ -37,13 +40,15 @@ graph TD
 ## Key Features
 
 * **Real-Time Event Ingestion:** Uses Azure Event Hubs to handle high-throughput data streams.
-* **Asynchronous Processing:** A .NET Worker Service consumes events and processes them independently, ensuring the ingestion endpoint is never blocked.
-* **Rule-Based Anomaly Detection:** A simple but extensible system for flagging suspicious transactions.
-* **Scalable NoSQL Persistence:** Uses Azure Cosmos DB (SQL API, Free Tier) for efficient storage and querying of transaction data.
-* **Cloud-Native Deployment:** The entire application stack is containerized with Docker and orchestrated by Azure Kubernetes Service (AKS).
-* **Infrastructure as Code (IaC):** All Azure resources (AKS, ACR, Cosmos DB, Key Vault, Event Hubs, etc.) are defined and managed declaratively using **Terraform**.
+* **Asynchronous Processing:** A .NET Worker Service consumes events and processes them independently.
+* **Rule-Based Anomaly Detection:** An extensible system for flagging suspicious transactions.
+* **Serverless Notifications:** Uses **Azure Logic Apps** to send email alerts when an anomaly is detected.
+* **Scalable NoSQL Persistence:** Uses Azure Cosmos DB (SQL API, Free Tier) for efficient storage.
+* **Cloud-Native Deployment:** The entire application stack is containerized with Docker and orchestrated by **Azure Kubernetes Service (AKS)** with health probes and resource limits.
+* **Automated Scaling:** The API autoscales using the Horizontal Pod Autoscaler (HPA), and the cluster itself scales with the Cluster Autoscaler.
+* **Infrastructure as Code (IaC):** All Azure resources are defined and managed declaratively using **Terraform**.
 * **End-to-End CI/CD:** A **GitHub Actions** workflow automates the entire process from commit to cloud deployment.
-* **Secure Configuration Management:** All secrets (connection strings, keys) are stored securely in **Azure Key Vault**.
+* **Secure Configuration Management:** Secrets are stored securely in **Azure Key Vault** and accessed by applications via dedicated Service Principals.
 * **Centralized Observability:** All services are instrumented with **Application Insights** for distributed tracing, logging, and performance monitoring.
 
 ## Technology Stack
@@ -54,6 +59,7 @@ graph TD
     * Azure Container Registry (ACR)
     * Azure Cosmos DB (SQL API, Free Tier)
     * Azure Event Hubs (Basic Tier)
+    * Azure Logic Apps
     * Azure Key Vault
     * Application Insights & Log Analytics Workspace
     * Azure Storage (for Terraform remote state)
@@ -80,86 +86,47 @@ graph TD
     └── FinancialMonitoring.Models.Tests/
 ```
 
-## Getting Started: Deployment Guide
+## Getting Started: Cloud Deployment Guide
 
-This guide outlines the steps to provision the necessary Azure infrastructure and deploy the application from a fresh clone.
+This guide outlines the end-to-end process to provision the Azure infrastructure and deploy the application from a fresh repository clone.
 
 ### Prerequisites
 
 * An active Azure Subscription.
-* Azure CLI
-* Terraform CLI
-* kubectl
-* jq (a command-line JSON processor)
+* [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+* [Terraform CLI](https://www.terraform.io/downloads.html)
+* [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+* [jq](https://stedolan.github.io/jq/download/) (a command-line JSON processor)
+* Docker Desktop (or Docker Engine)
 
-### Part 1: Bootstrap Azure Prerequisites
+### Deployment Steps
 
-The `setup/bootstrap.sh` script creates foundational resources needed for Terraform and the application's identity. This includes a Resource Group, a Storage Account for Terraform's remote state, and a powerful Service Principal (SP) for Terraform to use.
+The setup is automated via a series of scripts. Follow these steps in order from the project root directory.
 
-1.  **Log in to Azure CLI:** `az login`
-2.  **Set Your Subscription:** `az account set --subscription "<Your-Subscription-ID>"`
-3.  **Edit `setup/bootstrap.sh`:** Open the script and update the variables in the `VARIABLES TO EDIT` block.
-4.  **Run the Script** from the project root:
+**1. Run the Bootstrap Script**
+
+This script creates the foundational Azure resources (Resource Group, Terraform State Storage) and the primary Service Principal used by Terraform.
+
+* First, open `setup/bootstrap.sh` and update the variables in the `VARIABLES TO EDIT` block with your Azure Subscription ID and desired resource names/locations.
+* Then run the script:
     ```bash
     ./setup/bootstrap.sh
     ```
-    This script will generate `infra/backend.tf` and `.terraform.env`.
+* This will generate helper files and print the next set of instructions.
 
-### Part 2: Provision Infrastructure with Terraform
+**2. Follow the Instructions from `bootstrap.sh`**
 
-Now you will use Terraform (authenticating as the SP created above) to deploy the application's infrastructure.
+The instructions output by the `bootstrap.sh` script will guide you through the next phase. This involves:
 
-1.  **Source the Terraform Environment Variables:**
-    ```bash
-    source ./.terraform.env
-    ```
-2.  **Create an Application Identity and Terraform Variables:**
-    The `setup/setup_app_config.sh` script automates creating a second, low-privilege SP for your application and creating the `terraform.tfvars` file that Terraform needs. Run it from the project root:
-    ```bash
-    ./setup/setup_app_config.sh
-    ```
-3.  **Initialize and Apply Terraform:**
-    Navigate to the Terraform directory and run `init` and `apply`. This creates your Key Vault, AKS cluster, ACR, Cosmos DB, and Event Hubs.
-    ```bash
-    cd infra
-    terraform init -upgrade
-    terraform apply
-    ```
-    (Review the plan and type `yes` to approve).
+* **Provisioning Infrastructure with Terraform:** You will `source` an environment file to authenticate as the Terraform SP, then run `terraform init` and `terraform apply` to create the Key Vault, AKS cluster, ACR, Cosmos DB, and Event Hubs.
+* **Configuring the Application:** After Terraform is complete, you will run the second script, `./setup/setup_app_config.sh`. This creates the application's dedicated Service Principal, populates Key Vault with all necessary secrets, and generates the final `.env` file for the application runtime.
+* **Building and Pushing Images:** The instructions will then guide you to run `./build-and-push-local.sh` to build your production Docker images and push them to your new Azure Container Registry.
+* **Deploying to AKS:** Finally, the instructions will provide the `az aks get-credentials` and `kubectl apply -k .` commands to deploy the application to your Kubernetes cluster.
 
-### Part 3: Configure and Deploy the Application
+By following the sequence of scripts and the instructions they provide, you will have a complete cloud deployment.
 
-1.  **Populate Key Vault:**
-    The `setup/setup_app_config.sh` script will have already printed the `az keyvault secret set` commands you need to run. Execute those commands now as your own user (you may need to run `unset ARM_*` variables first).
+## Future Enhancements
 
-2.  **Configure Local `.env` File:**
-    The setup script will also have populated the main `.env` file in the project root with the credentials for your **Application SP** and your Key Vault URI. Ensure this file is in your `.gitignore`.
-
-3.  **Deploy to AKS:**
-    * Connect `kubectl` to your new cluster:
-        ```bash
-        az aks get-credentials --resource-group "<your-rg-name>" --name "<your-aks-cluster-name>" --overwrite-existing
-        ```
-    * Apply the Kubernetes manifests using Kustomize:
-        ```bash
-        cd ../k8s-manifests
-        kubectl apply -k .
-        ```
-
-### Local Development
-
-For local development, this project uses Docker Compose to run local equivalents of the cloud services (Kafka and the Cosmos DB Emulator).
-
-1.  Ensure you have Docker Desktop installed and running.
-2.  Create a `.env` file in the project root for your local Docker Compose setup. You do not need Azure credentials for this mode. Use `secrets.env` (created by the setup script) as a reference for the static values.
-3.  Run Docker Compose from the project root:
-    ```bash
-    docker-compose up --build
-    ```
-
-### Future Enhancements
-
-* **Production Hardening for Kubernetes:** Implement `resources` (requests/limits) and health probes (`livenessProbe`, `readinessProbe`) for all deployments.
-* **API Security:** Add authentication and authorization (e.g., JWT-based) to the API endpoints.
-* **Advanced Anomaly Detection:** Implement more sophisticated, stateful anomaly detection rules.
-* **Serverless Notifications:** Use an Azure Function triggered by an "Anomaly Detected" event to send notifications.
+* **API Security:** The API is currently secured by a simple API Key. This could be enhanced with a standard OAuth 2.0 / JWT-based flow.
+* **Advanced Anomaly Detection:** Implement more sophisticated, stateful anomaly detection rules using a cache like Azure Redis.
+* **Advanced CI/CD:** Implement multi-stage pipelines for deploying to `staging` and `production` environments.
