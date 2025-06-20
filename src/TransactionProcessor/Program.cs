@@ -8,6 +8,8 @@ using FinancialMonitoring.Models;
 using FinancialMonitoring.Abstractions.Messaging;
 using TransactionProcessor.Messaging;
 using Confluent.Kafka;
+using FinancialMonitoring.Abstractions.Caching;
+using TransactionProcessor.Caching;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -42,6 +44,10 @@ builder.Services.AddOptions<CosmosDbSettings>()
     .Bind(builder.Configuration.GetSection(AppConstants.CosmosDbConfigPrefix))
     .ValidateDataAnnotations()
     .ValidateOnStart();
+builder.Services.AddOptions<RedisSettings>()
+    .Bind(builder.Configuration.GetSection(AppConstants.RedisDbConfigPrefix))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 var messagingProvider = builder.Configuration["Messaging:Provider"]?.ToLowerInvariant() ?? AppConstants.KafkaDefaultName;
 Console.WriteLine($"Configuring messaging provider: {messagingProvider}");
@@ -67,11 +73,12 @@ builder.Services.AddApplicationInsightsTelemetryWorkerService();
 
 //Take configs, declare as singleton 
 builder.Services.AddSingleton<ICosmosDbService, CosmosDbService>();
-builder.Services.AddScoped<ITransactionAnomalyDetector, AnomalyDetector>();
+builder.Services.AddScoped<ITransactionAnomalyDetector, StatefulAnomalyDetector>();
 //Hosted to control how to end
 builder.Services.AddHostedService<CosmosDbInitializerHostedService>();
 builder.Services.AddSingleton<IAnomalyEventPublisher, EventHubsAnomalyEventPublisher>();
 builder.Services.AddHostedService<Worker>();
+builder.Services.AddSingleton<IRedisCacheService, RedisCacheService>();
 
 var host = builder.Build();
 host.Run();
