@@ -21,6 +21,9 @@ graph TD
     subgraph "Azure Runtime Infrastructure"
         G[Transaction Simulator on AKS] -- Produces Events --> H["Azure Event Hubs (transactions)"];
         H -- Streams Data --> I[Transaction Processor on AKS];
+
+        I -- Reads/Writes Stats --> Q[Azure Cache for Redis];
+
         I -- Publishes Anomaly --> N["Azure Event Hubs (anomalies)"];
         N -- Triggers --> O[Azure Logic App];
         O -- Sends Email --> P([Email Notification]);
@@ -41,14 +44,14 @@ graph TD
 
 * **Real-Time Event Ingestion:** Uses Azure Event Hubs to handle high-throughput data streams.
 * **Asynchronous Processing:** A .NET Worker Service consumes events and processes them independently.
-* **Rule-Based Anomaly Detection:** An extensible system for flagging suspicious transactions.
+* **Stateful Anomaly Detection:** An extensible system for flagging suspicious transactions. Uses **Azure Cache for Redis** to maintain real-time account statistics for more intelligent rule-based detection (e.g., transaction amount deviates significantly from the account's average).
 * **Serverless Notifications:** Uses **Azure Logic Apps** to send email alerts when an anomaly is detected.
 * **Scalable NoSQL Persistence:** Uses Azure Cosmos DB (SQL API, Free Tier) for efficient storage.
 * **Cloud-Native Deployment:** The entire application stack is containerized with Docker and orchestrated by **Azure Kubernetes Service (AKS)** with health probes and resource limits.
 * **Automated Scaling:** The API autoscales using the Horizontal Pod Autoscaler (HPA), and the cluster itself scales with the Cluster Autoscaler.
 * **Infrastructure as Code (IaC):** All Azure resources are defined and managed declaratively using **Terraform**.
 * **End-to-End CI/CD:** A **GitHub Actions** workflow automates the entire process from commit to cloud deployment.
-* **Secure Configuration Management:** Secrets are stored securely in **Azure Key Vault** and accessed by applications via dedicated Service Principals.
+* **Secure Configuration Management:** Secrets are stored securely in **Azure Key Vault**.
 * **Centralized Observability:** All services are instrumented with **Application Insights** for distributed tracing, logging, and performance monitoring.
 
 ## Technology Stack
@@ -59,6 +62,7 @@ graph TD
     * Azure Container Registry (ACR)
     * Azure Cosmos DB (SQL API, Free Tier)
     * Azure Event Hubs (Basic Tier)
+    * Azure Cache for Redis
     * Azure Logic Apps
     * Azure Key Vault
     * Application Insights & Log Analytics Workspace
@@ -112,15 +116,15 @@ This script creates the foundational Azure resources (Resource Group, Terraform 
     ```bash
     ./setup/bootstrap.sh
     ```
-* This will generate helper files and print the next set of instructions.
+* This script will generate helper files and print detailed instructions for the next steps. **Follow the instructions output by the script carefully.**
 
 **2. Follow the Instructions from `bootstrap.sh`**
 
 The instructions output by the `bootstrap.sh` script will guide you through the next phase. This involves:
 
-* **Provisioning Infrastructure with Terraform:** You will `source` an environment file to authenticate as the Terraform SP, then run `terraform init` and `terraform apply` to create the Key Vault, AKS cluster, ACR, Cosmos DB, and Event Hubs.
+* **Provisioning Infrastructure with Terraform:** You will `source` an environment file to authenticate as the Terraform SP, then run `terraform init` and `terraform apply` to create the Key Vault, AKS cluster, ACR, Cosmos DB, Event Hubs, and Redis Cache.
 * **Configuring the Application:** After Terraform is complete, you will run the second script, `./setup/setup_app_config.sh`. This creates the application's dedicated Service Principal, populates Key Vault with all necessary secrets, and generates the final `.env` file for the application runtime.
-* **Building and Pushing Images:** The instructions will then guide you to run `./build-and-push-local.sh` to build your production Docker images and push them to your new Azure Container Registry.
+* **Building and Pushing Images:** The instructions will then guide you to run `./build-and-push-local.sh` (or a similar script) to build your production Docker images and push them to your new Azure Container Registry.
 * **Deploying to AKS:** Finally, the instructions will provide the `az aks get-credentials` and `kubectl apply -k .` commands to deploy the application to your Kubernetes cluster.
 
 By following the sequence of scripts and the instructions they provide, you will have a complete cloud deployment.
@@ -128,5 +132,5 @@ By following the sequence of scripts and the instructions they provide, you will
 ## Future Enhancements
 
 * **API Security:** The API is currently secured by a simple API Key. This could be enhanced with a standard OAuth 2.0 / JWT-based flow.
-* **Advanced Anomaly Detection:** Implement more sophisticated, stateful anomaly detection rules using a cache like Azure Redis.
-* **Advanced CI/CD:** Implement multi-stage pipelines for deploying to `staging` and `production` environments.
+* **Passwordless Identity:** Upgrade from a Service Principal with a secret to using Azure AD Workload Identity for the most secure, passwordless access to Key Vault from AKS.
+* **Advanced CI/CD:** Implement multi-stage pipelines for deploying to `staging` and `production` environments with manual approvals.
