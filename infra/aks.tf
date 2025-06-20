@@ -9,6 +9,12 @@ resource "azurerm_kubernetes_cluster" "aks" {
     name       = "default"
     node_count = 1
     vm_size    = "Standard_B2s"
+
+    enable_auto_scaling = true
+    #Could use 0 to save a lot on idle times but now using free credits
+    # min_count           = 1
+    min_count = 1
+    max_count = 2
   }
 
   identity {
@@ -20,4 +26,3 @@ resource "azurerm_kubernetes_cluster" "aks" {
     project     = "RealTimeFinancialMonitoring"
   }
 }
-
