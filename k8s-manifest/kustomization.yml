@@ -9,6 +9,7 @@ resources:
 - 04-simulator-deployment.yml
 - 03-api-deployment-service.yml
 - 06-env-configmap.yml
+- 07-api-hpa.yml
 
 commonLabels:
   project: financial-monitoring
