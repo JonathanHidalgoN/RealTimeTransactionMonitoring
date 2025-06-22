@@ -11,10 +11,12 @@ spec:
     metadata:
       labels:
         app: transaction-processor
+        azure.workload.identity/use: "true"
     spec:
+      serviceAccountName: finmon-app-sa
       containers:
       - name: processor
-        image: finmonacrd86a5e25.azurecr.io/transactionprocessor:latest
+        image: finmonacr0aaa81f1.azurecr.io/transactionprocessor:latest
         #https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/
         livenessProbe:
           exec:
@@ -38,7 +40,5 @@ spec:
             cpu: "500m"
             memory: "256Mi"
         envFrom:
-        - secretRef:
-            name: app-secrets
         - configMapRef:
             name: env-config

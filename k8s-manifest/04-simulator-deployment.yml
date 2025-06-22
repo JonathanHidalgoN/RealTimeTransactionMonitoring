@@ -12,10 +12,12 @@ spec:
     metadata:
       labels:
         app: transaction-simulator
+        azure.workload.identity/use: "true"
     spec:
+      serviceAccountName: finmon-app-sa
       containers:
       - name: simulator
-        image: finmonacrd86a5e25.azurecr.io/transactionsimulator:latest
+        image: finmonacr0aaa81f1.azurecr.io/transactionsimulator:latest
         livenessProbe:
           exec:
             # This command checks if the /tmp/healthy file has been modified in the last minute.
@@ -29,8 +31,6 @@ spec:
           timeoutSeconds: 5
           failureThreshold: 3
         envFrom:
-        - secretRef:
-            name: app-secrets
         - configMapRef:
             name: env-config
         resources:

@@ -11,10 +11,12 @@ spec:
     metadata:
       labels:
         app: financial-api
+        azure.workload.identity/use: "true"
     spec:
+      serviceAccountName: finmon-app-sa
       containers:
       - name: api
-        image: finmonacrd86a5e25.azurecr.io/financialmonitoring-api:latest
+        image: finmonacr0aaa81f1.azurecr.io/financialmonitoring-api:latest
         ports:
         - containerPort: 8080
         livenessProbe:
@@ -37,8 +39,6 @@ spec:
             cpu: "500m"
             memory: "256Mi"
         envFrom:
-        - secretRef:
-            name: app-secrets
         - configMapRef:
             name: env-config
 
