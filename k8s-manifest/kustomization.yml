@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: finmon-app
 
 resources:
+- 00-serviceaccount.yml
 - 01-namespace.yml
 - 02-processor-deployment.yml
 - 04-simulator-deployment.yml
