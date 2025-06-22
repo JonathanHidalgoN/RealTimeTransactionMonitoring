@@ -6,8 +6,8 @@ resource "azurerm_eventhub" "anomalies" {
   message_retention   = 1
 }
 
-resource "azurerm_role_assignment" "app_sp_eh_anomalies_sender" {
+resource "azurerm_role_assignment" "app_identity_eh_anomalies_sender" {
   scope                = azurerm_eventhub.anomalies.id
   role_definition_name = "Azure Event Hubs Data Sender"
-  principal_id         = var.app_service_principal_object_id
+  principal_id         = azurerm_user_assigned_identity.app_identity.principal_id
 }
