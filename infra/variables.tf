@@ -10,11 +10,6 @@ variable "resource_prefix" {
   default     = "finmon"
 }
 
-variable "app_service_principal_object_id" {
-  description = "The Object ID of the Azure Active Directory"
-  type        = string
-}
-
 variable "admin_user_object_id" {
   description = "The Object ID of the administrator user to grant Key Vault admin rights."
   type        = string
