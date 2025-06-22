@@ -1,7 +1,7 @@
-resource "azurerm_role_assignment" "app_sp_kv_secrets_user" {
+resource "azurerm_role_assignment" "app_identity_kv_secrets_user" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Secrets User"
-  principal_id         = var.app_service_principal_object_id
+  principal_id         = azurerm_user_assigned_identity.app_identity.principal_id
 }
 
 resource "azurerm_role_assignment" "admin_user_kv_admin" {
