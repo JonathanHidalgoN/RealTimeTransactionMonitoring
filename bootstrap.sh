@@ -193,7 +193,6 @@ export ARM_SUBSCRIPTION_ID="${AZURE_SUBSCRIPTION_ID}"
 export ARM_TENANT_ID="${SP_TENANT_ID}"
 export TF_VAR_app_service_principal_object_id="${SP_OBJECT_ID}"
 export TF_VAR_admin_user_object_id="${ADMIN_OBJECT_ID}"
-export TF_VAR_resource_prefix="${RESOURCE_GROUP_NAME_BASE}"
 export TF_VAR_azure_location="${AZURE_LOCATION}"
 EOF
 chmod +x "${TF_ENV_FILE}"
