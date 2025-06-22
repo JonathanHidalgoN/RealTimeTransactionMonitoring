@@ -88,3 +88,8 @@ output "redis_connection_string" {
   value       = azurerm_redis_cache.cache.primary_connection_string
   sensitive   = true
 }
+
+output "app_managed_identity_client_id" {
+  description = "The Client ID of the application's User-Assigned Managed Identity."
+  value       = azurerm_user_assigned_identity.app_identity.client_id
+}
