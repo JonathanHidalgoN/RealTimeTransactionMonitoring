@@ -1,9 +1,2 @@
- - Implement all the code on azure
- - Solve error on boostrap, delete resource group, run script and get error of permission using SP for the app not for terraform
- - Add image push to script
- - Add event hub config to script to automatic setup
- - Add variables to take the value from .env for event hub name and container name into terraform
- - Make boostrap take variables from env
- - The values of images on kubernetes are static, can this be made automatic?
- - Remove "secrets" from variable names
- - Remove kafka configs from azure
+ - Each time we change the ACR url we have to manually edit the kubernetes service configs can this be made automatic?
+ - The new web app has the public api hardcoded, this looks bad
