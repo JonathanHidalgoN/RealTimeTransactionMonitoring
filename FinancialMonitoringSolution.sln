@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialMonitoring.Api.Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransactionProcessor.Tests", "tests\TransactionProcessor.Tests\TransactionProcessor.Tests.csproj", "{4C8F555B-856E-4095-B132-826A335EC555}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialMonitoring.WebApp", "src\FinancialMonitoring.WebApp\FinancialMonitoring.WebApp.csproj", "{5A6261A0-18AA-410D-B2D8-21D5C48DF7D1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,6 +72,10 @@ Global
 		{4C8F555B-856E-4095-B132-826A335EC555}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4C8F555B-856E-4095-B132-826A335EC555}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4C8F555B-856E-4095-B132-826A335EC555}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A6261A0-18AA-410D-B2D8-21D5C48DF7D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A6261A0-18AA-410D-B2D8-21D5C48DF7D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A6261A0-18AA-410D-B2D8-21D5C48DF7D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A6261A0-18AA-410D-B2D8-21D5C48DF7D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1F58ED7F-EAD3-4841-8E8F-BB58A2506F9C} = {E31073F4-01E3-4B35-AA81-7D681E6CFE8E}
@@ -81,5 +87,6 @@ Global
 		{15488AB4-F97C-4C3F-ACD0-33C4E5324F43} = {E31073F4-01E3-4B35-AA81-7D681E6CFE8E}
 		{9997A896-FB6B-4995-833D-EE84BB7A4D11} = {F147598D-0407-472A-9363-61DD9E832158}
 		{4C8F555B-856E-4095-B132-826A335EC555} = {F147598D-0407-472A-9363-61DD9E832158}
+		{5A6261A0-18AA-410D-B2D8-21D5C48DF7D1} = {E31073F4-01E3-4B35-AA81-7D681E6CFE8E}
 	EndGlobalSection
 EndGlobal
