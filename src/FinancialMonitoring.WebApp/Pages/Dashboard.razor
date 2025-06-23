@@ -1,0 +1,66 @@
+@* src/FinancialMonitoring.WebApp/Pages/Dashboard.razor *@
+@page "/dashboard"
+@using FinancialMonitoring.Models
+@using FinancialMonitoring.WebApp.Services
+@inject ApiClientService ApiClient
+<PageTitle>Dashboard</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Transaction Feed</MudText>
+
+@if (_isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+}
+else if (_transactions is null || !_transactions.Any())
+{
+    <MudText Color="Color.Warning">No transactions found or failed to load data.</MudText>
+}
+else
+{
+    <MudSimpleTable Hover="true" Striped="true" Bordered="true">
+        <thead>
+            <tr>
+                <th>Transaction ID</th>
+                <th>Amount</th>
+                <th>Timestamp</th>
+                <th>Source Account</th>
+                <th>Destination Account</th>
+                <th>Anomaly Flag</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tx in _transactions)
+            {
+                <tr>
+                    <td><MudText Typo="Typo.body2">@tx.Id</MudText></td>
+                    <td>@tx.Amount.ToString("C")</td>
+                    <td>@DateTimeOffset.FromUnixTimeMilliseconds(tx.Timestamp).ToString("g")</td>
+                    <td>@tx.SourceAccount.AccountId</td>
+                    <td>@tx.DestinationAccount.AccountId</td>
+<td>
+    @if (!string.IsNullOrEmpty(tx.AnomalyFlag))
+    {
+    <MudBlazor.MudChip Text="@tx.AnomalyFlag" Color="Color.Error" Size="Size.Small" />
+    }
+</td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+}
+
+
+@code {
+    private List<Transaction>? _transactions;
+
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Use our injected ApiClientService to fetch the data.
+        _transactions = await ApiClient.GetTransactionsAsync();
+
+        // Once data is loaded, turn off the loading spinner.
+        _isLoading = false;
+    }
+}
