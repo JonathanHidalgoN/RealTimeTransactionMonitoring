@@ -51,7 +51,10 @@ graph TD
 * **Automated Scaling:** The API autoscales using the Horizontal Pod Autoscaler (HPA), and the cluster itself scales with the Cluster Autoscaler.
 * **Infrastructure as Code (IaC):** All Azure resources are defined and managed declaratively using **Terraform**.
 * **End-to-End CI/CD:** A **GitHub Actions** workflow automates the entire process from commit to cloud deployment.
-* **Secure Configuration Management:** Secrets are stored securely in **Azure Key Vault**.
+* **Secure Configuration & Identity:**
+    * Secrets are stored securely in **Azure Key Vault**.
+    * The API is secured using **API Key authentication**.
+    * Services running in AKS use **Azure AD Workload Identity** for a modern, secure, and passwordless authentication to Key Vault.
 * **Centralized Observability:** All services are instrumented with **Application Insights** for distributed tracing, logging, and performance monitoring.
 
 ## Technology Stack
@@ -65,6 +68,7 @@ graph TD
     * Azure Cache for Redis
     * Azure Logic Apps
     * Azure Key Vault
+    * Azure Active Directory (Workload Identity)
     * Application Insights & Log Analytics Workspace
     * Azure Storage (for Terraform remote state)
 * **Tools & Concepts:** Docker, Kubernetes (Manifests with Kustomize), Terraform, GitHub Actions, Git, REST API, Dependency Injection
@@ -123,7 +127,7 @@ This script creates the foundational Azure resources (Resource Group, Terraform 
 The instructions output by the `bootstrap.sh` script will guide you through the next phase. This involves:
 
 * **Provisioning Infrastructure with Terraform:** You will `source` an environment file to authenticate as the Terraform SP, then run `terraform init` and `terraform apply` to create the Key Vault, AKS cluster, ACR, Cosmos DB, Event Hubs, and Redis Cache.
-* **Configuring the Application:** After Terraform is complete, you will run the second script, `./setup/setup_app_config.sh`. This creates the application's dedicated Service Principal, populates Key Vault with all necessary secrets, and generates the final `.env` file for the application runtime.
+* **Configuring the Application:** After Terraform is complete, you will run the second script, `./setup/setup_app_config.sh`. This script handles creating the application's identity and populating Key Vault with all necessary secrets.
 * **Building and Pushing Images:** The instructions will then guide you to run `./build-and-push-local.sh` (or a similar script) to build your production Docker images and push them to your new Azure Container Registry.
 * **Deploying to AKS:** Finally, the instructions will provide the `az aks get-credentials` and `kubectl apply -k .` commands to deploy the application to your Kubernetes cluster.
 
@@ -131,6 +135,6 @@ By following the sequence of scripts and the instructions they provide, you will
 
 ## Future Enhancements
 
-* **API Security:** The API is currently secured by a simple API Key. This could be enhanced with a standard OAuth 2.0 / JWT-based flow.
-* **Passwordless Identity:** Upgrade from a Service Principal with a secret to using Azure AD Workload Identity for the most secure, passwordless access to Key Vault from AKS.
+* **Advanced API Security:** Enhance the current API Key authentication with a standard OAuth 2.0 / JWT-based flow for user-level access.
 * **Advanced CI/CD:** Implement multi-stage pipelines for deploying to `staging` and `production` environments with manual approvals.
+* **Deepen Observability:** Create custom Azure Dashboards to visualize system health and performance metrics from Application Insights.
