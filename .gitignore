@@ -23,4 +23,4 @@ envs/
 .env.dev
 .env.prod
 .env
-*/wwwroot/appsettings.json
+**/wwwroot/appsettings.json
