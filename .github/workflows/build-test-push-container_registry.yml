@@ -119,6 +119,12 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Replace tokens in appsettings.json
+      run: |
+        sed -i 's|__ApiBaseUrl__|${{ vars.API_BASE_URL }}|g' src/FinancialMonitoring.WebApp/wwwroot/appsettings.json
+        sed -i 's|__ApiKey__|${{ secrets.API_KEY }}|g' src/FinancialMonitoring.WebApp/wwwroot/appsettings.json
+
+
     - name: Build and Deploy Blazor WebApp
       id: builddeploy
       uses: Azure/static-web-apps-deploy@v1
