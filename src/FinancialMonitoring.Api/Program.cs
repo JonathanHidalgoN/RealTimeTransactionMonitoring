@@ -32,7 +32,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy  =>
                       {
-                          policy.WithOrigins("http://localhost:5124", "https://localhost:7258")
+                          policy.WithOrigins("http://localhost:5124", "https://localhost:7258","https://nice-stone-0b6f3ec10.6.azurestaticapps.net"
+                            )
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
                       });
