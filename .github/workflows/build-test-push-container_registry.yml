@@ -68,6 +68,16 @@ jobs:
         push: true
         tags: ${{ env.ACR_LOGIN_SERVER }}/transactionsimulator:${{ steps.get_sha.outputs.sha }}
 
+    - name: Build and Push WebApp Image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./src/FinancialMonitoring.WebApp/Dockerfile
+        push: true
+        tags: ${{ env.ACR_LOGIN_SERVER }}/financialmonitoring-webapp:${{ steps.get_sha.outputs.sha }}
+
+    - name: 'Azure Logout'
+
     - name: Azure Logout
       run: az logout
       if: always()
