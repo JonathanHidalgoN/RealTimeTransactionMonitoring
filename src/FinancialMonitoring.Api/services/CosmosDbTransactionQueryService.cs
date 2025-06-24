@@ -53,13 +53,17 @@ public class CosmosDbTransactionQueryService : ITransactionQueryService, IAsyncD
         }
     }
 
+
     public async Task<IEnumerable<Transaction>> GetAllTransactionsAsync(int pageNumber = 1, int pageSize = 20)
     {
         await EnsureContainerInitializedAsync();
         if (_container == null) return Enumerable.Empty<Transaction>();
 
         _logger.LogInformation("Fetching all transactions, Page: {PageNumber}, Size: {PageSize}", pageNumber, pageSize);
-        var query = new QueryDefinition("SELECT * FROM c OFFSET @offset LIMIT @limit")
+
+        var sqlQueryText = "SELECT * FROM c ORDER BY c.Timestamp DESC OFFSET @offset LIMIT @limit";
+
+        var query = new QueryDefinition(sqlQueryText)
                         .WithParameter("@offset", (pageNumber - 1) * pageSize)
                         .WithParameter("@limit", pageSize);
 
@@ -74,6 +78,7 @@ public class CosmosDbTransactionQueryService : ITransactionQueryService, IAsyncD
         }
         return results;
     }
+
 
     public async Task<Transaction?> GetTransactionByIdAsync(string id)
     {
