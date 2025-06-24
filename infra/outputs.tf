@@ -93,3 +93,14 @@ output "app_managed_identity_client_id" {
   description = "The Client ID of the application's User-Assigned Managed Identity."
   value       = azurerm_user_assigned_identity.app_identity.client_id
 }
+
+output "static_web_app_api_key" {
+  description = "The deployment token (API key) for the Static Web App."
+  value       = azurerm_static_web_app.ui.api_key
+  sensitive   = true
+}
+
+output "static_web_app_default_hostname" {
+  description = "The default hostname of the deployed static web app."
+  value       = azurerm_static_web_app.ui.default_host_name
+}
