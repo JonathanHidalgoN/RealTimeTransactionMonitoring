@@ -1,11 +1,41 @@
 @* src/FinancialMonitoring.WebApp/Pages/Dashboard.razor *@
 @page "/dashboard"
+@implements IDisposable
+@using System.Timers
 @using FinancialMonitoring.Models
 @using FinancialMonitoring.WebApp.Services
 @inject ApiClientService ApiClient
+
 <PageTitle>Dashboard</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Transaction Feed</MudText>
+<MudText Typo="Typo.h4" GutterBottom="true">Transaction Dashboard</MudText>
+
+<MudGrid Spacing="2" Justify="Justify.FlexStart" Class="mb-4">
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Elevation="3" Class="pa-4" Height="100%">
+            <MudText Typo="Typo.h6">@_totalCount.ToString("N0")</MudText>
+            <MudText Typo="Typo.subtitle2">Total Transactions</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Elevation="3" Class="pa-4" Height="100%">
+            <MudText Typo="Typo.h6" Color="Color.Error">@_anomalyCount.ToString("N0")</MudText>
+            <MudText Typo="Typo.subtitle2">Anomalies Detected</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Elevation="3" Class="pa-4" Height="100%">
+            <MudText Typo="Typo.h6">@_anomalyRate.ToString("P1")</MudText>
+            <MudText Typo="Typo.subtitle2">Anomaly Rate</MudText>
+        </MudPaper>
+    </MudItem>
+<MudItem xs="12" sm="6" md="3">
+    <MudPaper Elevation="3" Class="pa-4" Height="100%">
+        <MudChart ChartType="ChartType.Pie" InputData="@_pieChartData" InputLabels="@_pieChartLabels" Height="175px" Width="100%">
+        </MudChart>
+    </MudPaper>
+</MudItem>
+</MudGrid>
 
 @if (_isLoading)
 {
@@ -17,6 +47,7 @@ else if (_transactions is null || !_transactions.Any())
 }
 else
 {
+    @* --- FIX #2: Moved <thead> and <tbody> INSIDE MudSimpleTable --- *@
     <MudSimpleTable Hover="true" Striped="true" Bordered="true">
         <thead>
             <tr>
@@ -37,12 +68,12 @@ else
                     <td>@DateTimeOffset.FromUnixTimeMilliseconds(tx.Timestamp).ToString("g")</td>
                     <td>@tx.SourceAccount.AccountId</td>
                     <td>@tx.DestinationAccount.AccountId</td>
-<td>
-    @if (!string.IsNullOrEmpty(tx.AnomalyFlag))
-    {
-    <MudBlazor.MudChip Text="@tx.AnomalyFlag" Color="Color.Error" Size="Size.Small" />
-    }
-</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(tx.AnomalyFlag))
+                        {
+                            <MudChip Text="@tx.AnomalyFlag" Color="Color.Error" Size="Size.Small" />
+                        }
+                    </td>
                 </tr>
             }
         </tbody>
@@ -52,15 +83,68 @@ else
 
 @code {
     private List<Transaction>? _transactions;
-
+    private int _totalCount = 0;
+    private int _anomalyCount = 0;
+    private double _anomalyRate = 0.0;
     private bool _isLoading = true;
 
+    private double[] _pieChartData = Array.Empty<double>();
+    private string[] _pieChartLabels = Array.Empty<string>();
+
+    // --- Step 2: Add a field for our timer ---
+    private Timer? _timer;
+
+    // This Blazor lifecycle method runs once when the component is initialized.
     protected override async Task OnInitializedAsync()
     {
-        // Use our injected ApiClientService to fetch the data.
+        // Load the data for the first time
+        await LoadDataAsync();
+
+        // --- Step 3: Set up and start the timer ---
+        _timer = new Timer(10000); // Set the interval to 10 seconds (10,000 milliseconds)
+        _timer.Elapsed += OnTimerElapsed; // Hook up the event handler
+        _timer.AutoReset = true; // Make it run repeatedly
+        _timer.Enabled = true; // Start the timer
+    }
+
+    // --- Step 4: Create a reusable method to load all data ---
+    private async Task LoadDataAsync()
+    {
+        // Don't show the main loading spinner for background refreshes, only for the initial load.
+        // The UI will just update when the new data arrives.
+
         _transactions = await ApiClient.GetTransactionsAsync();
 
-        // Once data is loaded, turn off the loading spinner.
+        if (_transactions is not null)
+        {
+            _totalCount = _transactions.Count;
+            _anomalyCount = _transactions.Count(t => !string.IsNullOrEmpty(t.AnomalyFlag));
+            _anomalyRate = (_totalCount > 0) ? ((double)_anomalyCount / _totalCount) : 0.0;
+
+            var normalCount = _totalCount - _anomalyCount;
+            _pieChartData = new double[] { normalCount, _anomalyCount };
+            _pieChartLabels = new string[] { "Normal", "Anomalous" };
+        }
+
         _isLoading = false;
+
+        // Tell Blazor that the state has changed and the UI needs to be re-rendered.
+        // We use InvokeAsync because the timer event will fire on a background thread.
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // --- Step 5: Create the event handler for the timer ---
+    private async void OnTimerElapsed(object? sender, ElapsedEventArgs e)
+    {
+        // When the timer ticks, just call our data loading method.
+        await LoadDataAsync();
+    }
+
+    // --- Step 6: Implement IDisposable to stop the timer ---
+    // This is crucial to prevent memory leaks. It's called automatically when the user navigates away from the page.
+    public void Dispose()
+    {
+        // Stop the timer and release its resources
+        _timer?.Dispose();
     }
 }
