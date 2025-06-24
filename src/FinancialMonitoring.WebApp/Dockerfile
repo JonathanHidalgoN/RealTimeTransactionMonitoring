@@ -11,7 +11,7 @@ COPY tests/FinancialMonitoring.Api.Tests/FinancialMonitoring.Api.Tests.csproj ./
 COPY tests/FinancialMonitoring.Models.Tests/FinancialMonitoring.Models.Tests.csproj ./tests/FinancialMonitoring.Models.Tests/
 COPY tests/TransactionSimulator.Tests/TransactionSimulator.Tests.csproj ./tests/TransactionSimulator.Tests/
 COPY tests/TransactionProcessor.Tests/TransactionProcessor.Tests.csproj ./tests/TransactionProcessor.Tests/
-COPY src/FinancialMonitoring.WebApp/FinancialMonitoring.WebApp.csproj ./src/FinancialMonitoring.WebApp/ # <-- ADDED
+COPY src/FinancialMonitoring.WebApp/FinancialMonitoring.WebApp.csproj ./src/FinancialMonitoring.WebApp/
 
 RUN dotnet restore "FinancialMonitoringSolution.sln"
 
