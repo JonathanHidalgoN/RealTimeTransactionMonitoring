@@ -76,8 +76,6 @@ jobs:
         push: true
         tags: ${{ env.ACR_LOGIN_SERVER }}/financialmonitoring-webapp:${{ steps.get_sha.outputs.sha }}
 
-    - name: 'Azure Logout'
-
     - name: Azure Logout
       run: az logout
       if: always()
