@@ -12,32 +12,31 @@ public class ApiClientService
         _httpClient = httpClient;
     }
 
-
-    public async Task<List<Transaction>?> GetTransactionsAsync(int pageNumber = 1, int pageSize = 10)
+    public async Task<PagedResult<Transaction>?> GetTransactionsAsync(int pageNumber = 1, int pageSize = 20)
     {
         var requestUri = $"api/transactions?pageNumber={pageNumber}&pageSize={pageSize}";
         try
         {
-            return await _httpClient.GetFromJsonAsync<List<Transaction>>(requestUri);
+            return await _httpClient.GetFromJsonAsync<PagedResult<Transaction>>(requestUri);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error fetching transactions: {ex.Message}");
-            return new List<Transaction>();
+            return null;
         }
     }
 
-
-    public async Task<List<Transaction>?> GetAnomaliesAsync()
+    public async Task<PagedResult<Transaction>?> GetAnomaliesAsync(int pageNumber = 1, int pageSize = 20)
     {
+        var requestUri = $"api/transactions/anomalies?pageNumber={pageNumber}&pageSize={pageSize}";
         try
         {
-            return await _httpClient.GetFromJsonAsync<List<Transaction>>("api/transactions/anomalies");
+            return await _httpClient.GetFromJsonAsync<PagedResult<Transaction>>(requestUri);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error fetching anomalies: {ex.Message}");
-            return new List<Transaction>();
+            return null;
         }
     }
 }
