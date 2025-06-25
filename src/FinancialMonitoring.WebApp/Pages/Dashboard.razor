@@ -1,4 +1,3 @@
-@* src/FinancialMonitoring.WebApp/Pages/Dashboard.razor *@
 @page "/dashboard"
 @implements IDisposable
 @using System.Timers
@@ -8,143 +7,147 @@
 
 <PageTitle>Dashboard</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Transaction Dashboard</MudText>
+<MudText Typo="Typo.h4" GutterBottom="true">Live Transaction Dashboard</MudText>
 
-<MudGrid Spacing="2" Justify="Justify.FlexStart" Class="mb-4">
-    <MudItem xs="12" sm="6" md="3">
-        <MudPaper Elevation="3" Class="pa-4" Height="100%">
-            <MudText Typo="Typo.h6">@_totalCount.ToString("N0")</MudText>
-            <MudText Typo="Typo.subtitle2">Total Transactions</MudText>
+<MudGrid Spacing="3" Justify="Justify.FlexStart" Class="mb-4">
+    <MudItem xs="12" sm="4" md="3">
+        <MudPaper Elevation="2" Class="pa-4" Height="100%">
+            <MudText Typo="Typo.h6">@_totalTransactionsInDb.ToString("N0")</MudText>
+            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Total Transactions (Est.)</MudText>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="6" md="3">
-        <MudPaper Elevation="3" Class="pa-4" Height="100%">
-            <MudText Typo="Typo.h6" Color="Color.Error">@_anomalyCount.ToString("N0")</MudText>
-            <MudText Typo="Typo.subtitle2">Anomalies Detected</MudText>
+    <MudItem xs="12" sm="4" md="3">
+        <MudPaper Elevation="2" Class="pa-4" Height="100%">
+            <MudText Typo="Typo.h6" Color="Color.Error">@_anomalyCountInView.ToString("N0")</MudText>
+            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Anomalies in View</MudText>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="6" md="3">
-        <MudPaper Elevation="3" Class="pa-4" Height="100%">
-            <MudText Typo="Typo.h6">@_anomalyRate.ToString("P1")</MudText>
-            <MudText Typo="Typo.subtitle2">Anomaly Rate</MudText>
+    <MudItem xs="12" sm="4" md="3">
+        <MudPaper Elevation="2" Class="pa-4" Height="100%">
+            <MudText Typo="Typo.h6">@_anomalyRateInView.ToString("P1")</MudText>
+            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Anomaly Rate in View</MudText>
         </MudPaper>
     </MudItem>
-<MudItem xs="12" sm="6" md="3">
-    <MudPaper Elevation="3" Class="pa-4" Height="100%">
-        <MudChart ChartType="ChartType.Pie" InputData="@_pieChartData" InputLabels="@_pieChartLabels" Height="175px" Width="100%">
-        </MudChart>
-    </MudPaper>
-</MudItem>
+    <MudItem xs="12" md="3">
+        <MudPaper Elevation="2" Class="pa-4" Height="100%">
+            <MudText Typo="Typo.subtitle1" GutterBottom="true">Status of Recent</MudText>
+            <MudChart ChartType="ChartType.Pie" InputData="@_pieChartData" InputLabels="@_pieChartLabels" Height="150px" Width="100%">
+                <MudChartOptions LegendPosition="Position.Bottom" />
+            </MudChart>
+        </MudPaper>
+    </MudItem>
 </MudGrid>
 
-@if (_isLoading)
-{
-    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-}
-else if (_transactions is null || !_transactions.Any())
-{
-    <MudText Color="Color.Warning">No transactions found or failed to load data.</MudText>
-}
-else
-{
-    @* --- FIX #2: Moved <thead> and <tbody> INSIDE MudSimpleTable --- *@
-    <MudSimpleTable Hover="true" Striped="true" Bordered="true">
-        <thead>
-            <tr>
-                <th>Transaction ID</th>
-                <th>Amount</th>
-                <th>Timestamp</th>
-                <th>Source Account</th>
-                <th>Destination Account</th>
-                <th>Anomaly Flag</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var tx in _transactions)
-            {
-                <tr>
-                    <td><MudText Typo="Typo.body2">@tx.Id</MudText></td>
-                    <td>@tx.Amount.ToString("C")</td>
-                    <td>@DateTimeOffset.FromUnixTimeMilliseconds(tx.Timestamp).ToString("g")</td>
-                    <td>@tx.SourceAccount.AccountId</td>
-                    <td>@tx.DestinationAccount.AccountId</td>
-                    <td>
-                        @if (!string.IsNullOrEmpty(tx.AnomalyFlag))
-                        {
-                            <MudChip Text="@tx.AnomalyFlag" Color="Color.Error" Size="Size.Small" />
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </MudSimpleTable>
-}
+@* The MudDataGrid component now handles everything.
+It shows a loading indicator automatically and will display its own "No items" message if the server returns an empty list.
+*@
+<MudDataGrid @ref="_dataGrid"
+             T="Transaction"
+             ServerData="@(new Func<GridState<Transaction>, Task<GridData<Transaction>>>(ServerReload))"
+             Striped="true"
+             Hover="true"
+             Bordered="true"
+             Dense="true">
+<Columns>
+        <PropertyColumn Property="x => x.Id" Title="ID" Sortable="false" />
+        <PropertyColumn Property="x => x.Amount" Title="Amount" Format="C" Sortable="false" />
+        <PropertyColumn Property="x => x.Timestamp" Title="Timestamp" Sortable="false">
+            <CellTemplate>
+                @DateTimeOffset.FromUnixTimeMilliseconds(context.Item.Timestamp).ToString("g")
+            </CellTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="x => x.SourceAccount.AccountId" Title="Source Account" Sortable="false" />
+        <PropertyColumn Property="x => x.DestinationAccount.AccountId" Title="Destination Account" Sortable="false" />
+        <TemplateColumn Title="Status" Sortable="false">
+            <CellTemplate>
+                @if (!string.IsNullOrEmpty(context.Item.AnomalyFlag))
+                {
+                    <MudChip Text="@context.Item.AnomalyFlag" Color="Color.Error" Size="Size.Small" />
+                }
+                else
+                {
+                    <MudChip Text="Normal" Color="Color.Success" Size="Size.Small" />
+                }
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="Transaction" PageSizeOptions="new int[] { 10, 20, 50 }" />
+    </PagerContent>
+</MudDataGrid>
 
 
 @code {
-    private List<Transaction>? _transactions;
-    private int _totalCount = 0;
-    private int _anomalyCount = 0;
-    private double _anomalyRate = 0.0;
-    private bool _isLoading = true;
-
+    // --- Fields ---
+    private int _totalTransactionsInDb = 0;
+    private int _anomalyCountInView = 0;
+    private double _anomalyRateInView = 0.0;
     private double[] _pieChartData = Array.Empty<double>();
     private string[] _pieChartLabels = Array.Empty<string>();
 
-    // --- Step 2: Add a field for our timer ---
     private Timer? _timer;
+    private MudDataGrid<Transaction>? _dataGrid; // Field to hold a reference to the DataGrid component
 
-    // This Blazor lifecycle method runs once when the component is initialized.
-    protected override async Task OnInitializedAsync()
+    // --- Lifecycle and Data Loading ---
+
+    // This method is the data source for the MudDataGrid.
+    // It's called automatically by the grid when it needs data (e.g., on page load, page change, or sort change).
+    private async Task<GridData<Transaction>> ServerReload(GridState<Transaction> state)
     {
-        // Load the data for the first time
-        await LoadDataAsync();
+        var pageNumber = state.Page + 1; // MudDataGrid is 0-indexed, our API is 1-indexed
+        var pageSize = state.PageSize;
 
-        // --- Step 3: Set up and start the timer ---
-        _timer = new Timer(10000); // Set the interval to 10 seconds (10,000 milliseconds)
-        _timer.Elapsed += OnTimerElapsed; // Hook up the event handler
-        _timer.AutoReset = true; // Make it run repeatedly
-        _timer.Enabled = true; // Start the timer
-    }
+        // Note: We are not yet passing sort information to the API. We will do that next.
+        var pagedResult = await ApiClient.GetTransactionsAsync(pageNumber, pageSize);
 
-    // --- Step 4: Create a reusable method to load all data ---
-    private async Task LoadDataAsync()
-    {
-        // Don't show the main loading spinner for background refreshes, only for the initial load.
-        // The UI will just update when the new data arrives.
-
-        _transactions = await ApiClient.GetTransactionsAsync();
-
-        if (_transactions is not null)
+        if (pagedResult is not null)
         {
-            _totalCount = _transactions.Count;
-            _anomalyCount = _transactions.Count(t => !string.IsNullOrEmpty(t.AnomalyFlag));
-            _anomalyRate = (_totalCount > 0) ? ((double)_anomalyCount / _totalCount) : 0.0;
+            // Update the KPI cards based on the currently visible page of data.
+            UpdateStats(pagedResult.Items);
 
-            var normalCount = _totalCount - _anomalyCount;
-            _pieChartData = new double[] { normalCount, _anomalyCount };
-            _pieChartLabels = new string[] { "Normal", "Anomalous" };
+            return new GridData<Transaction>()
+            {
+                Items = pagedResult.Items,
+                TotalItems = pagedResult.TotalCount
+            };
         }
 
-        _isLoading = false;
-
-        // Tell Blazor that the state has changed and the UI needs to be re-rendered.
-        // We use InvokeAsync because the timer event will fire on a background thread.
-        await InvokeAsync(StateHasChanged);
+        // Return empty data if the API call fails
+        return new GridData<Transaction>() { Items = new List<Transaction>(), TotalItems = 0 };
     }
 
-    // --- Step 5: Create the event handler for the timer ---
-    private async void OnTimerElapsed(object? sender, ElapsedEventArgs e)
+    private void UpdateStats(List<Transaction> transactions)
     {
-        // When the timer ticks, just call our data loading method.
-        await LoadDataAsync();
+        _totalTransactionsInDb = transactions.Count; // This will update with the page size for now
+        _anomalyCountInView = transactions.Count(t => !string.IsNullOrEmpty(t.AnomalyFlag));
+        _anomalyRateInView = (_totalTransactionsInDb > 0) ? ((double)_anomalyCountInView / _totalTransactionsInDb) : 0.0;
+
+        var normalCount = _totalTransactionsInDb - _anomalyCountInView;
+        _pieChartData = new double[] { normalCount, _anomalyCountInView };
+        _pieChartLabels = new string[] { "Normal", "Anomalous" };
+
+        // This tells Blazor to update the parts of the UI outside the grid (our KPI cards).
+        StateHasChanged();
     }
 
-    // --- Step 6: Implement IDisposable to stop the timer ---
-    // This is crucial to prevent memory leaks. It's called automatically when the user navigates away from the page.
+    protected override void OnInitialized()
+    {
+        _timer = new Timer(10000); // 10 seconds
+        _timer.Elapsed += async (sender, args) =>
+        {
+            // When the timer ticks, tell the DataGrid to reload its data from the server.
+            // We need to use InvokeAsync to safely update the UI from the timer's background thread.
+            if (_dataGrid is not null)
+            {
+                await InvokeAsync(() => _dataGrid.ReloadServerData());
+            }
+        };
+        _timer.AutoReset = true;
+        _timer.Enabled = true;
+    }
+
     public void Dispose()
     {
-        // Stop the timer and release its resources
         _timer?.Dispose();
     }
 }
