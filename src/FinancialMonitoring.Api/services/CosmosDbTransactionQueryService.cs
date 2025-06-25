@@ -54,31 +54,41 @@ public class CosmosDbTransactionQueryService : ITransactionQueryService, IAsyncD
     }
 
 
-    public async Task<IEnumerable<Transaction>> GetAllTransactionsAsync(int pageNumber = 1, int pageSize = 20)
+    public async Task<PagedResult<Transaction>?> GetAllTransactionsAsync(int pageNumber = 1, int pageSize = 20)
     {
         await EnsureContainerInitializedAsync();
-        if (_container == null) return Enumerable.Empty<Transaction>();
+        if (_container == null) return null;
 
-        _logger.LogInformation("Fetching all transactions, Page: {PageNumber}, Size: {PageSize}", pageNumber, pageSize);
+        _logger.LogInformation("Fetching transactions, Page: {PageNumber}, Size: {PageSize}", pageNumber, pageSize);
 
-        var sqlQueryText = "SELECT * FROM c ORDER BY c.Timestamp DESC OFFSET @offset LIMIT @limit";
+        var countQuery = new QueryDefinition("SELECT VALUE COUNT(1) FROM c");
+        var countIterator = _container.GetItemQueryIterator<int>(countQuery);
+        var countResponse = await countIterator.ReadNextAsync();
+        var totalCount = countResponse.Resource.First();
 
-        var query = new QueryDefinition(sqlQueryText)
-                        .WithParameter("@offset", (pageNumber - 1) * pageSize)
-                        .WithParameter("@limit", pageSize);
+        var offset = (pageNumber - 1) * pageSize;
+        var dataQuery = new QueryDefinition("SELECT * FROM c ORDER BY c.Timestamp DESC OFFSET @offset LIMIT @limit")
+            .WithParameter("@offset", offset)
+            .WithParameter("@limit", pageSize);
 
-        var results = new List<Transaction>();
-        using (FeedIterator<Transaction> feed = _container.GetItemQueryIterator<Transaction>(query))
+        var results = new List<TransactionForCosmos>();
+        using (var feed = _container.GetItemQueryIterator<TransactionForCosmos>(dataQuery))
         {
             while (feed.HasMoreResults)
             {
-                FeedResponse<Transaction> response = await feed.ReadNextAsync();
-                results.AddRange(response);
+                var response = await feed.ReadNextAsync();
+                results.AddRange(response.ToList());
             }
         }
-        return results;
-    }
 
+        return new PagedResult<Transaction>
+        {
+            Items = results.Select(t => t.ToTransaction()).ToList(),
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+    }
 
     public async Task<Transaction?> GetTransactionByIdAsync(string id)
     {
