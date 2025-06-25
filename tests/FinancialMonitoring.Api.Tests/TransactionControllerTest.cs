@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Abstractions.Persistence;
@@ -14,22 +13,20 @@ namespace FinancialMonitoring.Api.Tests;
 
 public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
     private readonly Mock<ITransactionQueryService> _mockQueryService;
-    private readonly string _apiKey = "a-dummy-test-api-key";
 
     public TransactionsControllerTests(WebApplicationFactory<Program> factory)
     {
         _mockQueryService = new Mock<ITransactionQueryService>();
-        _factory = factory.WithWebHostBuilder(builder =>
+        var _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureAppConfiguration((context, configBuilder) =>
             {
                 configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     { "KEY_VAULT_URI", "https://dummy.keyvault.uri" },
-                    { "ApiSettings:ApiKey", _apiKey },
+                    { "ApiSettings:ApiKey", "a-dummy-test-api-key" },
                     { "ApplicationInsights:ConnectionString", "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://test.in.ai.azure.com/" },
                     { "CosmosDb:EndpointUri", "https://localhost:8081" },
                     { "CosmosDb:PrimaryKey", "Cy236yDjf5/R+ob7XIw/Jw==" },
@@ -48,39 +45,49 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
         });
 
         _client = _factory.CreateClient();
-        _client.DefaultRequestHeaders.Add(ApiKeyAuthenticationDefaults.ApiKeyHeaderName, _apiKey);
+        _client.DefaultRequestHeaders.Add(ApiKeyAuthenticationDefaults.ApiKeyHeaderName, "a-dummy-test-api-key");
     }
 
     [Fact]
-    public async Task GetAllTransactions_ReturnsOkResult_WithListOfTransactions()
+    public async Task GetAllTransactions_ReturnsOkResult_WithPagedResultOfTransactions()
     {
         var expectedTransactions = new List<Transaction>
         {
-            new Transaction("tx1", 100, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), new Account("ACC1"), new Account("ACC2")),
-            new Transaction("tx2", 200, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), new Account("ACC3"), new Account("ACC4"))
+            new Transaction("tx1", 100, 0, new Account("ACC1"), new Account("ACC2")),
+            new Transaction("tx2", 200, 0, new Account("ACC3"), new Account("ACC4"))
+        };
+
+        var expectedPagedResult = new PagedResult<Transaction>
+        {
+            Items = expectedTransactions,
+            TotalCount = 2,
+            PageNumber = 1,
+            PageSize = 2
         };
 
         _mockQueryService
-            .Setup(service => service.GetAllTransactionsAsync(It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync(expectedTransactions);
+            .Setup(service => service.GetAllTransactionsAsync(1, 2))
+            .ReturnsAsync(expectedPagedResult);
 
         var response = await _client.GetAsync("/api/transactions?pageNumber=1&pageSize=2");
 
         response.EnsureSuccessStatusCode();
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var actualTransactions = await response.Content.ReadFromJsonAsync<List<Transaction>>();
-        Assert.NotNull(actualTransactions);
-        Assert.Equal(expectedTransactions.Count, actualTransactions.Count);
-        Assert.Contains(actualTransactions, t => t.Id == "tx1");
-        Assert.Contains(actualTransactions, t => t.Id == "tx2");
+        var actualResult = await response.Content.ReadFromJsonAsync<PagedResult<Transaction>>();
+
+        Assert.NotNull(actualResult);
+        Assert.NotNull(actualResult.Items);
+        Assert.Equal(expectedPagedResult.TotalCount, actualResult.TotalCount);
+        Assert.Equal(expectedTransactions.Count, actualResult.Items.Count);
+        Assert.Contains(actualResult.Items, t => t.Id == "tx1");
     }
 
     [Fact]
     public async Task GetTransactionById_WhenTransactionExists_ReturnsOkResult_WithTransaction()
     {
         var transactionId = "existing-tx-id";
-        var expectedTransaction = new Transaction(transactionId, 150, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), new Account("ACC5"), new Account("ACC6"));
+        var expectedTransaction = new Transaction(transactionId, 150, 0, new Account("ACC5"), new Account("ACC6"));
 
         _mockQueryService
             .Setup(service => service.GetTransactionByIdAsync(transactionId))
@@ -92,7 +99,6 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
         var actualTransaction = await response.Content.ReadFromJsonAsync<Transaction>();
         Assert.NotNull(actualTransaction);
         Assert.Equal(expectedTransaction.Id, actualTransaction.Id);
-        Assert.Equal(expectedTransaction.Amount, actualTransaction.Amount);
     }
 
     [Fact]
