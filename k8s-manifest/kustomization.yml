@@ -11,6 +11,8 @@ resources:
 - 03-api-deployment-service.yml
 - 06-env-configmap.yml
 - 07-api-hpa.yml
+- 08-cluster-issuer.yml
+- 09-api-ingress.yml
 
 commonLabels:
   project: financial-monitoring
