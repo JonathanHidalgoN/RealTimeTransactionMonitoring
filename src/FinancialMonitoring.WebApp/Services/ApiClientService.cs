@@ -12,11 +12,13 @@ public class ApiClientService
         _httpClient = httpClient;
     }
 
-    public async Task<List<Transaction>?> GetTransactionsAsync()
+
+    public async Task<List<Transaction>?> GetTransactionsAsync(int pageNumber = 1, int pageSize = 10)
     {
+        var requestUri = $"api/transactions?pageNumber={pageNumber}&pageSize={pageSize}";
         try
         {
-            return await _httpClient.GetFromJsonAsync<List<Transaction>>("api/transactions");
+            return await _httpClient.GetFromJsonAsync<List<Transaction>>(requestUri);
         }
         catch (Exception ex)
         {
@@ -24,6 +26,7 @@ public class ApiClientService
             return new List<Transaction>();
         }
     }
+
 
     public async Task<List<Transaction>?> GetAnomaliesAsync()
     {
