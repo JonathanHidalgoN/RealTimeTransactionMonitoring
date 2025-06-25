@@ -113,40 +113,28 @@ public class CosmosDbTransactionQueryService : ITransactionQueryService, IAsyncD
         }
     }
 
-    public async Task<IEnumerable<Transaction>> GetAnomalousTransactionsAsync(int pageNumber = 1, int pageSize = 20)
+
+    public async Task<PagedResult<Transaction>?> GetAnomalousTransactionsAsync(int pageNumber, int pageSize)
     {
         await EnsureContainerInitializedAsync();
-        if (_container == null) return Enumerable.Empty<Transaction>();
+        if (_container == null) return null;
 
         _logger.LogInformation("Fetching anomalous transactions, Page: {PageNumber}, Size: {PageSize}", pageNumber, pageSize);
-        var query = new QueryDefinition("SELECT * FROM c WHERE c.AnomalyFlag != null OFFSET @offset LIMIT @limit")
-                        .WithParameter("@offset", (pageNumber - 1) * pageSize)
-                        .WithParameter("@limit", pageSize);
 
-        var results = new List<Transaction>();
-        using (FeedIterator<Transaction> feed = _container.GetItemQueryIterator<Transaction>(query))
-        {
-            while (feed.HasMoreResults)
-            {
-                FeedResponse<Transaction> response = await feed.ReadNextAsync();
-                results.AddRange(response);
-            }
-        }
-        return results;
-    }
+        const string anomalyFilter = " WHERE c.AnomalyFlag != null";
 
-    public async Task<IEnumerable<Transaction>> GetAnomalousTransactionsAsync()
-    {
-        await EnsureContainerInitializedAsync();
-        if (_container == null) return Enumerable.Empty<Transaction>();
+        var countQuery = new QueryDefinition($"SELECT VALUE COUNT(1) FROM c{anomalyFilter}");
+        var countIterator = _container.GetItemQueryIterator<int>(countQuery);
+        var countResponse = await countIterator.ReadNextAsync();
+        var totalCount = countResponse.Resource.First();
 
-        _logger.LogInformation("Fetching all anomalous transactions.");
-
-        var sqlQueryText = "SELECT * FROM c WHERE c.AnomalyFlag != null";
-        var query = new QueryDefinition(sqlQueryText);
+        var offset = (pageNumber - 1) * pageSize;
+        var dataQuery = new QueryDefinition($"SELECT * FROM c{anomalyFilter} ORDER BY c.Timestamp DESC OFFSET @offset LIMIT @limit")
+            .WithParameter("@offset", offset)
+            .WithParameter("@limit", pageSize);
 
         var results = new List<TransactionForCosmos>();
-        using (var feed = _container.GetItemQueryIterator<TransactionForCosmos>(query))
+        using (var feed = _container.GetItemQueryIterator<TransactionForCosmos>(dataQuery))
         {
             while (feed.HasMoreResults)
             {
@@ -155,8 +143,14 @@ public class CosmosDbTransactionQueryService : ITransactionQueryService, IAsyncD
             }
         }
 
-    return results.Select(t => t.ToTransaction());
-}
+        return new PagedResult<Transaction>
+        {
+            Items = results.Select(t => t.ToTransaction()).ToList(),
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+    }
 
     public async ValueTask DisposeAsync()
     {
