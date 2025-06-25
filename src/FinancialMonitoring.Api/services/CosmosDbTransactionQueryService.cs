@@ -135,6 +135,29 @@ public class CosmosDbTransactionQueryService : ITransactionQueryService, IAsyncD
         return results;
     }
 
+    public async Task<IEnumerable<Transaction>> GetAnomalousTransactionsAsync()
+    {
+        await EnsureContainerInitializedAsync();
+        if (_container == null) return Enumerable.Empty<Transaction>();
+
+        _logger.LogInformation("Fetching all anomalous transactions.");
+
+        var sqlQueryText = "SELECT * FROM c WHERE c.AnomalyFlag != null";
+        var query = new QueryDefinition(sqlQueryText);
+
+        var results = new List<TransactionForCosmos>();
+        using (var feed = _container.GetItemQueryIterator<TransactionForCosmos>(query))
+        {
+            while (feed.HasMoreResults)
+            {
+                var response = await feed.ReadNextAsync();
+                results.AddRange(response.ToList());
+            }
+        }
+
+    return results.Select(t => t.ToTransaction());
+}
+
     public async ValueTask DisposeAsync()
     {
         _logger.LogInformation("Disposing CosmosClient in QueryService.");
