@@ -1,10 +1,13 @@
 using FinancialMonitoring.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace FinancialMonitoring.Abstractions.Persistence;
-
-public interface ITransactionQueryService
+namespace FinancialMonitoring.Abstractions.Persistence
 {
-    Task<IEnumerable<Transaction>> GetAllTransactionsAsync(int pageNumber = 1, int pageSize = 20);
-    Task<Transaction?> GetTransactionByIdAsync(string id);
-    Task<IEnumerable<Transaction>> GetAnomalousTransactionsAsync(int pageNumber = 1, int pageSize = 20);
+    public interface ITransactionQueryService
+    {
+        Task<PagedResult<Transaction>?> GetAllTransactionsAsync(int pageNumber, int pageSize);
+        Task<Transaction?> GetTransactionByIdAsync(string id);
+        Task<IEnumerable<Transaction>> GetAnomaliesAsync();
+    }
 }
