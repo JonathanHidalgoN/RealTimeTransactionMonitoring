@@ -30,7 +30,7 @@ public record TransactionForCosmos
     public Transaction ToTransaction()
     {
         return new Transaction(
-            Id,
+            id,
             Amount,
             Timestamp,
             SourceAccount,
