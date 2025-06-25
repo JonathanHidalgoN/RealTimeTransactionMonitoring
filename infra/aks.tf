@@ -1,21 +1,26 @@
+# infra/aks.tf
 resource "azurerm_kubernetes_cluster" "aks" {
   name                = "${var.resource_prefix}-aks"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   dns_prefix          = "${var.resource_prefix}-aks"
   sku_tier            = "Free"
-  oidc_issuer_enabled = true
+
+  oidc_issuer_profile {
+    enabled = true
+  }
+
+  workload_identity_profile {
+    enabled = true
+  }
 
   default_node_pool {
-    name       = "default"
-    node_count = 1
-    vm_size    = "Standard_B2s"
-
+    name                = "default"
+    node_count          = 1
+    vm_size             = "Standard_B2s"
     enable_auto_scaling = true
-    #Could use 0 to save a lot on idle times but now using free credits
-    # min_count           = 1
-    min_count = 1
-    max_count = 2
+    min_count           = 1
+    max_count           = 2
   }
 
   identity {
