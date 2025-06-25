@@ -22,17 +22,17 @@ public class TransactionsController : ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<Transaction>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<Transaction>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<Transaction>>> GetAllTransactions(
+    public async Task<ActionResult<PagedResult<Transaction>>> GetAllTransactions(
         [FromQuery][Range(1, int.MaxValue)] int pageNumber = 1,
         [FromQuery][Range(1, 100)] int pageSize = 20)
     {
         try
         {
             _logger.LogInformation("API: Getting all transactions - Page: {PageNumber}, Size: {PageSize}", pageNumber, pageSize);
-            var transactions = await _queryService.GetAllTransactionsAsync(pageNumber, pageSize);
-            return Ok(transactions);
+            var pagedResult = await _queryService.GetAllTransactionsAsync(pageNumber, pageSize);
+            return Ok(pagedResult);
         }
         catch (Exception ex)
         {
