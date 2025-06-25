@@ -1,5 +1,5 @@
-//A copy of transacion object but with 'id' in lower case because cosmos this object is 
-//only used to map from Transaction to cosmos database 
+//A copy of transacion object but with 'id' in lower case because cosmos this object is
+//only used to map from Transaction to cosmos database
 using System.Text.Json.Serialization;
 
 namespace FinancialMonitoring.Models;
@@ -26,4 +26,17 @@ public record TransactionForCosmos
             AnomalyFlag = domainTransaction.AnomalyFlag
         };
     }
+
+    public Transaction ToTransaction()
+    {
+        return new Transaction(
+            Id,
+            Amount,
+            Timestamp,
+            SourceAccount,
+            DestinationAccount,
+            AnomalyFlag
+        );
+    }
+
 }
