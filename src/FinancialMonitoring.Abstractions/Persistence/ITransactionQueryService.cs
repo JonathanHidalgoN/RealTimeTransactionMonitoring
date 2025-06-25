@@ -8,6 +8,6 @@ namespace FinancialMonitoring.Abstractions.Persistence
     {
         Task<PagedResult<Transaction>?> GetAllTransactionsAsync(int pageNumber, int pageSize);
         Task<Transaction?> GetTransactionByIdAsync(string id);
-        Task<IEnumerable<Transaction>> GetAnomalousTransactionsAsync();
+        Task<PagedResult<Transaction>?> GetAnomalousTransactionsAsync(int pageNumber, int pageSize);
     }
 }
