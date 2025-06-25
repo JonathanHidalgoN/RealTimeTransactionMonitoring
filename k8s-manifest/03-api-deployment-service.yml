@@ -50,7 +50,7 @@ metadata:
   name: api-service
   namespace: finmon-app
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: financial-api
   ports:
