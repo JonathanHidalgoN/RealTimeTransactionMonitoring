@@ -1,7 +1,43 @@
-﻿@page "/"
+@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Home - Financial Monitoring</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
+    <MudGrid Justify="Justify.Center" Class="pa-4">
+        <MudItem xs="12" sm="10" md="8" Class="text-center">
+            <MudText Typo="Typo.h2" GutterBottom="true">Real-Time Financial Monitoring System</MudText>
+            <MudText Typo="Typo.h5" Color="Color.Secondary" Class="mb-6">
+                An end-to-end cloud-native application for ingesting, processing, and visualizing financial transaction data with stateful anomaly detection, deployed on Azure Kubernetes Service.
+            </MudText>
+            <MudButton Href="/dashboard" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" Class="mt-4">
+                View Live Dashboard
+            </MudButton>
+        </MudItem>
+    </MudGrid>
 
-Welcome to your new app.
+    <MudDivider Class="my-12" />
+
+    <MudGrid Spacing="4" Class="mt-8">
+        <MudItem xs="12" sm="4">
+            <MudPaper Elevation="3" Class="pa-6 d-flex flex-column align-center">
+                <MudIcon Icon="@Icons.Material.Filled.DataObject" Color="Color.Primary" Style="font-size: 48px;" />
+                <MudText Typo="Typo.h6" Class="mt-4">Infrastructure as Code</MudText>
+                <MudText Align="Align.Center" Class="mt-2">All Azure resources provisioned declaratively with Terraform.</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudPaper Elevation="3" Class="pa-6 d-flex flex-column align-center">
+                <MudIcon Icon="@Icons.Material.Filled.Sync" Color="Color.Secondary" Style="font-size: 48px;" />
+                <MudText Typo="Typo.h6" Class="mt-4">Automated CI/CD</MudText>
+                <MudText Align="Align.Center" Class="mt-2">Build, test, and deployment automated with GitHub Actions.</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudPaper Elevation="3" Class="pa-6 d-flex flex-column align-center">
+                <MudIcon Icon="@Icons.Material.Filled.Security" Color="Color.Success" Style="font-size: 48px;" />
+                <MudText Typo="Typo.h6" Class="mt-4">Secure & Passwordless</MudText>
+                <MudText Align="Align.Center" Class="mt-2">Secrets managed by Key Vault with Azure AD Workload Identity.</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
