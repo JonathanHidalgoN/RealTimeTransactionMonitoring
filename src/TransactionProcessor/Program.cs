@@ -13,6 +13,7 @@ using TransactionProcessor.Caching;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+// Load configuration from Azure Key Vault if the URI is provided.
 var keyVaultUri = builder.Configuration["KEY_VAULT_URI"];
 if (!string.IsNullOrEmpty(keyVaultUri) && Uri.TryCreate(keyVaultUri, UriKind.Absolute, out var vaultUri))
 {
@@ -24,6 +25,7 @@ if (!string.IsNullOrEmpty(keyVaultUri) && Uri.TryCreate(keyVaultUri, UriKind.Abs
     }
     catch (Exception ex)
     {
+        // Log errors but allow the application to continue, as secrets might be available from other sources.
         Console.WriteLine($"Error connecting to Azure Key Vault: {ex.Message}");
     }
 }
@@ -32,6 +34,7 @@ else
     Console.WriteLine("KEY_VAULT_URI not configured. Key Vault secrets will not be loaded.");
 }
 
+// Bind configuration sections to strongly-typed settings objects.
 builder.Services.AddOptions<MessagingSettings>()
     .Bind(builder.Configuration.GetSection(AppConstants.EventHubsConfigPrefix))
     .ValidateDataAnnotations()
@@ -49,6 +52,7 @@ builder.Services.AddOptions<RedisSettings>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
+// Configure the messaging provider based on the "Messaging:Provider" configuration value.
 var messagingProvider = builder.Configuration["Messaging:Provider"]?.ToLowerInvariant() ?? AppConstants.KafkaDefaultName;
 Console.WriteLine($"Configuring messaging provider: {messagingProvider}");
 
@@ -69,20 +73,27 @@ else
     builder.Services.AddSingleton<IMessageConsumer<Null, string>, KafkaConsumer>();
 }
 
+// Configure core application services.
 builder.Services.AddApplicationInsightsTelemetryWorkerService();
 
-//Take configs, declare as singleton 
+// Register application services with the dependency injection container.
 builder.Services.AddSingleton<ICosmosDbService, CosmosDbService>();
 builder.Services.AddScoped<ITransactionAnomalyDetector, StatefulAnomalyDetector>();
-//Hosted to control how to end
+
+// This hosted service ensures the Cosmos DB database and container exist before the main worker starts.
 builder.Services.AddHostedService<CosmosDbInitializerHostedService>();
 builder.Services.AddSingleton<IAnomalyEventPublisher, EventHubsAnomalyEventPublisher>();
+
+// The main background service that processes transactions.
 builder.Services.AddHostedService<Worker>();
 builder.Services.AddSingleton<IRedisCacheService, RedisCacheService>();
 
 var host = builder.Build();
 host.Run();
 
+/// <summary>
+/// A hosted service responsible for initializing the Cosmos DB database and container at application startup.
+/// </summary>
 public class CosmosDbInitializerHostedService : IHostedService
 {
     private readonly ICosmosDbService _cosmosDbService;
@@ -96,6 +107,9 @@ public class CosmosDbInitializerHostedService : IHostedService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Triggered when the application host is ready to start the service.
+    /// </summary>
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Cosmos DB Initializer Hosted Service starting initialization.");
@@ -103,6 +117,9 @@ public class CosmosDbInitializerHostedService : IHostedService
         _logger.LogInformation("Cosmos DB Initializer Hosted Service has completed startup tasks.");
     }
 
+    /// <summary>
+    /// Triggered when the application host is performing a graceful shutdown.
+    /// </summary>
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Cosmos DB Initializer Hosted Service stopping.");
