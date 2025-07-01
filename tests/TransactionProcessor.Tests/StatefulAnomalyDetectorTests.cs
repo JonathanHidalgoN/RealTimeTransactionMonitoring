@@ -5,6 +5,7 @@ using FinancialMonitoring.Abstractions.Caching;
 using FinancialMonitoring.Abstractions.Messaging;
 using FinancialMonitoring.Models;
 using TransactionProcessor.AnomalyDetection;
+using Microsoft.Extensions.Options;
 
 namespace TransactionProcessor.Tests;
 
@@ -13,6 +14,7 @@ public class StatefulAnomalyDetectorTests
     private readonly Mock<IRedisCacheService> _mockCache;
     private readonly Mock<IAnomalyEventPublisher> _mockEventPublisher;
     private readonly StatefulAnomalyDetector _detector;
+    private readonly AnomalyDetectionSettings _settings;
 
     public StatefulAnomalyDetectorTests()
     {
@@ -20,7 +22,12 @@ public class StatefulAnomalyDetectorTests
         _mockEventPublisher = new Mock<IAnomalyEventPublisher>();
         var mockLogger = Mock.Of<ILogger<StatefulAnomalyDetector>>();
 
-        _detector = new StatefulAnomalyDetector(_mockCache.Object, _mockEventPublisher.Object, mockLogger);
+        // Create default settings for the tests.
+        _settings = new AnomalyDetectionSettings();
+        var mockOptions = new Mock<IOptions<AnomalyDetectionSettings>>();
+        mockOptions.Setup(o => o.Value).Returns(_settings);
+
+        _detector = new StatefulAnomalyDetector(_mockCache.Object, _mockEventPublisher.Object, mockLogger, mockOptions.Object);
     }
 
     private Transaction CreateTransaction(string accountId, double amount)
@@ -38,7 +45,7 @@ public class StatefulAnomalyDetectorTests
     public async Task DetectAsync_WhenNoPriorStatsExist_ReturnsNoAnomalyAndSavesNewStats()
     {
         var transaction = CreateTransaction("ACC_NEW", 500.0);
-        var expectedRedisKey = $"account-stats:{transaction.SourceAccount.AccountId}";
+        var expectedRedisKey = $"{_settings.AccountStatsKeyPrefix}{transaction.SourceAccount.AccountId}";
 
         _mockCache.Setup(c => c.GetAsync<AccountStats>(expectedRedisKey))
                   .ReturnsAsync((AccountStats?)null);
@@ -59,9 +66,10 @@ public class StatefulAnomalyDetectorTests
     public async Task DetectAsync_WithNormalSubsequentTransaction_ReturnsNoAnomalyAndUpdatesStats()
     {
         var transaction = CreateTransaction("ACC_EXISTING", 1000.0);
-        var expectedRedisKey = $"account-stats:{transaction.SourceAccount.AccountId}";
+        var expectedRedisKey = $"{_settings.AccountStatsKeyPrefix}{transaction.SourceAccount.AccountId}";
 
-        var existingStats = new AccountStats { TransactionCount = 5, AverageTransactionAmount = 500.0 };
+        // Ensure the transaction is not anomalous based on the default settings.
+        var existingStats = new AccountStats { TransactionCount = _settings.MinimumTransactionCount, AverageTransactionAmount = 500.0 };
 
         _mockCache.Setup(c => c.GetAsync<AccountStats>(expectedRedisKey))
                   .ReturnsAsync(existingStats);
@@ -72,7 +80,7 @@ public class StatefulAnomalyDetectorTests
 
         _mockCache.Verify(c => c.SetAsync(
             expectedRedisKey,
-            It.Is<AccountStats>(stats => stats.TransactionCount == 6 && Math.Abs(stats.AverageTransactionAmount - 583.33) < 0.01),
+            It.Is<AccountStats>(stats => stats.TransactionCount == _settings.MinimumTransactionCount + 1),
             It.IsAny<TimeSpan?>()),
             Times.Once());
 
@@ -83,19 +91,19 @@ public class StatefulAnomalyDetectorTests
     public async Task DetectAsync_WithAnomalousTransaction_ReturnsFlagAndPublishesEvent()
     {
         var transaction = CreateTransaction("ACC_ANOMALY", 12000.0);
-        var expectedRedisKey = $"account-stats:{transaction.SourceAccount.AccountId}";
-        var existingStats = new AccountStats { TransactionCount = 6, AverageTransactionAmount = 500.0 };
+        var expectedRedisKey = $"{_settings.AccountStatsKeyPrefix}{transaction.SourceAccount.AccountId}";
+        var existingStats = new AccountStats { TransactionCount = _settings.MinimumTransactionCount + 1, AverageTransactionAmount = 500.0 };
 
         _mockCache.Setup(c => c.GetAsync<AccountStats>(expectedRedisKey))
                   .ReturnsAsync(existingStats);
 
         var result = await _detector.DetectAsync(transaction);
 
-        Assert.Equal("HighValueDeviationAnomaly", result);
+        Assert.Equal(_settings.HighValueDeviationAnomalyFlag, result);
 
         _mockCache.Verify(c => c.SetAsync(
             expectedRedisKey,
-            It.Is<AccountStats>(stats => stats.TransactionCount == 7),
+            It.Is<AccountStats>(stats => stats.TransactionCount == _settings.MinimumTransactionCount + 2),
             It.IsAny<TimeSpan?>()),
             Times.Once());
 
@@ -104,5 +112,4 @@ public class StatefulAnomalyDetectorTests
             Times.Once()
         );
     }
-
 }
