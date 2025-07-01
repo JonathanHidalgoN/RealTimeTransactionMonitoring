@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
 using Microsoft.Extensions.Configuration;
 using FinancialMonitoring.Api.Authentication;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FinancialMonitoring.Api.Tests;
 
@@ -112,5 +114,17 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
         var response = await _client.GetAsync($"/api/transactions/{transactionId}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(" ")]
+    [InlineData(null)]
+    public async Task GetTransactionById_WithInvalidId_ReturnsBadRequest(string invalidId)
+    {
+        var controller = new Controllers.TransactionsController(_mockQueryService.Object, Mock.Of<ILogger<Controllers.TransactionsController>>());
+
+        var result = await controller.GetTransactionById(invalidId);
+
+        Assert.IsType<BadRequestObjectResult>(result.Result);
     }
 }
