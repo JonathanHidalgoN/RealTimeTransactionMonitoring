@@ -52,6 +52,11 @@ builder.Services.AddOptions<RedisSettings>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
+builder.Services.AddOptions<AnomalyDetectionSettings>()
+    .Bind(builder.Configuration.GetSection("AnomalyDetection"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 // Configure the messaging provider based on the "Messaging:Provider" configuration value.
 var messagingProvider = builder.Configuration["Messaging:Provider"]?.ToLowerInvariant() ?? AppConstants.KafkaDefaultName;
 Console.WriteLine($"Configuring messaging provider: {messagingProvider}");

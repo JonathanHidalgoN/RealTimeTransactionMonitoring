@@ -3,6 +3,7 @@ using FinancialMonitoring.Abstractions.Messaging;
 using FinancialMonitoring.Abstractions.Services;
 using FinancialMonitoring.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace TransactionProcessor.AnomalyDetection;
 
@@ -19,6 +20,7 @@ public class StatefulAnomalyDetector : ITransactionAnomalyDetector
     private readonly IRedisCacheService _cache;
     private readonly IAnomalyEventPublisher _eventPublisher;
     private readonly ILogger<StatefulAnomalyDetector> _logger;
+    private readonly AnomalyDetectionSettings _settings;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StatefulAnomalyDetector"/> class.
@@ -26,14 +28,17 @@ public class StatefulAnomalyDetector : ITransactionAnomalyDetector
     /// <param name="cache">The cache service used to store and retrieve account statistics.</param>
     /// <param name="eventPublisher">The service used to publish events for anomalous transactions.</param>
     /// <param name="logger">The logger for recording information and warnings.</param>
+    /// <param name="settings">The configuration settings for anomaly detection.</param>
     public StatefulAnomalyDetector(
         IRedisCacheService cache,
         IAnomalyEventPublisher eventPublisher,
-        ILogger<StatefulAnomalyDetector> logger)
+        ILogger<StatefulAnomalyDetector> logger,
+        IOptions<AnomalyDetectionSettings> settings)
     {
         _cache = cache;
         _eventPublisher = eventPublisher;
         _logger = logger;
+        _settings = settings.Value;
     }
 
     /// <summary>
@@ -50,7 +55,7 @@ public class StatefulAnomalyDetector : ITransactionAnomalyDetector
     /// </returns>
     public async Task<string?> DetectAsync(Transaction transaction)
     {
-        string redisKey = $"account-stats:{transaction.SourceAccount.AccountId}";
+        string redisKey = $"{_settings.AccountStatsKeyPrefix}{transaction.SourceAccount.AccountId}";
 
         // Retrieve the historical statistics for this account from Redis.
         // If no stats exist, create a new object.
@@ -59,12 +64,12 @@ public class StatefulAnomalyDetector : ITransactionAnomalyDetector
         string? anomalyFlag = null;
 
         // Rule: Flag as an anomaly if the account has some history and the amount is a high deviation from the average.
-        if (stats.TransactionCount > 5 && transaction.Amount > (stats.AverageTransactionAmount * 10))
+        if (stats.TransactionCount > _settings.MinimumTransactionCount && transaction.Amount > (stats.AverageTransactionAmount * _settings.HighValueDeviationFactor))
         {
-            anomalyFlag = "HighValueDeviationAnomaly";
+            anomalyFlag = _settings.HighValueDeviationAnomalyFlag;
             _logger.LogWarning(
-                "Stateful Anomaly Detected for transaction {TransactionId}. Amount {Amount} is >10x the average of {Average}",
-                transaction.Id, transaction.Amount, stats.AverageTransactionAmount);
+                "Stateful Anomaly Detected for transaction {TransactionId}. Amount {Amount} is >{Factor}x the average of {Average}",
+                transaction.Id, transaction.Amount, _settings.HighValueDeviationFactor, stats.AverageTransactionAmount);
 
             // Publish an event to notify other parts of the system about the anomaly.
             await _eventPublisher.PublishAsync(transaction);
