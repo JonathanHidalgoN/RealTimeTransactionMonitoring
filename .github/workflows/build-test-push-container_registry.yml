@@ -32,6 +32,10 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
+    #Build the solution first
+    - name: Build Solution
+      run: dotnet build --configuration Release
+
     #Run unit test
     - name: Run Unit Tests
     # --configuration Release: This specifies that the tests should be run against the Release build of the application. This is standard practice for CI/CD pipelines to ensure you are testing
@@ -43,7 +47,9 @@ jobs:
     # Actions, which can parse these files to display a detailed summary of test successes and failures in the workflow UI.
     # --no-build: This is an optimization flag. It tells dotnet test to skip the build step. This implies that a previous step in the GitHub Actions workflow has already compiled the project.
     # Separating the build and test steps is a common practice that can speed up the pipeline, as you don't need to rebuild the code if the build has already been successfully completed.
-      run: dotnet test --configuration Release --collect:"XPlat Code Coverage" --results-directory ./test-results --logger trx --no-build
+      run: |
+        mkdir -p ./test-results
+        dotnet test --configuration Release --collect:"XPlat Code Coverage" --results-directory ./test-results --logger trx --no-build
 
     #This step will just read the results from test and report them in the UI
     - name: Publish Unit Test Results
@@ -65,10 +71,13 @@ jobs:
       run: |
         docker compose -f docker-compose.test.yml up -d financialmonitoring-api-test cosmosdb-emulator redis
         sleep 30
-        docker compose -f docker-compose.test.yml run --rm load-tests
+        docker compose -f docker-compose.test.yml run --name load-tests-container load-tests
+        # Copy load test reports from container to host
+        mkdir -p ./load-test-reports
+        docker cp load-tests-container:/app/load-test-reports/. ./load-test-reports/ || echo "No load test reports found"
         docker compose -f docker-compose.test.yml down -v
 
-    #Upload test result for dowload in github
+    #Upload test result for download in github
     - name: Upload Test Results
       uses: actions/upload-artifact@v4
       if: always()
@@ -77,6 +86,7 @@ jobs:
         path: |
           ./test-results/
           ./load-test-reports/
+        if-no-files-found: warn
 
     #Auth to azure, if test pass we'll push images to azure container registry to deploy app
     - name: Azure Login
