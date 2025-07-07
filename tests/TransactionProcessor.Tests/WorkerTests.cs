@@ -38,14 +38,14 @@ public class WorkerTests
         var message = new ReceivedMessage<Null, string>(null, JsonSerializer.Serialize(transaction));
 
         _mockAnomalyDetector.Setup(d => d.DetectAsync(It.IsAny<Transaction>()))
-                            .ReturnsAsync((string)null);
+                            .ReturnsAsync((string?)null);
 
         var worker = new Worker(_mockLogger.Object, _serviceProvider, _mockMessageConsumer.Object);
 
         // This is a bit of a workaround to test the private method ProcessMessageAsync
         // In a real-world scenario, we might refactor this to be more easily testable.
         var method = typeof(Worker).GetMethod("ProcessMessageAsync", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        await (Task)method.Invoke(worker, new object[] { message });
+        await (Task)method!.Invoke(worker, new object[] { message })!;
 
         _mockAnomalyDetector.Verify(d => d.DetectAsync(It.IsAny<Transaction>()), Times.Once);
         _mockCosmosDbService.Verify(c => c.AddTransactionAsync(It.IsAny<TransactionForCosmos>()), Times.Once);
@@ -59,15 +59,15 @@ public class WorkerTests
         var worker = new Worker(_mockLogger.Object, _serviceProvider, _mockMessageConsumer.Object);
 
         var method = typeof(Worker).GetMethod("ProcessMessageAsync", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        await (Task)method.Invoke(worker, new object[] { message });
+        await (Task)method!.Invoke(worker, new object[] { message })!;
 
         _mockLogger.Verify(
             x => x.Log(
                 LogLevel.Error,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Error deserializing message")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Error deserializing message")),
                 It.IsAny<JsonException>(),
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 }

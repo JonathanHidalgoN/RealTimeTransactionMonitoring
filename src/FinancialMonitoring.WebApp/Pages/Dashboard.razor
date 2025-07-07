@@ -31,9 +31,7 @@
     <MudItem xs="12" md="3">
         <MudPaper Elevation="2" Class="pa-4" Height="100%">
             <MudText Typo="Typo.subtitle1" GutterBottom="true">Status of Recent</MudText>
-            <MudChart ChartType="ChartType.Pie" InputData="@_pieChartData" InputLabels="@_pieChartLabels" Height="150px" Width="100%">
-                <MudChartOptions LegendPosition="Position.Bottom" />
-            </MudChart>
+            <MudChart ChartType="ChartType.Pie" InputData="@_pieChartData" InputLabels="@_pieChartLabels" Height="150px" Width="100%" LegendPosition="Position.Bottom" />
         </MudPaper>
     </MudItem>
 </MudGrid>
