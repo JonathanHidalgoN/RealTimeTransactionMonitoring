@@ -2,7 +2,8 @@ using System.Net.Http.Json;
 
 namespace FinancialMonitoring.IntegrationTests;
 
-public class SimpleIntegrationTests : IAsyncLifetime
+//Test that the api respond to request
+public class ApiBasicTest : IAsyncLifetime
 {
     private HttpClient _client = null!;
 
@@ -10,11 +11,8 @@ public class SimpleIntegrationTests : IAsyncLifetime
     {
         var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl") ?? "http://financialmonitoring-api-test:8080";
         var apiKey = Environment.GetEnvironmentVariable("ApiKey") ?? "integration-test-key";
-
         _client = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
         _client.DefaultRequestHeaders.Add("X-API-Key", apiKey);
-        
-        // Wait a bit for API to be ready
         await Task.Delay(5000);
     }
 
@@ -38,7 +36,7 @@ public class SimpleIntegrationTests : IAsyncLifetime
     {
         var response = await _client.GetAsync("/api/transactions?pageNumber=1&pageSize=5");
         Assert.True(response.IsSuccessStatusCode);
-        
+
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("\"items\"", content.ToLower());
         Assert.Contains("\"totalcount\"", content.ToLower());
