@@ -1,0 +1,188 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: zookeeper-test
+    ports:
+      - "2182:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - test_network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: kafka-test
+    ports:
+      - "9093:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_INTERNAL://kafka:29092,LISTENER_EXTERNAL://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_INTERNAL:PLAINTEXT,LISTENER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CREATE_TOPICS: "transactions:1:1,anomalies:1:1"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:29092"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - test_network
+
+  cosmosdb-emulator:
+    container_name: cosmosdb-emulator-test
+    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
+    ports:
+      - "8082:8081"
+      - "10255:10251"
+      - "10256:10252"
+      - "10257:10253"
+      - "10258:10254"
+    environment:
+      AZURE_COSMOS_EMULATOR_PARTITION_COUNT: 1
+      AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE: "false"
+      AZURE_COSMOS_EMULATOR_IP_ADDRESS_OVERRIDE: "127.0.0.1"
+    volumes:
+      - cosmosdb_test_data:/tmp/cosmos/appdata
+    networks:
+      - test_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-k", "https://localhost:8081/_explorer/emulator.pem"]
+      interval: 30s
+      timeout: 30s
+      retries: 20
+      start_period: 300s
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-test
+    ports:
+      - "6380:6379"
+    networks:
+      - test_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  transactionprocessor-test:
+    container_name: transaction_processor_test
+    build:
+      context: .
+      dockerfile: ./src/TransactionProcessor/Dockerfile.dev
+    depends_on:
+      kafka:
+        condition: service_started
+      cosmosdb-emulator:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DOTNET_ENVIRONMENT: "Testing"
+      CosmosDb__EndpointUri: "https://cosmosdb-emulator:8081"
+      CosmosDb__PrimaryKey: "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
+      CosmosDb__DatabaseName: "TestFinancialMonitoring"
+      CosmosDb__ContainerName: "transactions"
+      CosmosDb__PartitionKeyPath: "/id"
+      Redis__ConnectionString: "redis:6379"
+      Kafka__BootstrapServers: "kafka:29092"
+      EventHubs__EventHubName: "transactions"
+      EventHubs__AnomalyEventHubName: "anomalies"
+      Messaging__Provider: "Kafka"
+      AnomalyDetection__MaxAmountThreshold: "1000"
+      AnomalyDetection__FrequencyThresholdPerMinute: "10"
+      APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://test.in.ai.azure.com/"
+      ApplicationInsights__ConnectionString: "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://test.in.ai.azure.com/"
+      ASPNETCORE_ENVIRONMENT: "Testing"
+    networks:
+      - test_network
+
+  financialmonitoring-api-test:
+    container_name: financialmonitoring_api_test
+    build:
+      context: .
+      dockerfile: ./src/FinancialMonitoring.Api/Dockerfile.dev
+    ports:
+      - "5101:8080"
+    depends_on:
+      cosmosdb-emulator:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DOTNET_ENVIRONMENT: "Testing"
+      CosmosDb__EndpointUri: "https://cosmosdb-emulator:8081"
+      CosmosDb__PrimaryKey: "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
+      CosmosDb__DatabaseName: "TestFinancialMonitoring"
+      CosmosDb__ContainerName: "transactions"
+      CosmosDb__PartitionKeyPath: "/id"
+      Redis__ConnectionString: "redis:6379"
+      ApiSettings__ApiKey: "integration-test-key"
+      APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://test.in.ai.azure.com/"
+      ApplicationInsights__ConnectionString: "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://test.in.ai.azure.com/"
+      ASPNETCORE_URLS: "http://0.0.0.0:8080"
+      ASPNETCORE_ENVIRONMENT: "Testing"
+    networks:
+      - test_network
+
+  integration-tests:
+    container_name: integration_tests
+    build:
+      context: .
+      dockerfile: ./tests/FinancialMonitoring.IntegrationTests/Dockerfile
+    depends_on:
+      financialmonitoring-api-test:
+        condition: service_started
+      transactionprocessor-test:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+      cosmosdb-emulator:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DOTNET_ENVIRONMENT: "Testing"
+      ApiBaseUrl: "http://financialmonitoring-api-test:8080"
+      ApiKey: "integration-test-key"
+      Kafka__BootstrapServers: "kafka:29092"
+      CosmosDb__EndpointUri: "https://cosmosdb-emulator:8081"
+      CosmosDb__PrimaryKey: "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
+      CosmosDb__DatabaseName: "TestFinancialMonitoring"
+      CosmosDb__ContainerName: "transactions"
+      ASPNETCORE_ENVIRONMENT: "Testing"
+    networks:
+      - test_network
+    volumes:
+      - ./test-results:/app/test-results
+
+  load-tests:
+    container_name: load_tests
+    build:
+      context: .
+      dockerfile: ./tests/FinancialMonitoring.LoadTests/Dockerfile
+    depends_on:
+      financialmonitoring-api-test:
+        condition: service_started
+    environment:
+      ApiBaseUrl: "http://financialmonitoring-api-test:8080"
+      ApiKey: "integration-test-key"
+    networks:
+      - test_network
+    volumes:
+      - ./load-test-reports:/app/load-test-reports
+
+networks:
+  test_network:
+    driver: bridge
+
+volumes:
+  cosmosdb_test_data: {}
