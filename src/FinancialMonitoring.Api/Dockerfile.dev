@@ -15,4 +15,6 @@ COPY ./src/FinancialMonitoring.Abstractions/ ./src/FinancialMonitoring.Abstracti
 
 WORKDIR /source/src/FinancialMonitoring.Api
 
-CMD ["dotnet", "run"]
+EXPOSE 8080
+
+CMD ["dotnet", "run", "--urls", "http://0.0.0.0:8080"]
