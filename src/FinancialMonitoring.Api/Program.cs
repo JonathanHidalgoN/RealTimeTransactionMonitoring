@@ -45,10 +45,14 @@ builder.Services.AddAuthentication()
         options => { });
 
 builder.Services.AddAuthorization();
-builder.Services.AddOptions<ApplicationInsightsSettings>()
-    .Bind(builder.Configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix))
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
+// Skip ApplicationInsights validation in Testing environment
+if (builder.Environment.EnvironmentName != "Testing")
+{
+    builder.Services.AddOptions<ApplicationInsightsSettings>()
+        .Bind(builder.Configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix))
+        .ValidateDataAnnotations()
+        .ValidateOnStart();
+}
 builder.Services.AddOptions<CosmosDbSettings>()
     .Bind(builder.Configuration.GetSection(AppConstants.CosmosDbConfigPrefix))
     .ValidateDataAnnotations()
@@ -57,7 +61,11 @@ builder.Services.AddOptions<ApiSettings>()
     .Bind(builder.Configuration.GetSection("ApiSettings"))
     .ValidateDataAnnotations()
     .ValidateOnStart();
-builder.Services.AddApplicationInsightsTelemetry();
+// Only add ApplicationInsights in non-Testing environments
+if (builder.Environment.EnvironmentName != "Testing")
+{
+    builder.Services.AddApplicationInsightsTelemetry();
+}
 builder.Services.AddHealthChecks();
 builder.Services.AddSingleton<ITransactionQueryService, CosmosDbTransactionQueryService>();
 
