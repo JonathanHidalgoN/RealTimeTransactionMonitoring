@@ -12,14 +12,17 @@ env:
 
 jobs:
   build-and-push:
+    #Define a variable from this job, we'll need it to identify the docker images
     runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ steps.get_sha.outputs.sha }}
 
+    #Get the code from the repo
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    #Get an unique string sequence from the github env
     - name: Get short commit SHA
       id: get_sha
       run: echo "sha=$(echo ${GITHUB_SHA::7})" >> $GITHUB_OUTPUT
@@ -29,9 +32,53 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
-    - name: Run dotnet test
-      run: dotnet test
+    #Run unit test
+    - name: Run Unit Tests
+    # --configuration Release: This specifies that the tests should be run against the Release build of the application. This is standard practice for CI/CD pipelines to ensure you are testing
+    # the optimized code that will be deployed, not the Debug version used for local development.
+    #--collect:"XPlat Code Coverage": This is a crucial flag for quality assurance. It instructs the test runner to collect code coverage data while the tests are running. "XPlat" stands for
+    #"cross-platform," meaning it will work on Linux, Windows, or macOS runners. This process generates a report (often in a format like Cobertura) that shows which lines of your source code
+    # were executed by the tests. This helps you identify untested parts of your application.
+    # --logger trx: This tells the test runner to generate the test results file in the trx format (Visual Studio Test Results). This format is widely supported by CI/CD platforms like GitHub
+    # Actions, which can parse these files to display a detailed summary of test successes and failures in the workflow UI.
+    # --no-build: This is an optimization flag. It tells dotnet test to skip the build step. This implies that a previous step in the GitHub Actions workflow has already compiled the project.
+    # Separating the build and test steps is a common practice that can speed up the pipeline, as you don't need to rebuild the code if the build has already been successfully completed.
+      run: dotnet test --configuration Release --collect:"XPlat Code Coverage" --results-directory ./test-results --logger trx --no-build
 
+    #This step will just read the results from test and report them in the UI
+    - name: Publish Unit Test Results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Unit Tests
+        path: ./test-results/*.trx
+        reporter: dotnet-trx
+
+    - name: Run Integration Tests
+      run: |
+        docker compose -f docker-compose.test.yml up -d --build
+        sleep 60
+        docker compose -f docker-compose.test.yml run --rm integration-tests
+        docker compose -f docker-compose.test.yml down -v
+
+    - name: Run Load Tests
+      run: |
+        docker compose -f docker-compose.test.yml up -d financialmonitoring-api-test cosmosdb-emulator redis
+        sleep 30
+        docker compose -f docker-compose.test.yml run --rm load-tests
+        docker compose -f docker-compose.test.yml down -v
+
+    #Upload test result for dowload in github
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          ./test-results/
+          ./load-test-reports/
+
+    #Auth to azure, if test pass we'll push images to azure container registry to deploy app
     - name: Azure Login
       uses: azure/login@v1
       with:
@@ -44,6 +91,7 @@ jobs:
         username: ${{ secrets.AZURE_CLIENT_ID }}
         password: ${{ secrets.AZURE_CLIENT_SECRET }}
 
+    #The following will build the api, processor and simulator, then push them to acr
     - name: Build and Push API Image
       uses: docker/build-push-action@v5
       with:
@@ -80,22 +128,27 @@ jobs:
       run: az logout
       if: always()
 
+    #This step will use the acr images to deploy on kubernetes cluster
   deploy-to-aks:
     runs-on: ubuntu-latest
     needs: build-and-push
 
+    #Again copy code
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    #Azure login
     - name: Azure Login
       uses: azure/login@v1
       with:
         creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ vars.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
 
+    #We set the cluster to be the azure one running our app
     - name: Set kubectl context to AKS cluster
       run: az aks get-credentials --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
 
+    #Then we take the previous unique image tag generated in the last worflow and update the images to point to the new ones
     - name: Set Kustomize image tags
       working-directory: ./k8s-manifest
       run: |
@@ -103,6 +156,7 @@ jobs:
         kustomize edit set image ${{ env.ACR_LOGIN_SERVER }}/transactionprocessor=:${{ needs.build-and-push.outputs.image_tag }}
         kustomize edit set image ${{ env.ACR_LOGIN_SERVER }}/transactionsimulator=:${{ needs.build-and-push.outputs.image_tag }}
 
+    #Tell the cluster to applu changes
     - name: Deploy to AKS
       working-directory: ./k8s-manifest
       run: kubectl apply -k .
@@ -111,6 +165,7 @@ jobs:
       run: az logout
       if: always()
 
+    #This will update the static web app in azure
   deploy-ui:
     runs-on: ubuntu-latest
     needs: build-and-push
@@ -119,12 +174,14 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    #Look for the strings and inject some secrets
     - name: Replace tokens in appsettings.json
       run: |
         sed -i 's|__ApiBaseUrl__|${{ vars.API_BASE_URL }}|g' src/FinancialMonitoring.WebApp/wwwroot/appsettings.json
         sed -i 's|__ApiKey__|${{ secrets.API_KEY }}|g' src/FinancialMonitoring.WebApp/wwwroot/appsettings.json
 
 
+    #Build the razor web app
     - name: Build and Deploy Blazor WebApp
       id: builddeploy
       uses: Azure/static-web-apps-deploy@v1
@@ -133,5 +190,5 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         action: "upload"
         app_location: "src/FinancialMonitoring.WebApp"
-        api_location: "" # We are not deploying an API with SWA, so leave this blank
+        api_location: "" # We are not deploying an API with SWA, just an static page leave in blank
         output_location: "wwwroot"
