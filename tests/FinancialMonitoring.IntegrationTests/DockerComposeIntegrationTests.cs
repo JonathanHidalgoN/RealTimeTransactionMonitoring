@@ -23,25 +23,28 @@ public class DockerComposeIntegrationTests : IAsyncLifetime
         var cosmosKey = Environment.GetEnvironmentVariable("CosmosDb__PrimaryKey") ?? "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
         var apiKey = Environment.GetEnvironmentVariable("ApiKey") ?? "integration-test-key";
 
+        //Create http client to api with default key
         _client = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
         _client.DefaultRequestHeaders.Add("X-API-Key", apiKey);
 
+        //Connect to kafka
         var producerConfig = new ProducerConfig
         {
             BootstrapServers = kafkaBootstrapServers
         };
         _producer = new ProducerBuilder<Null, string>(producerConfig).Build();
 
+        //Connect to cosmos
         var connectionString = $"AccountEndpoint={cosmosEndpoint};AccountKey={cosmosKey}";
-        _cosmosClient = new CosmosClient(connectionString, new CosmosClientOptions 
-        { 
-            HttpClientFactory = () => new HttpClient(new HttpClientHandler 
-            { 
-                ServerCertificateCustomValidationCallback = (_, _, _, _) => true 
-            }) 
+        _cosmosClient = new CosmosClient(connectionString, new CosmosClientOptions
+        {
+            HttpClientFactory = () => new HttpClient(new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (_, _, _, _) => true
+            })
         });
-        
-        try 
+
+        try
         {
             _database = await _cosmosClient.CreateDatabaseIfNotExistsAsync("TestFinancialMonitoring");
             _container = await _database.CreateContainerIfNotExistsAsync("transactions", "/id");
@@ -49,7 +52,6 @@ public class DockerComposeIntegrationTests : IAsyncLifetime
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to initialize Cosmos DB: {ex.Message}");
-            // Continue without Cosmos validation for now
         }
     }
 
@@ -87,7 +89,7 @@ public class DockerComposeIntegrationTests : IAsyncLifetime
         {
             // Transaction might not be processed yet or API might not be ready
             var allTransactionsResponse = await _client.GetAsync("/api/transactions?pageSize=10");
-            Assert.True(allTransactionsResponse.IsSuccessStatusCode, 
+            Assert.True(allTransactionsResponse.IsSuccessStatusCode,
                 $"API is not responding. Status: {response.StatusCode}, All transactions status: {allTransactionsResponse.StatusCode}");
         }
     }
@@ -107,7 +109,7 @@ public class DockerComposeIntegrationTests : IAsyncLifetime
         {
             Value = JsonSerializer.Serialize(testMessage)
         });
-        
+
         Assert.NotNull(result);
         Assert.Equal(PersistenceStatus.Persisted, result.Status);
     }
