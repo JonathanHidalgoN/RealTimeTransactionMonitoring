@@ -1,3 +1,0 @@
-docker compose up --build -d --force-recreate
-To make the docker compose up run again we have to use this command 'docker-compose up --build -d --force-recreate' because kafka will remember the offset and then the processor won't process the initial transactions until the offset is reach.
-
