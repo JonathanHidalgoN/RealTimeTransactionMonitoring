@@ -6,18 +6,13 @@ resource "azurerm_kubernetes_cluster" "aks" {
   dns_prefix          = "${var.resource_prefix}-aks"
   sku_tier            = "Free"
 
-  oidc_issuer_profile {
-    enabled = true
-  }
-
-  workload_identity_profile {
-    enabled = true
-  }
+  oidc_issuer_enabled       = true
+  workload_identity_enabled = true
 
   default_node_pool {
     name                = "default"
     node_count          = 1
-    vm_size             = "Standard_B1s"
+    vm_size             = "Standard_B2s"
     enable_auto_scaling = true
     min_count           = 1
     max_count           = 2
