@@ -1,6 +1,6 @@
 
 resource "azurerm_cosmosdb_account" "db" {
-  name                = "${var.resource_prefix}-cosmos"
+  name                = "${var.resource_prefix}-cosmos-${random_id.suffix.hex}"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   offer_type          = "Standard"

@@ -1,5 +1,5 @@
 resource "azurerm_redis_cache" "cache" {
-  name                 = "${var.resource_prefix}-redis-cache"
+  name                 = "${var.resource_prefix}-redis-cache-${random_id.suffix.hex}"
   location             = azurerm_resource_group.rg.location
   resource_group_name  = azurerm_resource_group.rg.name
   capacity             = 0
