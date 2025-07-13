@@ -29,3 +29,5 @@ HOW-TO-RUN-LOAD*
 load-test-reports*
 test-results*
 concerns.txt
+cost-management.sh
+switch-architecture.sh
