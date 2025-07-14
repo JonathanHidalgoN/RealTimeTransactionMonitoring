@@ -47,7 +47,7 @@ resource "azurerm_container_app" "api" {
 
       env {
         name  = "EventHub__ConnectionString"
-        value = azurerm_eventhub_authorization_rule.transactions_rule.primary_connection_string
+        value = azurerm_eventhub_namespace.eh_namespace.default_primary_connection_string
       }
 
       env {
@@ -57,7 +57,7 @@ resource "azurerm_container_app" "api" {
 
       env {
         name  = "ApplicationInsights__ConnectionString"
-        value = azurerm_application_insights.appinsights.connection_string
+        value = azurerm_application_insights.appi.connection_string
       }
     }
   }
@@ -66,7 +66,7 @@ resource "azurerm_container_app" "api" {
     external_enabled = true
     target_port      = 80
 
-    traffic_policy {
+    traffic_weight {
       latest_revision = true
       percentage      = 100
     }
@@ -113,7 +113,7 @@ resource "azurerm_container_app" "processor" {
 
       env {
         name  = "EventHub__ConnectionString"
-        value = azurerm_eventhub_authorization_rule.transactions_rule.primary_connection_string
+        value = azurerm_eventhub_namespace.eh_namespace.default_primary_connection_string
       }
 
       env {
@@ -123,7 +123,7 @@ resource "azurerm_container_app" "processor" {
 
       env {
         name  = "ApplicationInsights__ConnectionString"
-        value = azurerm_application_insights.appinsights.connection_string
+        value = azurerm_application_insights.appi.connection_string
       }
     }
   }
@@ -164,12 +164,12 @@ resource "azurerm_container_app" "simulator" {
 
       env {
         name  = "EventHub__ConnectionString"
-        value = azurerm_eventhub_authorization_rule.transactions_rule.primary_connection_string
+        value = azurerm_eventhub_namespace.eh_namespace.default_primary_connection_string
       }
 
       env {
         name  = "ApplicationInsights__ConnectionString"
-        value = azurerm_application_insights.appinsights.connection_string
+        value = azurerm_application_insights.appi.connection_string
       }
     }
   }
