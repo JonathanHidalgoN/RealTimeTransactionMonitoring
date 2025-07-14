@@ -60,7 +60,6 @@ echo "  API Key: ${API_KEY:0:8}..."
 
 echo -e "\n${CYAN}--- Step 2: Preparing appsettings.json ---${NC}"
 
-# Create backup of original appsettings.json
 APPSETTINGS_FILE="src/FinancialMonitoring.WebApp/wwwroot/appsettings.json"
 BACKUP_FILE="${APPSETTINGS_FILE}.backup"
 
@@ -68,7 +67,6 @@ if [ ! -f "$BACKUP_FILE" ]; then
     cp "$APPSETTINGS_FILE" "$BACKUP_FILE"
     echo "✓ Created backup of appsettings.json"
 fi
-# Replace tokens with actual values
 # Escape special characters in API_KEY for sed (including &)
 ESCAPED_API_KEY=$(printf '%s\n' "$API_KEY" | sed 's/[[\.*^$()+?{|&]/\\&/g')
 sed -i.tmp "s|__ApiBaseUrl__|${API_BASE_URL}|g" "$APPSETTINGS_FILE"
@@ -77,7 +75,6 @@ rm "${APPSETTINGS_FILE}.tmp"
 
 echo -e "${GREEN}✓ Updated appsettings.json with current values${NC}"
 
-# Check if SWA CLI is installed
 if ! command -v swa &>/dev/null; then
     echo "Azure Static Web Apps CLI not found."
 fi
@@ -94,7 +91,6 @@ echo -e "${GREEN}✓ Blazor app built successfully${NC}"
 
 echo -e "\n${CYAN}--- Step 5: Deploying to Azure Static Web Apps ---${NC}"
 
-# Deploy using SWA CLI
 swa deploy \
     --deployment-token "$STATIC_WEB_APP_TOKEN" \
     --app-location "./bin/publish/wwwroot" \
@@ -114,6 +110,6 @@ echo "Web App URL: ${STATIC_URL}"
 cd ..
 
 echo ""
-echo -e "${YELLOW}⚠️  CORS Configuration Required${NC}"
+echo -e "${YELLOW}CORS Configuration Required${NC}"
 echo "Add this URL to API's CORS AllowedOrigins in ConfigMap:"
 echo "${STATIC_URL}"
