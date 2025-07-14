@@ -13,9 +13,9 @@ resource "azurerm_kubernetes_cluster" "aks" {
   default_node_pool {
     name                = "default"
     node_count          = var.enable_cost_optimization ? 1 : 2
-    vm_size             = var.enable_cost_optimization ? "Standard_B1s" : "Standard_B2s"
+    vm_size             = "Standard_B2s"
     enable_auto_scaling = true
-    min_count           = var.enable_cost_optimization ? 0 : 1
+    min_count           = 1
     max_count           = var.development_mode ? 2 : 5
   }
 
