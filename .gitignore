@@ -31,3 +31,4 @@ test-results*
 concerns.txt
 switch-architecture.sh
 src/FinancialMonitoring.WebApp/wwwroot/appsettings.json.backup
+infra/tfplan
