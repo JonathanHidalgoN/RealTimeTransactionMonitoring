@@ -125,6 +125,11 @@ resource "azurerm_container_app" "processor" {
         name  = "ApplicationInsights__ConnectionString"
         value = azurerm_application_insights.appi.connection_string
       }
+
+      env {
+        name  = "AnomalyDetection__Mode"
+        value = "stateless"
+      }
     }
   }
 
