@@ -99,6 +99,7 @@ services:
       Messaging__Provider: "Kafka"
       AnomalyDetection__MaxAmountThreshold: "1000"
       AnomalyDetection__FrequencyThresholdPerMinute: "10"
+      AnomalyDetection__Mode: "stateless"
       APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://test.in.ai.azure.com/"
       ApplicationInsights__ConnectionString: "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://test.in.ai.azure.com/"
       ASPNETCORE_ENVIRONMENT: "Testing"
