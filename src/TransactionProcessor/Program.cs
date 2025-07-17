@@ -47,10 +47,19 @@ builder.Services.AddOptions<CosmosDbSettings>()
     .Bind(builder.Configuration.GetSection(AppConstants.CosmosDbConfigPrefix))
     .ValidateDataAnnotations()
     .ValidateOnStart();
-builder.Services.AddOptions<RedisSettings>()
-    .Bind(builder.Configuration.GetSection(AppConstants.RedisDbConfigPrefix))
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
+
+// Configure the anomaly detection mode based on the "AnomalyDetection:Mode" configuration value.
+var anomalyDetectionMode = builder.Configuration["AnomalyDetection:Mode"]?.ToLowerInvariant() ?? "stateless";
+Console.WriteLine($"Configuring anomaly detection mode: {anomalyDetectionMode}");
+
+// Only register RedisSettings if using stateful mode
+if (anomalyDetectionMode == "stateful")
+{
+    builder.Services.AddOptions<RedisSettings>()
+        .Bind(builder.Configuration.GetSection(AppConstants.RedisDbConfigPrefix))
+        .ValidateDataAnnotations()
+        .ValidateOnStart();
+}
 
 builder.Services.AddOptions<AnomalyDetectionSettings>()
     .Bind(builder.Configuration.GetSection("AnomalyDetection"))
@@ -60,10 +69,6 @@ builder.Services.AddOptions<AnomalyDetectionSettings>()
 // Configure the messaging provider based on the "Messaging:Provider" configuration value.
 var messagingProvider = builder.Configuration["Messaging:Provider"]?.ToLowerInvariant() ?? AppConstants.KafkaDefaultName;
 Console.WriteLine($"Configuring messaging provider: {messagingProvider}");
-
-// Configure the anomaly detection mode based on the "AnomalyDetection:Mode" configuration value.
-var anomalyDetectionMode = builder.Configuration["AnomalyDetection:Mode"]?.ToLowerInvariant() ?? "stateless";
-Console.WriteLine($"Configuring anomaly detection mode: {anomalyDetectionMode}");
 
 if (messagingProvider == "eventhubs")
 {
