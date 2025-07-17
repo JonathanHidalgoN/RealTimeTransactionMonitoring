@@ -1,6 +1,11 @@
 #!/bin/bash
 
-RESOURCE_GROUP=$(az group list --query "[?contains(name, 'finmon-rg')].name" -o tsv | head -1)
+# Load environment variables
+if [ -f .env ]; then
+    source .env
+fi
+
+RESOURCE_GROUP="${RESOURCE_GROUP_NAME:-$(az group list --query "[?contains(name, 'finmon-rg')].name" -o tsv | head -1)}"
 AKS_CLUSTER=$(az aks list --resource-group $RESOURCE_GROUP --query "[0].name" -o tsv 2>/dev/null)
 NODE_POOL="default"
 
