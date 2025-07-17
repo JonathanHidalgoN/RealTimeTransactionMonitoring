@@ -14,7 +14,8 @@ echo "This script will:"
 echo "1. Read configuration variables from your root '.env' file."
 echo "    - AZURE_SUBSCRIPTION_ID=\"<your-subscription-id>\""
 echo "    - AZURE_LOCATION=\"<your-azure-region, e.g., mexicocentral>\""
-echo "    - RESOURCE_GROUP_NAME=\"<your-resource-group-base-name, e.g., finmon>\""
+echo "    - RESOURCE_GROUP_NAME=\"<your-resource-group-name, e.g., finmon-rg>\""
+echo "    - RESOURCE_GROUP_PREFIX=\"<your-resource-group-prefix, e.g., finmon>\""
 echo "    - SERVICE_PRINCIPAL_NAME=\"<your-service-principal-name, e.g., FinMonInfraAppSP>\""
 echo "    - TF_STATE_STORAGE_ACCOUNT_NAME_BASE=\"<your-terraform-state-storage-account-base-name, e.g., finmontfstate>\""
 echo "2. Log into Azure and set your active subscription."
@@ -58,6 +59,10 @@ if [ -z "$SERVICE_PRINCIPAL_NAME" ]; then
 fi
 if [ -z "$TF_STATE_STORAGE_ACCOUNT_NAME_BASE" ]; then
     echo "Error: TF_STATE_STORAGE_ACCOUNT_NAME_BASE is not set in your .env file." >&2
+    exit 1
+fi
+if [ -z "$RESOURCE_GROUP_PREFIX" ]; then
+    echo "Error: RESOURCE_GROUP_PREFIX is not set in your .env file." >&2
     exit 1
 fi
 
@@ -194,6 +199,7 @@ export ARM_TENANT_ID="${SP_TENANT_ID}"
 export TF_VAR_app_service_principal_object_id="${SP_OBJECT_ID}"
 export TF_VAR_admin_user_object_id="${ADMIN_OBJECT_ID}"
 export TF_VAR_azure_location="${AZURE_LOCATION}"
+export TF_VAR_resource_prefix="${RESOURCE_GROUP_PREFIX}"
 EOF
 chmod +x "${TF_ENV_FILE}"
 echo -e "${GREEN}✓ Helper files generated successfully.${NC}"
