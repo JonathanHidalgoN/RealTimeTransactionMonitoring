@@ -10,11 +10,20 @@ deploy: infra apps frontend
 	@echo "Dashboard: $$(cd infra && terraform output -raw static_web_app_default_hostname 2>/dev/null || echo 'Check Azure portal')"
 	@echo ""
 
-infra: 
+infra:
 	@$(MAKE) bootstrap
-	@$(MAKE) terraform
-	@$(MAKE) app-config
-	@echo "Infrastructure deployment complete"
+	@echo ""
+	@echo "MANUAL STEP REQUIRED:"
+	@echo "Run the following commands in your shell to deploy the core infrastructure:"
+	@echo "1. source .terraform.env && source .env"
+	@echo "2. cd infra"
+	@echo "3. terraform init -upgrade"
+	@echo "4. terraform import azurerm_resource_group.rg \"/subscriptions/$$(az account show --query id -o tsv)/resourceGroups/$$RESOURCE_GROUP_NAME\" || echo 'Skipping import...'"
+	@echo "5. terraform plan -out=tfplan"
+	@echo "6. terraform apply tfplan"
+	@echo ""
+	@echo "After the commands complete successfully, run: make terraform-continue"
+	@echo ""
 
 apps: 
 	@$(MAKE) build-push
@@ -37,18 +46,28 @@ bootstrap:
 	@echo "Setting up Azure infrastructure foundation..."
 	./scripts/bootstrap.sh
 
+#terraform:
+#	@echo "Deploying Azure resources with Terraform..."
+#	@if [ ! -f .terraform.env ]; then \
+#		echo "Error: .terraform.env not found. Run 'make bootstrap' first."; \
+#		exit 1; \
+#	fi
+#	@echo "Initializing Terraform..."
+#	@bash -c "source .terraform.env && cd infra && terraform init -upgrade"
+#	@echo "Importing existing resource group..."
+#	@bash -c "source .terraform.env && source .env && export RESOURCE_GROUP_NAME && cd infra && terraform import azurerm_resource_group.rg \"/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RESOURCE_GROUP_NAME-rg\"" || echo "Resource group already imported or doesn't exist"
+#	@echo "Applying Terraform configuration..."
+#	@bash -c "source .terraform.env && cd infra && terraform plan -out=tfplan && terraform apply tfplan"
+
 terraform:
-	@echo "Deploying Azure resources with Terraform..."
-	@if [ ! -f .terraform.env ]; then \
-		echo "Error: .terraform.env not found. Run 'make bootstrap' first."; \
-		exit 1; \
-	fi
-	@echo "Initializing Terraform..."
-	@bash -c "source .terraform.env && cd infra && terraform init -upgrade"
-	@echo "Importing existing resource group..."
-	@bash -c "source .terraform.env && cd infra && terraform import azurerm_resource_group.rg \"/subscriptions/$$(az account show --query id -o tsv)/resourceGroups/finmon-rg\"" || echo "Resource group already imported or doesn't exist"
-	@echo "Applying Terraform configuration..."
-	@bash -c "source .terraform.env && cd infra && terraform plan -out=tfplan && terraform apply tfplan"
+	# This target is intentionally left blank.
+	# The 'infra' target provides instructions for manual terraform deployment.
+
+terraform-continue:
+	@echo "Continuing infrastructure deployment..."
+	@$(MAKE) app-config
+	@echo "Infrastructure deployment complete"
+
 
 app-config:
 	@echo "Setting up application configuration..."
