@@ -52,7 +52,7 @@ resource "azurerm_container_app" "api" {
 
       env {
         name  = "Redis__ConnectionString"
-        value = "${azurerm_redis_cache.cache.hostname}:${azurerm_redis_cache.cache.ssl_port},password=${azurerm_redis_cache.cache.primary_access_key},ssl=True,abortConnect=False"
+        value = var.anomaly_detection_mode == "stateful" ? "${azurerm_redis_cache.cache[0].hostname}:${azurerm_redis_cache.cache[0].ssl_port},password=${azurerm_redis_cache.cache[0].primary_access_key},ssl=True,abortConnect=False" : ""
       }
 
       env {
@@ -118,7 +118,7 @@ resource "azurerm_container_app" "processor" {
 
       env {
         name  = "Redis__ConnectionString"
-        value = "${azurerm_redis_cache.cache.hostname}:${azurerm_redis_cache.cache.ssl_port},password=${azurerm_redis_cache.cache.primary_access_key},ssl=True,abortConnect=False"
+        value = var.anomaly_detection_mode == "stateful" ? "${azurerm_redis_cache.cache[0].hostname}:${azurerm_redis_cache.cache[0].ssl_port},password=${azurerm_redis_cache.cache[0].primary_access_key},ssl=True,abortConnect=False" : ""
       }
 
       env {
@@ -128,7 +128,7 @@ resource "azurerm_container_app" "processor" {
 
       env {
         name  = "AnomalyDetection__Mode"
-        value = "stateless"
+        value = var.anomaly_detection_mode
       }
     }
   }

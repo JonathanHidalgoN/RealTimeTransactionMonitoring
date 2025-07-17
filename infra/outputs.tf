@@ -85,7 +85,7 @@ output "logic_app_name" {
 
 output "redis_connection_string" {
   description = "The primary connection string for the Azure Cache for Redis instance."
-  value       = azurerm_redis_cache.cache.primary_connection_string
+  value       = var.anomaly_detection_mode == "stateful" ? azurerm_redis_cache.cache[0].primary_connection_string : ""
   sensitive   = true
 }
 
