@@ -1,7 +1,4 @@
 #!/bin/bash
-# Purpose: Setup application configuration and secrets
-# Populates: Azure Key Vault with secrets, creates .env file for Workload Identity
-
 set -e
 
 YELLOW='\033[1;33m'
@@ -55,7 +52,11 @@ az keyvault secret set --vault-name "$KV_NAME" --name "CosmosDb--PrimaryKey" --v
 az keyvault secret set --vault-name "$KV_NAME" --name "EventHubs--ConnectionString" --value "$EH_CS" --output none
 az keyvault secret set --vault-name "$KV_NAME" --name "EventHubs--BlobStorageConnectionString" --value "$EH_STORAGE_CS" --output none
 az keyvault secret set --vault-name "$KV_NAME" --name "ApiSettings--ApiKey" --value "$API_KEY" --output none
-az keyvault secret set --vault-name "$KV_NAME" --name "Redis--ConnectionString" --value "$REDIS_AZ" --output none
+if [ -n "$REDIS_AZ" ]; then
+    az keyvault secret set --vault-name "$KV_NAME" --name "Redis--ConnectionString" --value "$REDIS_AZ" --output none
+else
+    echo "Skipping Redis connection string (stateless mode)"
+fi
 echo -e "${GREEN}✓ All application secrets have been set in Key Vault '${KV_NAME}'.${NC}"
 
 PROJECT_ENV_FILE=".env"
