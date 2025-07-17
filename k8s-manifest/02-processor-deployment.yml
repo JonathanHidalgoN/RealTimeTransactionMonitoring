@@ -16,7 +16,7 @@ spec:
       serviceAccountName: finmon-app-sa
       containers:
       - name: processor
-        image: finmonacr19c7d5ec.azurecr.io/transactionprocessor:latest
+        image: finmonacr2f88f1a9.azurecr.io/transactionprocessor:latest
         #https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/
         livenessProbe:
           exec:
