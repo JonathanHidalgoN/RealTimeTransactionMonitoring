@@ -17,7 +17,6 @@ resource "azurerm_role_assignment" "aks_acr_pull" {
   principal_id         = azurerm_kubernetes_cluster.aks[0].kubelet_identity[0].object_id
 }
 
-# Container Apps need ACR pull access via managed identity
 resource "azurerm_role_assignment" "app_identity_acr_pull" {
   count                = var.deployment_architecture == "containerapp" ? 1 : 0
   scope                = azurerm_container_registry.acr.id
