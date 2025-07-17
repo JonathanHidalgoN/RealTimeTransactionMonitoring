@@ -87,6 +87,7 @@ services:
       EventHubs__EventHubName: "${EVENTHUBS_EVENTHUB_NAME}"
       EventHubs__BlobContainerName: "${EVENTHUBS_BLOB_CONTAINER_NAME}"
       Messaging__Provider: "${MESSAGE_PROVIDER}"
+      AnomalyDetection__Mode: "stateless"
       #Needed when using hot reload in docker
       #https://learn.microsoft.com/en-us/aspnet/core/tutorials/dotnet-watch?view=aspnetcore-8.0
       DOTNET_USE_POLLING_FILE_WATCHER: "true"

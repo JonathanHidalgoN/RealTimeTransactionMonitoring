@@ -32,12 +32,12 @@ output "acr_name" {
 
 output "aks_cluster_name" {
   description = "The name of the AKS cluster."
-  value       = azurerm_kubernetes_cluster.aks.name
+  value       = var.deployment_architecture == "aks" ? azurerm_kubernetes_cluster.aks[0].name : null
 }
 
 output "aks_cluster_id" {
   description = "The ID of the AKS cluster."
-  value       = azurerm_kubernetes_cluster.aks.id
+  value       = var.deployment_architecture == "aks" ? azurerm_kubernetes_cluster.aks[0].id : null
 }
 
 output "cosmosdb_endpoint" {
@@ -85,7 +85,7 @@ output "logic_app_name" {
 
 output "redis_connection_string" {
   description = "The primary connection string for the Azure Cache for Redis instance."
-  value       = azurerm_redis_cache.cache.primary_connection_string
+  value       = var.anomaly_detection_mode == "stateful" ? azurerm_redis_cache.cache[0].primary_connection_string : ""
   sensitive   = true
 }
 
@@ -103,4 +103,15 @@ output "static_web_app_api_key" {
 output "static_web_app_default_hostname" {
   description = "The default hostname of the deployed static web app."
   value       = azurerm_static_web_app.ui.default_host_name
+}
+
+# Container Apps outputs
+output "container_app_api_url" {
+  description = "The URL of the API Container App."
+  value       = var.deployment_architecture == "containerapp" ? "https://${azurerm_container_app.api[0].latest_revision_fqdn}" : null
+}
+
+output "container_app_environment_name" {
+  description = "The name of the Container Apps environment."
+  value       = var.deployment_architecture == "containerapp" ? azurerm_container_app_environment.main[0].name : null
 }

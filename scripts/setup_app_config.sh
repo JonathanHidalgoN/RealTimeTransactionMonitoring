@@ -4,18 +4,10 @@ set -e
 YELLOW='\033[1;33m'
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-echo -e "${YELLOW}======================================================${NC}"
-echo -e "${YELLOW}           Application Secrets Setup Script           ${NC}"
-echo -e "${YELLOW}======================================================${NC}"
-echo ""
-echo "This script will populate Azure Key Vault with the necessary secrets"
-echo "and generate a '.env' file for your runtime configuration."
-echo ""
-echo -e "${YELLOW}Prerequisites:${NC}"
-echo "1. You must be logged into Azure as a user with permissions to set Key Vault secrets."
-echo "2. You must have already run 'terraform apply' successfully."
+echo -e "${YELLOW}Setting up Application Configuration${NC}"
+echo "Populates Key Vault and creates .env file"
 echo ""
 
 read -p "Do you want to continue? (yes/no): " confirm
@@ -60,7 +52,11 @@ az keyvault secret set --vault-name "$KV_NAME" --name "CosmosDb--PrimaryKey" --v
 az keyvault secret set --vault-name "$KV_NAME" --name "EventHubs--ConnectionString" --value "$EH_CS" --output none
 az keyvault secret set --vault-name "$KV_NAME" --name "EventHubs--BlobStorageConnectionString" --value "$EH_STORAGE_CS" --output none
 az keyvault secret set --vault-name "$KV_NAME" --name "ApiSettings--ApiKey" --value "$API_KEY" --output none
-az keyvault secret set --vault-name "$KV_NAME" --name "Redis--ConnectionString" --value "$REDIS_AZ" --output none
+if [ -n "$REDIS_AZ" ]; then
+    az keyvault secret set --vault-name "$KV_NAME" --name "Redis--ConnectionString" --value "$REDIS_AZ" --output none
+else
+    echo "Skipping Redis connection string (stateless mode)"
+fi
 echo -e "${GREEN}✓ All application secrets have been set in Key Vault '${KV_NAME}'.${NC}"
 
 PROJECT_ENV_FILE=".env"
@@ -75,15 +71,9 @@ AZURE_CLIENT_ID="${APP_IDENTITY_CLIENT_ID}"
 EOF
 echo -e "${GREEN}✓ '${PROJECT_ENV_FILE}' created/updated successfully for Workload Identity.${NC}"
 
-echo -e "\n${YELLOW}============================================${NC}"
-echo -e "${YELLOW}      Application Configuration Complete!     ${NC}"
-echo -e "${YELLOW}============================================${NC}"
+echo -e "\n${GREEN}✓ Application Configuration Complete${NC}"
 echo ""
-echo "You are now ready to run your application."
-echo "The '.env' file has been populated with the necessary configuration for Workload Identity."
+echo "Key Vault populated with secrets"
+echo ".env file created for Workload Identity"
 echo ""
-echo -e "${CYAN}Next Step: Deploy Your Application:${NC}"
-echo "Your Kubernetes manifests have already been updated for Workload Identity."
-echo "Simply run your CI/CD pipeline by pushing to your main branch, or apply the manifests manually:"
-echo -e "Run: ${GREEN}cd k8s-manifests && kubectl apply -k .${NC}"
-echo ""
+echo "Next: Deploy to Kubernetes with kubectl apply -f k8s-manifest/"

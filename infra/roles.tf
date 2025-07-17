@@ -11,9 +11,16 @@ resource "azurerm_role_assignment" "admin_user_kv_admin" {
 }
 
 resource "azurerm_role_assignment" "aks_acr_pull" {
+  count                = var.deployment_architecture == "aks" ? 1 : 0
   scope                = azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
-  principal_id         = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
-  # azurerm_kubernetes_cluster.aks.identity[0].principal_id instead.
+  principal_id         = azurerm_kubernetes_cluster.aks[0].kubelet_identity[0].object_id
+}
+
+resource "azurerm_role_assignment" "app_identity_acr_pull" {
+  count                = var.deployment_architecture == "containerapp" ? 1 : 0
+  scope                = azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_user_assigned_identity.app_identity.principal_id
 }
 

@@ -47,10 +47,19 @@ builder.Services.AddOptions<CosmosDbSettings>()
     .Bind(builder.Configuration.GetSection(AppConstants.CosmosDbConfigPrefix))
     .ValidateDataAnnotations()
     .ValidateOnStart();
-builder.Services.AddOptions<RedisSettings>()
-    .Bind(builder.Configuration.GetSection(AppConstants.RedisDbConfigPrefix))
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
+
+// Configure the anomaly detection mode based on the "AnomalyDetection:Mode" configuration value.
+var anomalyDetectionMode = builder.Configuration["AnomalyDetection:Mode"]?.ToLowerInvariant() ?? "stateless";
+Console.WriteLine($"Configuring anomaly detection mode: {anomalyDetectionMode}");
+
+// Only register RedisSettings if using stateful mode
+if (anomalyDetectionMode == "stateful")
+{
+    builder.Services.AddOptions<RedisSettings>()
+        .Bind(builder.Configuration.GetSection(AppConstants.RedisDbConfigPrefix))
+        .ValidateDataAnnotations()
+        .ValidateOnStart();
+}
 
 builder.Services.AddOptions<AnomalyDetectionSettings>()
     .Bind(builder.Configuration.GetSection("AnomalyDetection"))
@@ -83,7 +92,19 @@ builder.Services.AddApplicationInsightsTelemetryWorkerService();
 
 // Register application services with the dependency injection container.
 builder.Services.AddSingleton<ICosmosDbService, CosmosDbService>();
-builder.Services.AddScoped<ITransactionAnomalyDetector, StatefulAnomalyDetector>();
+
+// Configure anomaly detection based on mode
+if (anomalyDetectionMode == "stateful")
+{
+    Console.WriteLine("Configuring stateful anomaly detection with Redis dependency");
+    builder.Services.AddSingleton<IRedisCacheService, RedisCacheService>();
+    builder.Services.AddScoped<ITransactionAnomalyDetector, StatefulAnomalyDetector>();
+}
+else
+{
+    Console.WriteLine("Configuring stateless anomaly detection (no Redis dependency)");
+    builder.Services.AddScoped<ITransactionAnomalyDetector, AnomalyDetector>();
+}
 
 // This hosted service ensures the Cosmos DB database and container exist before the main worker starts.
 builder.Services.AddHostedService<CosmosDbInitializerHostedService>();
@@ -91,7 +112,6 @@ builder.Services.AddSingleton<IAnomalyEventPublisher, EventHubsAnomalyEventPubli
 
 // The main background service that processes transactions.
 builder.Services.AddHostedService<Worker>();
-builder.Services.AddSingleton<IRedisCacheService, RedisCacheService>();
 
 var host = builder.Build();
 host.Run();

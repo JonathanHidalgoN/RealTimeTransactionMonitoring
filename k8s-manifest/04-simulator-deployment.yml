@@ -17,7 +17,7 @@ spec:
       serviceAccountName: finmon-app-sa
       containers:
       - name: simulator
-        image: finmonacr0aaa81f1.azurecr.io/transactionsimulator:latest
+        image: finmonacr2f88f1a9.azurecr.io/transactionsimulator:latest
         livenessProbe:
           exec:
             # This command checks if the /tmp/healthy file has been modified in the last minute.

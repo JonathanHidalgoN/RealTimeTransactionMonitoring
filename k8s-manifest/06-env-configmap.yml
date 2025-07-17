@@ -15,3 +15,7 @@ data:
   EventHubs__BlobContainerName: "eh-checkpoints"
 
   Messaging__Provider: "eventhubs"
+  
+  # Anomaly Detection Configuration
+  # Options: "stateless" (no Redis dependency) or "stateful" (requires Redis)
+  AnomalyDetection__Mode: "stateless"
