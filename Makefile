@@ -91,7 +91,7 @@ k8s-setup:
 	@echo "Domain: api.finmon-ui-azj.com"
 	@echo "Points to: $$(kubectl get service ingress-nginx-controller -n ingress-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo 'LoadBalancer IP pending')"
 	@echo ""
-	@echo "After updating DNS, run: make k8s-continue"
+	@echo "After updating DNS, run: make apps-continue"
 	@echo ""
 
 k8s-continue:
