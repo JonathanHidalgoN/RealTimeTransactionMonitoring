@@ -52,7 +52,7 @@ jobs:
     - name: Display Performance Summary
       if: always()
       run: |
-        echo "## Performance Test Results 🚀" >> $GITHUB_STEP_SUMMARY
+        echo "## Performance Test Results" >> $GITHUB_STEP_SUMMARY
         echo "Load test completed. Download the artifacts to see detailed metrics." >> $GITHUB_STEP_SUMMARY
         echo "- Test Environment: GitHub Actions Ubuntu Runner" >> $GITHUB_STEP_SUMMARY
         echo "- Test Duration: ~2 minutes" >> $GITHUB_STEP_SUMMARY
