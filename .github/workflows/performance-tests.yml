@@ -1,0 +1,59 @@
+name: Performance Tests
+
+on:
+  push:
+    branches: [ performance-testing ]
+  workflow_dispatch: # Also allow manual runs
+
+jobs:
+  performance-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+      pull-requests: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Build Solution
+      run: dotnet build --configuration Release
+
+    - name: Start Test Environment
+      run: |
+        docker compose -f docker-compose.test.yml up -d financialmonitoring-api-test cosmosdb-emulator redis --build
+        sleep 60
+
+    - name: Run Load Tests
+      run: |
+        docker compose -f docker-compose.test.yml run --name load-tests-container load-tests
+        mkdir -p ./load-test-reports
+        docker cp load-tests-container:/app/load-test-reports/. ./load-test-reports/ || echo "No load test reports found"
+
+    - name: Upload Performance Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: performance-test-results
+        path: ./load-test-reports/
+        if-no-files-found: warn
+
+    - name: Cleanup
+      if: always()
+      run: docker compose -f docker-compose.test.yml down -v
+
+    - name: Display Performance Summary
+      if: always()
+      run: |
+        echo "## Performance Test Results 🚀" >> $GITHUB_STEP_SUMMARY
+        echo "Load test completed. Download the artifacts to see detailed metrics." >> $GITHUB_STEP_SUMMARY
+        echo "- Test Environment: GitHub Actions Ubuntu Runner" >> $GITHUB_STEP_SUMMARY
+        echo "- Test Duration: ~2 minutes" >> $GITHUB_STEP_SUMMARY
+        echo "- Scenarios: API Load Test, Anomaly Detection, Memory Intensive, Transaction Lookup" >> $GITHUB_STEP_SUMMARY
