@@ -38,6 +38,36 @@ public record TransactionForCosmos
     public required Account DestinationAccount { get; init; }
 
     /// <summary>
+    /// The type of transaction (Purchase, Transfer, etc.)
+    /// </summary>
+    public TransactionType Type { get; init; }
+
+    /// <summary>
+    /// The merchant category for the transaction
+    /// </summary>
+    public MerchantCategory MerchantCategory { get; init; }
+
+    /// <summary>
+    /// The name of the merchant or entity
+    /// </summary>
+    public required string MerchantName { get; init; }
+
+    /// <summary>
+    /// The location where the transaction occurred
+    /// </summary>
+    public required Location Location { get; init; }
+
+    /// <summary>
+    /// The currency code (ISO 4217)
+    /// </summary>
+    public string Currency { get; init; } = "USD";
+
+    /// <summary>
+    /// The payment method used for the transaction
+    /// </summary>
+    public PaymentMethod PaymentMethod { get; init; }
+
+    /// <summary>
     /// A flag indicating the type of anomaly detected, if any.
     /// </summary>
     public string? AnomalyFlag { get; init; }
@@ -56,6 +86,12 @@ public record TransactionForCosmos
             Timestamp = domainTransaction.Timestamp,
             SourceAccount = domainTransaction.SourceAccount,
             DestinationAccount = domainTransaction.DestinationAccount,
+            Type = domainTransaction.Type,
+            MerchantCategory = domainTransaction.MerchantCategory,
+            MerchantName = domainTransaction.MerchantName,
+            Location = domainTransaction.Location,
+            Currency = domainTransaction.Currency,
+            PaymentMethod = domainTransaction.PaymentMethod,
             AnomalyFlag = domainTransaction.AnomalyFlag
         };
     }
@@ -72,6 +108,12 @@ public record TransactionForCosmos
             Timestamp,
             SourceAccount,
             DestinationAccount,
+            Type,
+            MerchantCategory,
+            MerchantName,
+            Location,
+            Currency,
+            PaymentMethod,
             AnomalyFlag
         );
     }
