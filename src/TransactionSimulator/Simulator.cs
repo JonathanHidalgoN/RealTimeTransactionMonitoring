@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Confluent.Kafka;
 using System.IO;
+using TransactionSimulator.Generation;
 
 namespace TransactionSimulator;
 
@@ -12,27 +13,15 @@ public class Simulator : BackgroundService
 {
     private readonly ILogger<Simulator> _logger;
     private readonly IMessageProducer<Null, string> _messageProducer;
-    private static readonly Random _random = new Random();
+    private readonly TransactionGenerator _transactionGenerator;
 
     public Simulator(ILogger<Simulator> logger, IMessageProducer<Null, string> messageProducer)
     {
         _logger = logger;
         _messageProducer = messageProducer;
+        _transactionGenerator = new TransactionGenerator();
     }
 
-    public static Transaction GenerateTransaction()
-    {
-        string sourceAccId = "ACC" + _random.Next(1000, 9999);
-        string destAccId = "ACC" + _random.Next(1000, 9999);
-
-        return new Transaction(
-            id: Guid.NewGuid().ToString(),
-            amount: Math.Round(_random.NextDouble() * 1500, 2),
-            timestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            sourceAccount: new Account(sourceAccId),
-            destinationAccount: new Account(destAccId)
-        );
-    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -42,7 +31,7 @@ public class Simulator : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             transactionCounter++;
-            Transaction transaction = GenerateTransaction();
+            Transaction transaction = _transactionGenerator.GenerateRealisticTransaction();
             string jsonTransaction = JsonSerializer.Serialize(transaction);
 
             try
@@ -58,8 +47,9 @@ public class Simulator : BackgroundService
             {
                 await _messageProducer.ProduceAsync(null, jsonTransaction, stoppingToken);
 
-                _logger.LogInformation("[{Timestamp:HH:mm:ss}] Produced message {Counter} on topic '{TopicName}'",
-                    DateTime.Now, transactionCounter, AppConstants.TransactionsTopicName);
+                _logger.LogInformation("[{Timestamp:HH:mm:ss}] Produced realistic transaction {Counter}: {AccountId} -> {MerchantName} (${Amount}) in {Location}",
+                    DateTime.Now, transactionCounter, transaction.SourceAccount.AccountId, 
+                    transaction.MerchantName, transaction.Amount, transaction.Location.City);
             }
             catch (Exception ex) when (ex is OperationCanceledException or TaskCanceledException)
             {
