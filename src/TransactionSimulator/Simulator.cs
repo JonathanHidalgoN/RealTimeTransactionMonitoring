@@ -48,7 +48,7 @@ public class Simulator : BackgroundService
                 await _messageProducer.ProduceAsync(null, jsonTransaction, stoppingToken);
 
                 _logger.LogInformation("[{Timestamp:HH:mm:ss}] Produced realistic transaction {Counter}: {AccountId} -> {MerchantName} (${Amount}) in {Location}",
-                    DateTime.Now, transactionCounter, transaction.SourceAccount.AccountId, 
+                    DateTime.Now, transactionCounter, transaction.SourceAccount.AccountId,
                     transaction.MerchantName, transaction.Amount, transaction.Location.City);
             }
             catch (Exception ex) when (ex is OperationCanceledException or TaskCanceledException)
