@@ -1,14 +1,15 @@
 using TransactionSimulator;
 using TransactionSimulator.Generation;
+using FinancialMonitoring.Abstractions;
 using FinancialMonitoring.Models;
 
 public class SimulatorTests
 {
     [Fact]
-    public void GenerateRealisticTransaction_ShouldReturnValidTransaction_WhenCalled()
+    public void GenerateTransaction_ShouldReturnValidTransaction_WhenCalled()
     {
-        var generator = new TransactionGenerator(seed: 12345);
-        Transaction generatedTransaction = generator.GenerateRealisticTransaction();
+        ITransactionGenerator generator = new TransactionGenerator(seed: 12345);
+        Transaction generatedTransaction = generator.GenerateTransaction();
 
         Assert.NotNull(generatedTransaction);
         Assert.False(string.IsNullOrWhiteSpace(generatedTransaction.Id));
