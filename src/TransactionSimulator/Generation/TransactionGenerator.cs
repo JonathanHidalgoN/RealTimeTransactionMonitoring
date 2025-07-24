@@ -1,4 +1,5 @@
 using FinancialMonitoring.Models;
+using FinancialMonitoring.Abstractions;
 using TransactionSimulator.Data;
 
 namespace TransactionSimulator.Generation;
@@ -6,7 +7,7 @@ namespace TransactionSimulator.Generation;
 /// <summary>
 /// Professional-grade transaction generator with realistic patterns
 /// </summary>
-public class TransactionGenerator
+public class TransactionGenerator : ITransactionGenerator
 {
     private const int DAYS_IN_MONTH = 30;
     private const int HOURS_IN_HALF_DAY = 12;
@@ -37,7 +38,7 @@ public class TransactionGenerator
     /// <summary>
     /// Generates a realistic transaction with proper temporal, geographic, and behavioral patterns
     /// </summary>
-    public Transaction GenerateRealisticTransaction()
+    public Transaction GenerateTransaction()
     {
         var userProfile = _userProfiles[_random.Next(_userProfiles.Count)];
         var now = DateTimeOffset.UtcNow;
