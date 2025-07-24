@@ -5,7 +5,9 @@ using Azure.Identity;
 using Microsoft.Extensions.Configuration;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Abstractions.Messaging;
+using FinancialMonitoring.Abstractions;
 using TransactionSimulator.Messaging;
+using TransactionSimulator.Generation;
 using Confluent.Kafka;
 
 public class Program
@@ -64,6 +66,8 @@ public class Program
         }
 
         builder.Services.AddApplicationInsightsTelemetryWorkerService();
+
+        builder.Services.AddSingleton<ITransactionGenerator, TransactionGenerator>();
 
         builder.Services.AddHostedService<Simulator>();
 
