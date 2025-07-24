@@ -136,7 +136,11 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
             amount: 250.00,
             timestamp: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
             sourceAccount: new Account("ACC-FROM-001"),
-            destinationAccount: new Account("ACC-TO-001")
+            destinationAccount: new Account("ACC-TO-001"),
+            type: TransactionType.Purchase,
+            merchantCategory: MerchantCategory.Retail,
+            merchantName: "Integration Test Store",
+            location: new Location("NYC", "NY", "US")
         );
 
         await _producer.ProduceAsync("transactions", new Message<Null, string>
@@ -164,7 +168,11 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
             amount: 5000.00,
             timestamp: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
             sourceAccount: new Account("ACC-ANOMALY-001"),
-            destinationAccount: new Account("ACC-ANOMALY-002")
+            destinationAccount: new Account("ACC-ANOMALY-002"),
+            type: TransactionType.Purchase,
+            merchantCategory: MerchantCategory.Retail,
+            merchantName: "High Value Store",
+            location: new Location("NYC", "NY", "US")
         );
 
         await _producer.ProduceAsync("transactions", new Message<Null, string>
@@ -191,7 +199,11 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
             amount: 100.00 + i,
             timestamp: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
             sourceAccount: new Account($"ACC-FROM-{i:D3}"),
-            destinationAccount: new Account($"ACC-TO-{i:D3}")
+            destinationAccount: new Account($"ACC-TO-{i:D3}"),
+            type: TransactionType.Purchase,
+            merchantCategory: MerchantCategory.Retail,
+            merchantName: $"Test Store {i}",
+            location: new Location("NYC", "NY", "US")
         )).ToList();
 
         var tasks = transactions.Select(async transaction =>

@@ -1,16 +1,18 @@
 using TransactionSimulator;
+using TransactionSimulator.Generation;
 using FinancialMonitoring.Models;
 
 public class SimulatorTests
 {
     [Fact]
-    public void GenerateTransaction_ShouldReturnValidTransaction_WhenCalled()
+    public void GenerateRealisticTransaction_ShouldReturnValidTransaction_WhenCalled()
     {
-        Transaction generatedTransaction = Simulator.GenerateTransaction();
+        var generator = new TransactionGenerator(seed: 12345);
+        Transaction generatedTransaction = generator.GenerateRealisticTransaction();
 
         Assert.NotNull(generatedTransaction);
         Assert.False(string.IsNullOrWhiteSpace(generatedTransaction.Id));
-        Assert.InRange(generatedTransaction.Amount, 0, 1500);
+        Assert.True(generatedTransaction.Amount > 0);
 
         long currentUnixTimeMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         Assert.True(generatedTransaction.Timestamp <= currentUnixTimeMs, "Timestamp should not be in the future.");
@@ -19,6 +21,11 @@ public class SimulatorTests
         Assert.StartsWith("ACC", generatedTransaction.SourceAccount.AccountId);
 
         Assert.NotNull(generatedTransaction.DestinationAccount);
-        Assert.StartsWith("ACC", generatedTransaction.DestinationAccount.AccountId);
+        Assert.False(string.IsNullOrWhiteSpace(generatedTransaction.DestinationAccount.AccountId));
+
+        Assert.False(string.IsNullOrWhiteSpace(generatedTransaction.MerchantName));
+        Assert.NotNull(generatedTransaction.Location);
+        Assert.False(string.IsNullOrWhiteSpace(generatedTransaction.Location.City));
+        Assert.Equal("USD", generatedTransaction.Currency);
     }
 }

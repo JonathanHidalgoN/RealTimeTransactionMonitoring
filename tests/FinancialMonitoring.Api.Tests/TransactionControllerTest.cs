@@ -55,8 +55,10 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
     {
         var expectedTransactions = new List<Transaction>
         {
-            new Transaction("tx1", 100, 0, new Account("ACC1"), new Account("ACC2")),
-            new Transaction("tx2", 200, 0, new Account("ACC3"), new Account("ACC4"))
+            new Transaction("tx1", 100, 0, new Account("ACC1"), new Account("ACC2"),
+                TransactionType.Purchase, MerchantCategory.Retail, "Store 1", new Location("NYC", "NY", "US")),
+            new Transaction("tx2", 200, 0, new Account("ACC3"), new Account("ACC4"),
+                TransactionType.Purchase, MerchantCategory.Grocery, "Store 2", new Location("LA", "CA", "US"))
         };
 
         var expectedPagedResult = new PagedResult<Transaction>
@@ -89,7 +91,8 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
     public async Task GetTransactionById_WhenTransactionExists_ReturnsOkResult_WithTransaction()
     {
         var transactionId = "existing-tx-id";
-        var expectedTransaction = new Transaction(transactionId, 150, 0, new Account("ACC5"), new Account("ACC6"));
+        var expectedTransaction = new Transaction(transactionId, 150, 0, new Account("ACC5"), new Account("ACC6"),
+            TransactionType.Purchase, MerchantCategory.Restaurant, "Test Restaurant", new Location("NYC", "NY", "US"));
 
         _mockQueryService
             .Setup(service => service.GetTransactionByIdAsync(transactionId))

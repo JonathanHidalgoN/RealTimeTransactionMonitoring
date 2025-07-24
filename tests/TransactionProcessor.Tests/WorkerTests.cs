@@ -34,7 +34,8 @@ public class WorkerTests
     [Fact]
     public async Task ProcessMessageAsync_WithValidMessage_ShouldProcessAndStoreTransaction()
     {
-        var transaction = new Transaction("TXN123", 100, 123456, new Account("ACC1"), new Account("ACC2"));
+        var transaction = new Transaction("TXN123", 100, 123456, new Account("ACC1"), new Account("ACC2"),
+            TransactionType.Purchase, MerchantCategory.Retail, "Test Store", new Location("NYC", "NY", "US"));
         var message = new ReceivedMessage<Null, string>(null, JsonSerializer.Serialize(transaction));
 
         _mockAnomalyDetector.Setup(d => d.DetectAsync(It.IsAny<Transaction>()))

@@ -63,7 +63,11 @@ public class DockerComposeIntegrationTests : IAsyncLifetime
             amount: 250.00,
             timestamp: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
             sourceAccount: new Account("ACC-FROM-001"),
-            destinationAccount: new Account("ACC-TO-001")
+            destinationAccount: new Account("ACC-TO-001"),
+            type: TransactionType.Purchase,
+            merchantCategory: MerchantCategory.Retail,
+            merchantName: "Docker Test Store",
+            location: new Location("NYC", "NY", "US")
         );
 
         // Send transaction to Kafka

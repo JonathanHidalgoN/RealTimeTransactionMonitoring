@@ -37,7 +37,11 @@ public class StatefulAnomalyDetectorTests
             amount: amount,
             timestamp: 0,
             sourceAccount: new Account(accountId),
-            destinationAccount: new Account("DEST_ACC")
+            destinationAccount: new Account("DEST_ACC"),
+            type: TransactionType.Purchase,
+            merchantCategory: MerchantCategory.Retail,
+            merchantName: "Test Store",
+            location: new Location("NYC", "NY", "US")
         );
     }
 

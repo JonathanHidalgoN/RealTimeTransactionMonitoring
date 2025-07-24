@@ -5,6 +5,55 @@ public class TransactionTests
 {
     private Account ValidSourceAccount() => new Account("ACC_SRC_VALID");
     private Account ValidDestinationAccount() => new Account("ACC_DEST_VALID");
+    private Location ValidLocation() => new Location("New York", "NY", "US", "10001");
+    
+    private Transaction CreateValidTransaction(
+        string? id = null, 
+        double? amount = null, 
+        long? timestamp = null,
+        Account? sourceAccount = null,
+        Account? destinationAccount = null,
+        string? anomalyFlag = null)
+    {
+        return new Transaction(
+            id ?? Guid.NewGuid().ToString(),
+            amount ?? 100.50,
+            timestamp ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            sourceAccount ?? ValidSourceAccount(),
+            destinationAccount ?? ValidDestinationAccount(),
+            TransactionType.Purchase,
+            MerchantCategory.Retail,
+            "Test Merchant",
+            ValidLocation(),
+            "USD",
+            PaymentMethod.DebitCard,
+            anomalyFlag
+        );
+    }
+    
+    private Transaction CreateTransactionWithNullChecking(
+        string id, 
+        double amount, 
+        long timestamp,
+        Account sourceAccount,
+        Account destinationAccount,
+        string? anomalyFlag = null)
+    {
+        return new Transaction(
+            id,
+            amount,
+            timestamp,
+            sourceAccount,
+            destinationAccount,
+            TransactionType.Purchase,
+            MerchantCategory.Retail,
+            "Test Merchant",
+            ValidLocation(),
+            "USD",
+            PaymentMethod.DebitCard,
+            anomalyFlag
+        );
+    }
 
     [Fact]
     public void Constructor_WithValidParameters_ShouldCreateInstance()
@@ -15,7 +64,7 @@ public class TransactionTests
         Account sourceAccount = ValidSourceAccount();
         Account destinationAccount = ValidDestinationAccount();
 
-        var transaction = new Transaction(validId, validAmount, validTimestamp, sourceAccount, destinationAccount);
+        var transaction = CreateValidTransaction(validId, validAmount, validTimestamp, sourceAccount, destinationAccount);
 
         Assert.NotNull(transaction);
         Assert.Equal(validId, transaction.Id);
@@ -34,7 +83,7 @@ public class TransactionTests
     public void Constructor_WithInvalidId_ShouldThrowArgumentException(string invalidId)
     {
         var exception = Assert.Throws<ArgumentException>(() =>
-            new Transaction(invalidId, 100, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), ValidSourceAccount(), ValidDestinationAccount()));
+            CreateTransactionWithNullChecking(invalidId, 100, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), ValidSourceAccount(), ValidDestinationAccount()));
         Assert.Equal("id", exception.ParamName);
     }
 
@@ -42,7 +91,7 @@ public class TransactionTests
     public void Constructor_WithNegativeAmount_ShouldThrowArgumentOutOfRangeException()
     {
         var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new Transaction(Guid.NewGuid().ToString(), -50.0, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), ValidSourceAccount(), ValidDestinationAccount()));
+            CreateTransactionWithNullChecking(Guid.NewGuid().ToString(), -50.0, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), ValidSourceAccount(), ValidDestinationAccount()));
         Assert.Equal("amount", exception.ParamName);
     }
 
@@ -55,7 +104,7 @@ public class TransactionTests
 
         var exception = Assert.Throws<ArgumentNullException>(() =>
 #pragma warning disable CS8604
-            new Transaction(Guid.NewGuid().ToString(), 100, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), nullSourceAccount, ValidDestinationAccount()));
+            CreateTransactionWithNullChecking(Guid.NewGuid().ToString(), 100, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), nullSourceAccount, ValidDestinationAccount()));
 #pragma warning restore CS8604
         Assert.Equal("sourceAccount", exception.ParamName);
     }
@@ -69,7 +118,7 @@ public class TransactionTests
 
         var exception = Assert.Throws<ArgumentNullException>(() =>
 #pragma warning disable CS8604
-            new Transaction(Guid.NewGuid().ToString(), 100, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), ValidSourceAccount(), nullDestinationAccount));
+            CreateTransactionWithNullChecking(Guid.NewGuid().ToString(), 100, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), ValidSourceAccount(), nullDestinationAccount));
 #pragma warning restore CS8604
         Assert.Equal("destinationAccount", exception.ParamName);
     }
@@ -78,7 +127,7 @@ public class TransactionTests
     public void Constructor_WithZeroAmount_ShouldBeAllowed()
     {
         string validId = Guid.NewGuid().ToString();
-        var transaction = new Transaction(validId, 0.0, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), ValidSourceAccount(), ValidDestinationAccount());
+        var transaction = CreateValidTransaction(validId, 0.0);
         Assert.NotNull(transaction);
         Assert.Equal(0.0, transaction.Amount);
     }

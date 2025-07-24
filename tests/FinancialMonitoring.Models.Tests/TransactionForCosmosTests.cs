@@ -11,6 +11,12 @@ public class TransactionForCosmosTests
             timestamp: 1672531200,
             sourceAccount: new Account("SRC001"),
             destinationAccount: new Account("DEST002"),
+            type: TransactionType.Purchase,
+            merchantCategory: MerchantCategory.Retail,
+            merchantName: "Test Store",
+            location: new Location("New York", "NY", "US", "10001"),
+            currency: "USD",
+            paymentMethod: PaymentMethod.CreditCard,
             anomalyFlag: "HighValue");
 
         var cosmosTransaction = TransactionForCosmos.FromDomainTransaction(domainTransaction);
@@ -33,6 +39,12 @@ public class TransactionForCosmosTests
             Timestamp = 1672534800,
             SourceAccount = new Account("SRC003"),
             DestinationAccount = new Account("DEST004"),
+            Type = TransactionType.Purchase,
+            MerchantCategory = MerchantCategory.Grocery,
+            MerchantName = "Test Market",
+            Location = new Location("Los Angeles", "CA", "US", "90210"),
+            Currency = "USD",
+            PaymentMethod = PaymentMethod.DebitCard,
             AnomalyFlag = null
         };
 

@@ -22,7 +22,8 @@ public class HighValueTransactionAnomalyDetectorTests
     [Fact]
     public async Task DetectAsync_WithHighValueTransaction_ShouldPublishEventAndReturnFlag()
     {
-        var highValueTransaction = new Transaction("tx-123", 15000.00, 0, new Account("A"), new Account("B"));
+        var highValueTransaction = new Transaction("tx-123", 15000.00, 0, new Account("A"), new Account("B"), 
+            TransactionType.Purchase, MerchantCategory.Retail, "Test Store", new Location("NYC", "NY", "US"));
 
         var result = await _detector.DetectAsync(highValueTransaction);
 
@@ -37,7 +38,8 @@ public class HighValueTransactionAnomalyDetectorTests
     [Fact]
     public async Task DetectAsync_WithNormalValueTransaction_ShouldNotPublishEventAndReturnNull()
     {
-        var normalTransaction = new Transaction("tx-456", 500.00, 0, new Account("C"), new Account("D"));
+        var normalTransaction = new Transaction("tx-456", 500.00, 0, new Account("C"), new Account("D"),
+            TransactionType.Purchase, MerchantCategory.Grocery, "Test Market", new Location("NYC", "NY", "US"));
 
         var result = await _detector.DetectAsync(normalTransaction);
 
