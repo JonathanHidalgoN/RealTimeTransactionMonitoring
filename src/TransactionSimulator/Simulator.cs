@@ -1,11 +1,11 @@
 using FinancialMonitoring.Abstractions.Messaging;
+using FinancialMonitoring.Abstractions;
 using FinancialMonitoring.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Confluent.Kafka;
 using System.IO;
-using TransactionSimulator.Generation;
 
 namespace TransactionSimulator;
 
@@ -13,13 +13,13 @@ public class Simulator : BackgroundService
 {
     private readonly ILogger<Simulator> _logger;
     private readonly IMessageProducer<Null, string> _messageProducer;
-    private readonly TransactionGenerator _transactionGenerator;
+    private readonly ITransactionGenerator _transactionGenerator;
 
-    public Simulator(ILogger<Simulator> logger, IMessageProducer<Null, string> messageProducer)
+    public Simulator(ILogger<Simulator> logger, IMessageProducer<Null, string> messageProducer, ITransactionGenerator transactionGenerator)
     {
         _logger = logger;
         _messageProducer = messageProducer;
-        _transactionGenerator = new TransactionGenerator();
+        _transactionGenerator = transactionGenerator;
     }
 
 
@@ -31,7 +31,7 @@ public class Simulator : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             transactionCounter++;
-            Transaction transaction = _transactionGenerator.GenerateRealisticTransaction();
+            Transaction transaction = _transactionGenerator.GenerateTransaction();
             string jsonTransaction = JsonSerializer.Serialize(transaction);
 
             try
