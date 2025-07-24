@@ -16,7 +16,7 @@ public record Location
     public string State { get; init; }
 
     /// <summary>
-    /// Country code (ISO 3166-1 alpha-2)
+    /// Country code
     /// </summary>
     public string Country { get; init; }
 
