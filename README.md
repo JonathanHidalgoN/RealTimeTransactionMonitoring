@@ -68,6 +68,34 @@ graph TD
     * Services running in AKS use **Azure AD Workload Identity** for a modern, secure, and passwordless authentication to Key Vault.
 * **Centralized Observability:** All services are instrumented with **Application Insights** for distributed tracing, logging, and performance monitoring.
 
+## Professional-Grade Synthetic Transaction Generation
+
+The system includes a sophisticated transaction generation engine that creates realistic financial data for testing, development, and ML training purposes. The generator implements behavioral patterns based on real-world financial transaction characteristics.
+
+### Key Generation Features
+
+* **User Profile-Based Behavior**: Generates diverse user personas (Students, Young Professionals, Families, Retirees, High Net Worth, Small Business, Freelancers) with distinct spending patterns
+* **Temporal Intelligence**: Transactions follow realistic time patterns including:
+  - Business hours vs. off-hours activity
+  - Weekend vs. weekday behaviors  
+  - User-type specific active hours (students transact late, retirees during day)
+  - Time zone awareness for geographic users
+* **Geographic Distribution**: Realistic location data across 40+ US cities with travel probability modeling
+* **Merchant Ecosystem**: Category-specific merchants (grocery stores, gas stations, restaurants) with realistic pricing ranges
+* **Payment Method Selection**: Context-aware payment methods (large amounts use checks/ACH, ATMs use cash, online services prefer digital wallets)
+
+### Transaction Generation Heuristics
+
+The generator employs several heuristics to create ML-ready transaction data:
+
+1. **Amount Distribution**: Using normal distributions around user spending patterns with category-specific bounds (groceries: $5-300, travel: $100-5000)
+2. **Frequency Modeling**: Monthly transaction frequencies converted to daily probabilities with time-of-day weighting
+3. **Risk Profiling**: Users with higher risk tolerance occasionally generate transactions at unusual hours or amounts
+4. **Behavioral Consistency**: Account statistics maintain continuity (same user tends to shop at similar merchant categories)
+5. **Anomaly Injection**: Controlled insertion of suspicious patterns for ML model training
+
+The transaction generator is interface-based (`ITransactionGenerator`) allowing easy swapping between realistic and simple generators for different testing scenarios.
+
 ## Technology Stack
 
 * **Languages & Frameworks:** C# 12, .NET 8, ASP.NET Core (Web API), Worker Service, Blazor WebAssembly, xUnit
