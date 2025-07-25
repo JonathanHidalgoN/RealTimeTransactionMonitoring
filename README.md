@@ -6,48 +6,144 @@ The primary goal is to identify and flag anomalous transactions, provide a query
 
 ## Architecture
 
-The system follows an event-driven architecture, ensuring scalability and resilience.
+The system follows an event-driven architecture, ensuring scalability and resilience. The architecture is presented through four focused diagrams that clearly separate different aspects of the system.
+
+### CI/CD Pipeline
+
+The automated deployment pipeline handles testing, building, and deployment of all components:
 
 ```mermaid
 graph TD
-    subgraph "CI/CD Pipeline"
-        DEV[Developer] -- Git Push --> REPO[GitHub Repository];
-        REPO -- Triggers --> ACTIONS[GitHub Actions CI/CD];
-        ACTIONS -- Builds Images --> ACR[Azure Container Registry];
-        ACTIONS -- Deploys UI --> SWA[Azure Static Web Apps];
-        ACTIONS -- Deploys Backend --> AKS[Azure Kubernetes Service];
+    DEV[👨‍💻 Developer] -- Git Push --> REPO[📁 GitHub Repository]
+    REPO -- Triggers --> ACTIONS[⚙️ GitHub Actions]
+    
+    subgraph "Testing Phase"
+        ACTIONS --> UNIT[🧪 Unit Tests]
+        ACTIONS --> INTEGRATION[🔗 Integration Tests]
+        ACTIONS --> LOAD[⚡ Load Tests]
     end
+    
+    subgraph "Build & Push Phase"
+        UNIT --> BUILD[🔨 Build 4 Docker Images]
+        BUILD --> API_IMG[📦 API Image]
+        BUILD --> PROC_IMG[📦 Processor Image]
+        BUILD --> SIM_IMG[📦 Simulator Image]
+        BUILD --> WEB_IMG[📦 WebApp Image]
+        
+        API_IMG --> ACR[🏪 Azure Container Registry]
+        PROC_IMG --> ACR
+        SIM_IMG --> ACR
+        WEB_IMG --> ACR
+    end
+    
+    subgraph "Deploy Phase"
+        ACR --> K8S_UPDATE[📝 Update K8s Manifests]
+        K8S_UPDATE --> AKS[☸️ Deploy to AKS]
+        WEB_IMG --> SWA[🌐 Deploy to Static Web Apps]
+    end
+```
 
-    subgraph "User Access"
-        USER[User] --> SWA;
-        SWA -- API Calls --> API[API Service on AKS];
-    end
+### Azure Infrastructure
 
-    subgraph "Azure Runtime Infrastructure"
-        AKS --> API;
-        AKS --> PROCESSOR[Transaction Processor];
-        AKS --> SIMULATOR[Transaction Simulator];
-        
-        SIMULATOR -- Produces Events --> EVENTS_IN["Azure Event Hubs (transactions)"];
-        EVENTS_IN -- Streams Data --> PROCESSOR;
-        
-        PROCESSOR -- Stores Data --> COSMOS[Azure Cosmos DB];
-        PROCESSOR -- Publishes Anomaly --> EVENTS_OUT["Azure Event Hubs (anomalies)"];
-        EVENTS_OUT -- Triggers --> LOGIC[Azure Logic App];
-        LOGIC -- Sends Email --> EMAIL([Email Notification]);
-        
-        API -- Queries Data --> COSMOS;
-        PROCESSOR -- Reads Secrets --> KV[Azure Key Vault];
-        API -- Reads Secrets --> KV;
-        
-        ACR -- Provides Images --> AKS;
-    end
+All Azure services and their relationships in the cloud infrastructure:
 
-    subgraph "Observability"
-        API --> INSIGHTS[Application Insights];
-        PROCESSOR --> INSIGHTS;
-        SIMULATOR --> INSIGHTS;
+```mermaid
+graph TB
+    subgraph "Compute & Container Services"
+        AKS[☸️ Azure Kubernetes Service]
+        ACR[🏪 Azure Container Registry]
+        SWA[🌐 Azure Static Web Apps]
     end
+    
+    subgraph "Data & Messaging Services"
+        COSMOS[(🌍 Azure Cosmos DB)]
+        REDIS[(⚡ Azure Cache for Redis)]
+        EH_TRANS[📨 Event Hubs<br/>transactions]
+        EH_ANOM[📨 Event Hubs<br/>anomalies]
+    end
+    
+    subgraph "Security & Monitoring"
+        KV[🔐 Azure Key Vault]
+        INSIGHTS[📊 Application Insights]
+    end
+    
+    subgraph "Automation & Notifications"
+        LOGIC[🔄 Azure Logic Apps]
+        EMAIL[📧 Email Service]
+    end
+    
+    ACR --> AKS
+    AKS --> COSMOS
+    AKS --> REDIS
+    AKS --> EH_TRANS
+    AKS --> EH_ANOM
+    AKS --> KV
+    AKS --> INSIGHTS
+    EH_ANOM --> LOGIC
+    LOGIC --> EMAIL
+```
+
+### Runtime Application Architecture
+
+How the three main containerized services interact within the Kubernetes cluster:
+
+```mermaid
+graph LR
+    subgraph "AKS Cluster"
+        SIM[🎯 Transaction<br/>Simulator]
+        PROC[⚙️ Transaction<br/>Processor]
+        API[🔌 API<br/>Service]
+    end
+    
+    subgraph "External Services"
+        UI[💻 Blazor WebApp<br/>Static Web Apps]
+        USER[👤 End User]
+    end
+    
+    subgraph "Storage & Messaging"
+        EH_TRANS[📨 Event Hubs<br/>transactions]
+        EH_ANOM[📨 Event Hubs<br/>anomalies]
+        COSMOS[(🌍 Cosmos DB)]
+        REDIS[(⚡ Redis Cache)]
+    end
+    
+    SIM --> EH_TRANS
+    EH_TRANS --> PROC
+    PROC --> COSMOS
+    PROC --> REDIS
+    PROC --> EH_ANOM
+    API --> COSMOS
+    USER --> UI
+    UI --> API
+```
+
+### Transaction Data Flow
+
+Step-by-step journey of a transaction through the complete system:
+
+```mermaid
+graph TD
+    START([💰 Transaction Generated]) --> SIM[🎯 Transaction Simulator]
+    SIM --> EH1[📨 Event Hubs<br/>transactions topic]
+    EH1 --> PROC[⚙️ Transaction Processor]
+    
+    subgraph "Processing Logic"
+        PROC --> REDIS{⚡ Check Redis<br/>for Account Stats}
+        REDIS --> ANOMALY_CHECK{🔍 Anomaly<br/>Detection}
+        ANOMALY_CHECK -->|Normal| STORE1[💾 Store in Cosmos DB]
+        ANOMALY_CHECK -->|Suspicious| STORE2[💾 Store in Cosmos DB<br/>+ Flag as Anomaly]
+        STORE2 --> EH2[📨 Event Hubs<br/>anomalies topic]
+        EH2 --> LOGIC[🔄 Logic Apps]
+        LOGIC --> EMAIL[📧 Send Alert Email]
+    end
+    
+    STORE1 --> DB[(🌍 Cosmos DB<br/>Transactions)]
+    DB --> API[🔌 API Service]
+    API --> UI[💻 Blazor WebApp]
+    UI --> USER[👤 User Dashboard]
+    
+    style ANOMALY_CHECK fill:#ff9999
+    style EMAIL fill:#ffcc99
 ```
 
 ## Key Features
