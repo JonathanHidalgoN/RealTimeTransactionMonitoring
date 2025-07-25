@@ -106,6 +106,7 @@ graph TB
     ACR --> API
     ACR --> PROC
     ACR --> SIM
+```
 
 ### Transaction Data Flow
 
