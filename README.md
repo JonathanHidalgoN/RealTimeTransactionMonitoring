@@ -16,28 +16,28 @@ The automated deployment pipeline handles testing, building, and deployment of a
 graph TD
     DEV[Developer] -- Git Push --> REPO[GitHub Repository]
     REPO -- Triggers --> ACTIONS[GitHub Actions]
-    
+
     subgraph "Testing Phase"
         ACTIONS --> UNIT[Unit Tests]
         ACTIONS --> INTEGRATION[Integration Tests]
         ACTIONS --> LOAD[Load Tests]
     end
-    
+
     LOAD --> BUILD
-    
+
     subgraph "Build & Push Phase"
         BUILD[Build 4 Docker Images]
         BUILD --> API_IMG[API Image]
         BUILD --> PROC_IMG[Processor Image]
         BUILD --> SIM_IMG[Simulator Image]
         BUILD --> WEB_IMG[WebApp Image]
-        
+
         API_IMG --> ACR[Azure Container Registry]
         PROC_IMG --> ACR
         SIM_IMG --> ACR
         WEB_IMG --> ACR
     end
-    
+
     subgraph "Deploy Phase"
         ACR --> K8S_UPDATE[Update K8s Manifests]
         K8S_UPDATE --> AKS[Deploy to AKS]
@@ -56,86 +56,56 @@ graph TB
         PROC[Transaction Processor]
         SIM[Transaction Simulator]
     end
-    
-    subgraph "External Azure Services"
-        SWA[Azure Static Web Apps<br/>Blazor UI]
+
+    subgraph "Container Registry"
         ACR[Azure Container Registry]
     end
     
+    subgraph "Web Application"
+        SWA[Azure Static Web Apps<br/>Blazor UI]
+    end
+
     subgraph "Data Services"
         COSMOS[(Azure Cosmos DB)]
         REDIS[(Azure Cache for Redis)]
     end
-    
+
     subgraph "Messaging & Events"
         EH_TRANS[Event Hubs<br/>transactions topic]
         EH_ANOM[Event Hubs<br/>anomalies topic]
         LOGIC[Azure Logic Apps]
     end
-    
+
     subgraph "Security & Monitoring"
         KV[Azure Key Vault]
         INSIGHTS[Application Insights]
     end
+
+    %% Key Vault provides secrets TO services
+    KV --> API
+    KV --> PROC
+    KV --> SIM
     
-    %% All AKS services connect to Key Vault and App Insights
-    API --> KV
-    PROC --> KV
-    SIM --> KV
+    %% Services send telemetry TO App Insights
     API --> INSIGHTS
     PROC --> INSIGHTS
     SIM --> INSIGHTS
-    
+
     %% Data connections
     API --> COSMOS
     PROC --> COSMOS
     PROC --> REDIS
-    
+
     %% Event flow
     SIM --> EH_TRANS
     EH_TRANS --> PROC
     PROC --> EH_ANOM
     EH_ANOM --> LOGIC
-    
-    %% Container registry
+
+    %% Container registry provides images TO services
     ACR --> API
     ACR --> PROC
     ACR --> SIM
-```
-
-### Runtime Application Architecture
-
-How the three main containerized services interact within the Kubernetes cluster:
-
-```mermaid
-graph LR
-    subgraph "AKS Cluster"
-        SIM[Transaction<br/>Simulator]
-        PROC[Transaction<br/>Processor]
-        API[API<br/>Service]
-    end
-    
-    subgraph "External Services"
-        UI[Blazor WebApp<br/>Static Web Apps]
-        USER[End User]
-    end
-    
-    subgraph "Storage & Messaging"
-        EH_TRANS[Event Hubs<br/>transactions]
-        EH_ANOM[Event Hubs<br/>anomalies]
-        COSMOS[(Cosmos DB)]
-        REDIS[(Redis Cache)]
-    end
-    
-    SIM --> EH_TRANS
-    EH_TRANS --> PROC
-    PROC --> COSMOS
-    PROC --> REDIS
-    PROC --> EH_ANOM
-    API --> COSMOS
-    USER --> UI
-    UI --> API
-```
 
 ### Transaction Data Flow
 
@@ -146,22 +116,21 @@ graph TD
     START([Transaction Generated]) --> SIM[Transaction Simulator]
     SIM --> EH1[Event Hubs<br/>transactions topic]
     EH1 --> PROC[Transaction Processor]
-    
+
     subgraph "Processing Logic"
         PROC --> REDIS{Check Redis<br/>for Account Stats}
         REDIS --> ANOMALY_CHECK{Anomaly<br/>Detection}
-        ANOMALY_CHECK -->|Normal| STORE1[Store in Cosmos DB]
-        ANOMALY_CHECK -->|Suspicious| STORE2[Store in Cosmos DB<br/>+ Flag as Anomaly]
-        STORE2 --> EH2[Event Hubs<br/>anomalies topic]
+        ANOMALY_CHECK --> STORE[Store in Cosmos DB]
+        ANOMALY_CHECK -->|If Anomaly Detected| EH2[Event Hubs<br/>anomalies topic]
         EH2 --> LOGIC[Logic Apps]
         LOGIC --> EMAIL[Send Alert Email]
     end
-    
-    STORE1 --> DB[(Cosmos DB<br/>Transactions)]
+
+    STORE --> DB[(Cosmos DB<br/>Transactions)]
     DB --> API[API Service]
     API --> UI[Blazor WebApp]
     UI --> USER[User Dashboard]
-    
+
     style ANOMALY_CHECK fill:#ff9999
     style EMAIL fill:#ffcc99
 ```
@@ -193,7 +162,7 @@ The system includes a sophisticated transaction generation engine that creates r
 * **User Profile-Based Behavior**: Generates diverse user personas (Students, Young Professionals, Families, Retirees, High Net Worth, Small Business, Freelancers) with distinct spending patterns
 * **Temporal Intelligence**: Transactions follow realistic time patterns including:
   - Business hours vs. off-hours activity
-  - Weekend vs. weekday behaviors  
+  - Weekend vs. weekday behaviors
   - User-type specific active hours (students transact late, retirees during day)
   - Time zone awareness for geographic users
 * **Geographic Distribution**: Realistic location data across 40+ US cities with travel probability modeling
@@ -338,7 +307,7 @@ The infrastructure phase establishes the Azure foundation and provisions all req
 The application phase builds container images and deploys them to Kubernetes.
 
 1. **Build and Push**: Automatically builds Docker images and pushes them to Azure Container Registry
-2. **Kubernetes Setup**: 
+2. **Kubernetes Setup**:
    - Connects to AKS cluster
    - Installs NGINX Ingress Controller
    - Displays LoadBalancer IP for DNS configuration
