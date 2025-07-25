@@ -14,73 +14,93 @@ The automated deployment pipeline handles testing, building, and deployment of a
 
 ```mermaid
 graph TD
-    DEV[👨‍💻 Developer] -- Git Push --> REPO[📁 GitHub Repository]
-    REPO -- Triggers --> ACTIONS[⚙️ GitHub Actions]
+    DEV[Developer] -- Git Push --> REPO[GitHub Repository]
+    REPO -- Triggers --> ACTIONS[GitHub Actions]
     
     subgraph "Testing Phase"
-        ACTIONS --> UNIT[🧪 Unit Tests]
-        ACTIONS --> INTEGRATION[🔗 Integration Tests]
-        ACTIONS --> LOAD[⚡ Load Tests]
+        ACTIONS --> UNIT[Unit Tests]
+        ACTIONS --> INTEGRATION[Integration Tests]
+        ACTIONS --> LOAD[Load Tests]
     end
     
+    LOAD --> BUILD
+    
     subgraph "Build & Push Phase"
-        UNIT --> BUILD[🔨 Build 4 Docker Images]
-        BUILD --> API_IMG[📦 API Image]
-        BUILD --> PROC_IMG[📦 Processor Image]
-        BUILD --> SIM_IMG[📦 Simulator Image]
-        BUILD --> WEB_IMG[📦 WebApp Image]
+        BUILD[Build 4 Docker Images]
+        BUILD --> API_IMG[API Image]
+        BUILD --> PROC_IMG[Processor Image]
+        BUILD --> SIM_IMG[Simulator Image]
+        BUILD --> WEB_IMG[WebApp Image]
         
-        API_IMG --> ACR[🏪 Azure Container Registry]
+        API_IMG --> ACR[Azure Container Registry]
         PROC_IMG --> ACR
         SIM_IMG --> ACR
         WEB_IMG --> ACR
     end
     
     subgraph "Deploy Phase"
-        ACR --> K8S_UPDATE[📝 Update K8s Manifests]
-        K8S_UPDATE --> AKS[☸️ Deploy to AKS]
-        WEB_IMG --> SWA[🌐 Deploy to Static Web Apps]
+        ACR --> K8S_UPDATE[Update K8s Manifests]
+        K8S_UPDATE --> AKS[Deploy to AKS]
+        WEB_IMG --> SWA[Deploy to Static Web Apps]
     end
 ```
 
 ### Azure Infrastructure
 
-All Azure services and their relationships in the cloud infrastructure:
+The actual infrastructure showing what runs where based on Kubernetes manifests and Terraform:
 
 ```mermaid
 graph TB
-    subgraph "Compute & Container Services"
-        AKS[☸️ Azure Kubernetes Service]
-        ACR[🏪 Azure Container Registry]
-        SWA[🌐 Azure Static Web Apps]
+    subgraph "Azure Kubernetes Service (AKS)"
+        API[API Service]
+        PROC[Transaction Processor]
+        SIM[Transaction Simulator]
     end
     
-    subgraph "Data & Messaging Services"
-        COSMOS[(🌍 Azure Cosmos DB)]
-        REDIS[(⚡ Azure Cache for Redis)]
-        EH_TRANS[📨 Event Hubs<br/>transactions]
-        EH_ANOM[📨 Event Hubs<br/>anomalies]
+    subgraph "External Azure Services"
+        SWA[Azure Static Web Apps<br/>Blazor UI]
+        ACR[Azure Container Registry]
+    end
+    
+    subgraph "Data Services"
+        COSMOS[(Azure Cosmos DB)]
+        REDIS[(Azure Cache for Redis)]
+    end
+    
+    subgraph "Messaging & Events"
+        EH_TRANS[Event Hubs<br/>transactions topic]
+        EH_ANOM[Event Hubs<br/>anomalies topic]
+        LOGIC[Azure Logic Apps]
     end
     
     subgraph "Security & Monitoring"
-        KV[🔐 Azure Key Vault]
-        INSIGHTS[📊 Application Insights]
+        KV[Azure Key Vault]
+        INSIGHTS[Application Insights]
     end
     
-    subgraph "Automation & Notifications"
-        LOGIC[🔄 Azure Logic Apps]
-        EMAIL[📧 Email Service]
-    end
+    %% All AKS services connect to Key Vault and App Insights
+    API --> KV
+    PROC --> KV
+    SIM --> KV
+    API --> INSIGHTS
+    PROC --> INSIGHTS
+    SIM --> INSIGHTS
     
-    ACR --> AKS
-    AKS --> COSMOS
-    AKS --> REDIS
-    AKS --> EH_TRANS
-    AKS --> EH_ANOM
-    AKS --> KV
-    AKS --> INSIGHTS
+    %% Data connections
+    API --> COSMOS
+    PROC --> COSMOS
+    PROC --> REDIS
+    
+    %% Event flow
+    SIM --> EH_TRANS
+    EH_TRANS --> PROC
+    PROC --> EH_ANOM
     EH_ANOM --> LOGIC
-    LOGIC --> EMAIL
+    
+    %% Container registry
+    ACR --> API
+    ACR --> PROC
+    ACR --> SIM
 ```
 
 ### Runtime Application Architecture
@@ -90,21 +110,21 @@ How the three main containerized services interact within the Kubernetes cluster
 ```mermaid
 graph LR
     subgraph "AKS Cluster"
-        SIM[🎯 Transaction<br/>Simulator]
-        PROC[⚙️ Transaction<br/>Processor]
-        API[🔌 API<br/>Service]
+        SIM[Transaction<br/>Simulator]
+        PROC[Transaction<br/>Processor]
+        API[API<br/>Service]
     end
     
     subgraph "External Services"
-        UI[💻 Blazor WebApp<br/>Static Web Apps]
-        USER[👤 End User]
+        UI[Blazor WebApp<br/>Static Web Apps]
+        USER[End User]
     end
     
     subgraph "Storage & Messaging"
-        EH_TRANS[📨 Event Hubs<br/>transactions]
-        EH_ANOM[📨 Event Hubs<br/>anomalies]
-        COSMOS[(🌍 Cosmos DB)]
-        REDIS[(⚡ Redis Cache)]
+        EH_TRANS[Event Hubs<br/>transactions]
+        EH_ANOM[Event Hubs<br/>anomalies]
+        COSMOS[(Cosmos DB)]
+        REDIS[(Redis Cache)]
     end
     
     SIM --> EH_TRANS
@@ -123,24 +143,24 @@ Step-by-step journey of a transaction through the complete system:
 
 ```mermaid
 graph TD
-    START([💰 Transaction Generated]) --> SIM[🎯 Transaction Simulator]
-    SIM --> EH1[📨 Event Hubs<br/>transactions topic]
-    EH1 --> PROC[⚙️ Transaction Processor]
+    START([Transaction Generated]) --> SIM[Transaction Simulator]
+    SIM --> EH1[Event Hubs<br/>transactions topic]
+    EH1 --> PROC[Transaction Processor]
     
     subgraph "Processing Logic"
-        PROC --> REDIS{⚡ Check Redis<br/>for Account Stats}
-        REDIS --> ANOMALY_CHECK{🔍 Anomaly<br/>Detection}
-        ANOMALY_CHECK -->|Normal| STORE1[💾 Store in Cosmos DB]
-        ANOMALY_CHECK -->|Suspicious| STORE2[💾 Store in Cosmos DB<br/>+ Flag as Anomaly]
-        STORE2 --> EH2[📨 Event Hubs<br/>anomalies topic]
-        EH2 --> LOGIC[🔄 Logic Apps]
-        LOGIC --> EMAIL[📧 Send Alert Email]
+        PROC --> REDIS{Check Redis<br/>for Account Stats}
+        REDIS --> ANOMALY_CHECK{Anomaly<br/>Detection}
+        ANOMALY_CHECK -->|Normal| STORE1[Store in Cosmos DB]
+        ANOMALY_CHECK -->|Suspicious| STORE2[Store in Cosmos DB<br/>+ Flag as Anomaly]
+        STORE2 --> EH2[Event Hubs<br/>anomalies topic]
+        EH2 --> LOGIC[Logic Apps]
+        LOGIC --> EMAIL[Send Alert Email]
     end
     
-    STORE1 --> DB[(🌍 Cosmos DB<br/>Transactions)]
-    DB --> API[🔌 API Service]
-    API --> UI[💻 Blazor WebApp]
-    UI --> USER[👤 User Dashboard]
+    STORE1 --> DB[(Cosmos DB<br/>Transactions)]
+    DB --> API[API Service]
+    API --> UI[Blazor WebApp]
+    UI --> USER[User Dashboard]
     
     style ANOMALY_CHECK fill:#ff9999
     style EMAIL fill:#ffcc99
