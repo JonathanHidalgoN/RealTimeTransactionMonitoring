@@ -15,17 +15,17 @@ namespace FinancialMonitoring.Api.Controllers;
 [Authorize(AuthenticationSchemes = ApiKeyAuthenticationDefaults.SchemeName)]
 public class TransactionsController : ControllerBase
 {
-    private readonly ITransactionQueryService _queryService;
+    private readonly ITransactionRepository _transactionRepository;
     private readonly ILogger<TransactionsController> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TransactionsController"/> class.
     /// </summary>
-    /// <param name="queryService">The service for querying transaction data.</param>
+    /// <param name="transactionRepository">The repository for transaction data operations.</param>
     /// <param name="logger">The logger for recording operational information.</param>
-    public TransactionsController(ITransactionQueryService queryService, ILogger<TransactionsController> logger)
+    public TransactionsController(ITransactionRepository transactionRepository, ILogger<TransactionsController> logger)
     {
-        _queryService = queryService;
+        _transactionRepository = transactionRepository;
         _logger = logger;
     }
 
@@ -45,7 +45,7 @@ public class TransactionsController : ControllerBase
         try
         {
             _logger.LogInformation("API: Getting all transactions - Page: {PageNumber}, Size: {PageSize}", pageNumber, pageSize);
-            var pagedResult = await _queryService.GetAllTransactionsAsync(pageNumber, pageSize);
+            var pagedResult = await _transactionRepository.GetAllTransactionsAsync(pageNumber, pageSize);
             return Ok(pagedResult);
         }
         catch (Exception ex)
@@ -74,7 +74,7 @@ public class TransactionsController : ControllerBase
         try
         {
             _logger.LogInformation("API: Getting transaction by ID: {TransactionId}", id);
-            var transaction = await _queryService.GetTransactionByIdAsync(id);
+            var transaction = await _transactionRepository.GetTransactionByIdAsync(id);
             if (transaction == null)
             {
                 _logger.LogWarning("API: Transaction with ID {TransactionId} not found.", id);
@@ -105,7 +105,7 @@ public class TransactionsController : ControllerBase
         try
         {
             _logger.LogInformation("API: Getting anomalous transactions - Page: {PageNumber}, Size: {PageSize}", pageNumber, pageSize);
-            var transactions = await _queryService.GetAnomalousTransactionsAsync(pageNumber, pageSize);
+            var transactions = await _transactionRepository.GetAnomalousTransactionsAsync(pageNumber, pageSize);
             return Ok(transactions);
         }
         catch (Exception ex)
