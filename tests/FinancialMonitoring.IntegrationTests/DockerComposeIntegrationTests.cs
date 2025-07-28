@@ -1,7 +1,8 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using Confluent.Kafka;
-using Microsoft.Azure.Cosmos;
+using MongoDB.Driver;
+using MongoDB.Bson;
 using FinancialMonitoring.Models;
 
 namespace FinancialMonitoring.IntegrationTests;
@@ -10,17 +11,18 @@ public class DockerComposeIntegrationTests : IAsyncLifetime
 {
     private HttpClient _client = null!;
     private IProducer<Null, string> _producer = null!;
-    private CosmosClient _cosmosClient = null!;
-    private Database _database = null!;
-    private Container _container = null!;
+    private IMongoClient _mongoClient = null!;
+    private IMongoDatabase _database = null!;
+    private IMongoCollection<Transaction> _collection = null!;
 
     public async Task InitializeAsync()
     {
         // Use environment variables for Docker Compose setup
         var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl") ?? "http://financialmonitoring-api-test:8080";
         var kafkaBootstrapServers = Environment.GetEnvironmentVariable("Kafka__BootstrapServers") ?? "kafka:29092";
-        var cosmosEndpoint = Environment.GetEnvironmentVariable("CosmosDb__EndpointUri") ?? "https://cosmosdb-emulator:8081";
-        var cosmosKey = Environment.GetEnvironmentVariable("CosmosDb__PrimaryKey") ?? "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+        var mongoConnectionString = Environment.GetEnvironmentVariable("MongoDb__ConnectionString") ?? "mongodb://admin:password123@mongodb-test:27017";
+        var mongoDatabaseName = Environment.GetEnvironmentVariable("MongoDb__DatabaseName") ?? "TestFinancialMonitoring";
+        var mongoCollectionName = Environment.GetEnvironmentVariable("MongoDb__CollectionName") ?? "transactions";
         var apiKey = Environment.GetEnvironmentVariable("ApiKey") ?? "integration-test-key";
 
         //Create http client to api with default key
@@ -34,24 +36,19 @@ public class DockerComposeIntegrationTests : IAsyncLifetime
         };
         _producer = new ProducerBuilder<Null, string>(producerConfig).Build();
 
-        //Connect to cosmos
-        var connectionString = $"AccountEndpoint={cosmosEndpoint};AccountKey={cosmosKey}";
-        _cosmosClient = new CosmosClient(connectionString, new CosmosClientOptions
-        {
-            HttpClientFactory = () => new HttpClient(new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (_, _, _, _) => true
-            })
-        });
-
+        //Connect to MongoDB
         try
         {
-            _database = await _cosmosClient.CreateDatabaseIfNotExistsAsync("TestFinancialMonitoring");
-            _container = await _database.CreateContainerIfNotExistsAsync("transactions", "/id");
+            _mongoClient = new MongoClient(mongoConnectionString);
+            _database = _mongoClient.GetDatabase(mongoDatabaseName);
+            _collection = _database.GetCollection<Transaction>(mongoCollectionName);
+            
+            // Test the connection
+            await _database.RunCommandAsync((Command<MongoDB.Bson.BsonDocument>)"{ping:1}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to initialize Cosmos DB: {ex.Message}");
+            Console.WriteLine($"Failed to initialize MongoDB: {ex.Message}");
         }
     }
 
@@ -121,7 +118,7 @@ public class DockerComposeIntegrationTests : IAsyncLifetime
     public async Task DisposeAsync()
     {
         _producer?.Dispose();
-        _cosmosClient?.Dispose();
+        _mongoClient = null; // MongoDB client doesn't need explicit disposal
         _client?.Dispose();
         await Task.CompletedTask;
     }

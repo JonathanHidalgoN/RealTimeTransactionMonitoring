@@ -19,7 +19,7 @@
     <PackageReference Include="Testcontainers.CosmosDb" Version="3.10.0" />
     <PackageReference Include="Testcontainers.Redis" Version="3.10.0" />
     <PackageReference Include="Confluent.Kafka" Version="2.10.0" />
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.51.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.30.0" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.41" />
   </ItemGroup>
 

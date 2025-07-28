@@ -1,5 +1,6 @@
 using Confluent.Kafka;
-using Microsoft.Azure.Cosmos;
+using MongoDB.Driver;
+using MongoDB.Bson;
 using StackExchange.Redis;
 using System.Text.Json;
 
@@ -11,7 +12,7 @@ namespace FinancialMonitoring.IntegrationTests;
 public class BasicConnectivityTests : IAsyncLifetime
 {
     private IProducer<Null, string>? _producer;
-    private CosmosClient? _cosmosClient;
+    private IMongoClient? _mongoClient;
     private IConnectionMultiplexer? _redis;
 
     public async Task InitializeAsync()
@@ -83,12 +84,10 @@ public class BasicConnectivityTests : IAsyncLifetime
             _redis = await ConnectionMultiplexer.ConnectAsync(redisConnectionString);
             var database = _redis.GetDatabase();
 
-            //Insert dummy value
             var testKey = "test:connectivity";
             var testValue = "integration-test";
 
             await database.StringSetAsync(testKey, testValue);
-            //Retrive and assert dummy value is the same
             var retrievedValue = await database.StringGetAsync(testKey);
 
             Assert.Equal(testValue, retrievedValue);
@@ -103,37 +102,44 @@ public class BasicConnectivityTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task CosmosDB_ShouldBeReachable()
+    public async Task MongoDB_ShouldBeReachable()
     {
-        //Conect to cosmosdb-emulator, this variable is inject in dockercompose file
-        var cosmosEndpoint = Environment.GetEnvironmentVariable("CosmosDb__EndpointUri") ?? "https://cosmosdb-emulator:8081";
-        var cosmosKey = Environment.GetEnvironmentVariable("CosmosDb__PrimaryKey") ?? "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+        var mongoConnectionString = Environment.GetEnvironmentVariable("MongoDb__ConnectionString") ?? "mongodb://admin:password123@mongodb-test:27017";
+        var mongoDatabaseName = Environment.GetEnvironmentVariable("MongoDb__DatabaseName") ?? "TestFinancialMonitoring";
 
         try
         {
-            //Connect to cosmos
-            var connectionString = $"AccountEndpoint={cosmosEndpoint};AccountKey={cosmosKey}";
-            _cosmosClient = new CosmosClient(connectionString, new CosmosClientOptions
-            {
-                HttpClientFactory = () => new HttpClient(new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback = (_, _, _, _) => true
-                })
-            });
+            _mongoClient = new MongoClient(mongoConnectionString);
+            var database = _mongoClient.GetDatabase(mongoDatabaseName);
 
-            var accountProperties = await _cosmosClient.ReadAccountAsync();
-            Assert.NotNull(accountProperties);
+            // Test connectivity by creating inserting a document
+            var testCollection = database.GetCollection<BsonDocument>("connectivity_test");
+            var testDocument = new BsonDocument
+            {
+                { "test", "connectivity" },
+                { "timestamp", DateTime.UtcNow },
+                { "source", "integration-test" }
+            };
+
+            await testCollection.InsertOneAsync(testDocument);
+
+            // Verify we can read it
+            var filter = Builders<BsonDocument>.Filter.Eq("test", "connectivity");
+            var retrievedDocument = await testCollection.Find(filter).FirstOrDefaultAsync();
+            Assert.NotNull(retrievedDocument);
+            Assert.Equal("connectivity", retrievedDocument["test"].AsString);
+
+            await testCollection.DeleteOneAsync(filter);
         }
         catch (Exception ex)
         {
-            Assert.Fail($"CosmosDB connectivity failed: {ex.Message}");
+            Assert.Fail($"MongoDB connectivity failed: {ex.Message}");
         }
     }
 
     [Fact]
     public void Environment_ShouldBeConfiguredForTesting()
     {
-        //Check correct env variable balue for testing
         var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
         Assert.Equal("Testing", environment);
     }
@@ -141,7 +147,7 @@ public class BasicConnectivityTests : IAsyncLifetime
     public async Task DisposeAsync()
     {
         _producer?.Dispose();
-        _cosmosClient?.Dispose();
+        _mongoClient = null;
         _redis?.Dispose();
         await Task.CompletedTask;
     }
