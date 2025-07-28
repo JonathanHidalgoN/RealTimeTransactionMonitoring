@@ -16,11 +16,11 @@ namespace FinancialMonitoring.Api.Tests;
 public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly HttpClient _client;
-    private readonly Mock<ITransactionQueryService> _mockQueryService;
+    private readonly Mock<ITransactionRepository> _mockRepository;
 
     public TransactionsControllerTests(WebApplicationFactory<Program> factory)
     {
-        _mockQueryService = new Mock<ITransactionQueryService>();
+        _mockRepository = new Mock<ITransactionRepository>();
         var _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureAppConfiguration((context, configBuilder) =>
@@ -41,8 +41,8 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
 
             builder.ConfigureServices(services =>
             {
-                services.RemoveAll<ITransactionQueryService>();
-                services.AddSingleton<ITransactionQueryService>(_mockQueryService.Object);
+                services.RemoveAll<ITransactionRepository>();
+                services.AddSingleton<ITransactionRepository>(_mockRepository.Object);
             });
         });
 
@@ -69,7 +69,7 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
             PageSize = 2
         };
 
-        _mockQueryService
+        _mockRepository
             .Setup(service => service.GetAllTransactionsAsync(1, 2))
             .ReturnsAsync(expectedPagedResult);
 
@@ -94,7 +94,7 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
         var expectedTransaction = new Transaction(transactionId, 150, 0, new Account("ACC5"), new Account("ACC6"),
             TransactionType.Purchase, MerchantCategory.Restaurant, "Test Restaurant", new Location("NYC", "NY", "US"));
 
-        _mockQueryService
+        _mockRepository
             .Setup(service => service.GetTransactionByIdAsync(transactionId))
             .ReturnsAsync(expectedTransaction);
 
@@ -110,7 +110,7 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
     public async Task GetTransactionById_WhenTransactionDoesNotExist_ReturnsNotFound()
     {
         var transactionId = "non-existing-tx-id";
-        _mockQueryService
+        _mockRepository
             .Setup(service => service.GetTransactionByIdAsync(transactionId))
             .ReturnsAsync((Transaction?)null);
 
@@ -124,7 +124,7 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
     [InlineData(null)]
     public async Task GetTransactionById_WithInvalidId_ReturnsBadRequest(string invalidId)
     {
-        var controller = new Controllers.TransactionsController(_mockQueryService.Object, Mock.Of<ILogger<Controllers.TransactionsController>>());
+        var controller = new Controllers.TransactionsController(_mockRepository.Object, Mock.Of<ILogger<Controllers.TransactionsController>>());
 
         var result = await controller.GetTransactionById(invalidId);
 
