@@ -57,10 +57,21 @@ if (builder.Environment.EnvironmentName != "Testing")
         .ValidateDataAnnotations()
         .ValidateOnStart();
 }
-builder.Services.AddOptions<CosmosDbSettings>()
-    .Bind(builder.Configuration.GetSection(AppConstants.CosmosDbConfigPrefix))
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
+// Configure database settings based on environment
+if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddOptions<MongoDbSettings>()
+        .Bind(builder.Configuration.GetSection(AppConstants.MongoDbConfigPrefix))
+        .ValidateDataAnnotations()
+        .ValidateOnStart();
+}
+else
+{
+    builder.Services.AddOptions<CosmosDbSettings>()
+        .Bind(builder.Configuration.GetSection(AppConstants.CosmosDbConfigPrefix))
+        .ValidateDataAnnotations()
+        .ValidateOnStart();
+}
 builder.Services.AddOptions<ApiSettings>()
     .Bind(builder.Configuration.GetSection("ApiSettings"))
     .ValidateDataAnnotations()
@@ -71,7 +82,21 @@ if (builder.Environment.EnvironmentName != "Testing")
     builder.Services.AddApplicationInsightsTelemetry();
 }
 builder.Services.AddHealthChecks();
-builder.Services.AddSingleton<ITransactionQueryService, CosmosDbTransactionQueryService>();
+
+// Configure repository based on environment
+if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing"))
+{
+    Console.WriteLine("Configuring MongoDB repository for local development/testing");
+    builder.Services.AddSingleton<ITransactionRepository, MongoTransactionRepository>();
+}
+else
+{
+    Console.WriteLine("Configuring Cosmos DB repository for production");
+    // Register existing Cosmos services for production
+    builder.Services.AddSingleton<ICosmosDbService, CosmosDbService>();
+    builder.Services.AddSingleton<ITransactionQueryService, CosmosDbTransactionQueryService>();
+    builder.Services.AddSingleton<ITransactionRepository, CosmosTransactionRepository>();
+}
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
