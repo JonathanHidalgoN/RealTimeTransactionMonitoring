@@ -43,10 +43,22 @@ builder.Services.AddOptions<ApplicationInsightsSettings>()
     .Bind(builder.Configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix))
     .ValidateDataAnnotations()
     .ValidateOnStart();
-builder.Services.AddOptions<CosmosDbSettings>()
-    .Bind(builder.Configuration.GetSection(AppConstants.CosmosDbConfigPrefix))
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
+// Configure database settings based on environment
+var environment = builder.Configuration["DOTNET_ENVIRONMENT"] ?? "Production";
+if (environment == "Development" || environment == "Testing")
+{
+    builder.Services.AddOptions<MongoDbSettings>()
+        .Bind(builder.Configuration.GetSection(AppConstants.MongoDbConfigPrefix))
+        .ValidateDataAnnotations()
+        .ValidateOnStart();
+}
+else
+{
+    builder.Services.AddOptions<CosmosDbSettings>()
+        .Bind(builder.Configuration.GetSection(AppConstants.CosmosDbConfigPrefix))
+        .ValidateDataAnnotations()
+        .ValidateOnStart();
+}
 
 // Configure the anomaly detection mode based on the "AnomalyDetection:Mode" configuration value.
 var anomalyDetectionMode = builder.Configuration["AnomalyDetection:Mode"]?.ToLowerInvariant() ?? "stateless";
@@ -91,7 +103,18 @@ else
 builder.Services.AddApplicationInsightsTelemetryWorkerService();
 
 // Register application services with the dependency injection container.
-builder.Services.AddSingleton<ICosmosDbService, CosmosDbService>();
+// Configure repository based on environment
+if (environment == "Development" || environment == "Testing")
+{
+    Console.WriteLine("Configuring MongoDB repository for local development/testing");
+    builder.Services.AddSingleton<ITransactionRepository, MongoTransactionRepository>();
+}
+else
+{
+    Console.WriteLine("Configuring Cosmos DB repository for production");
+    builder.Services.AddSingleton<ICosmosDbService, CosmosDbService>();
+    builder.Services.AddSingleton<ITransactionRepository, CosmosTransactionRepository>();
+}
 
 // Configure anomaly detection based on mode
 if (anomalyDetectionMode == "stateful")
@@ -106,8 +129,8 @@ else
     builder.Services.AddScoped<ITransactionAnomalyDetector, AnomalyDetector>();
 }
 
-// This hosted service ensures the Cosmos DB database and container exist before the main worker starts.
-builder.Services.AddHostedService<CosmosDbInitializerHostedService>();
+// This hosted service ensures the database and container/collection exist before the main worker starts.
+builder.Services.AddHostedService<DatabaseInitializerHostedService>();
 builder.Services.AddSingleton<IAnomalyEventPublisher, EventHubsAnomalyEventPublisher>();
 
 // The main background service that processes transactions.
@@ -117,18 +140,18 @@ var host = builder.Build();
 host.Run();
 
 /// <summary>
-/// A hosted service responsible for initializing the Cosmos DB database and container at application startup.
+/// A hosted service responsible for initializing the database and its containers/collections at application startup.
 /// </summary>
-public class CosmosDbInitializerHostedService : IHostedService
+public class DatabaseInitializerHostedService : IHostedService
 {
-    private readonly ICosmosDbService _cosmosDbService;
-    private readonly ILogger<CosmosDbInitializerHostedService> _logger;
+    private readonly ITransactionRepository _transactionRepository;
+    private readonly ILogger<DatabaseInitializerHostedService> _logger;
 
-    public CosmosDbInitializerHostedService(
-        ICosmosDbService cosmosDbService,
-        ILogger<CosmosDbInitializerHostedService> logger)
+    public DatabaseInitializerHostedService(
+        ITransactionRepository transactionRepository,
+        ILogger<DatabaseInitializerHostedService> logger)
     {
-        _cosmosDbService = cosmosDbService;
+        _transactionRepository = transactionRepository;
         _logger = logger;
     }
 
@@ -137,9 +160,9 @@ public class CosmosDbInitializerHostedService : IHostedService
     /// </summary>
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Cosmos DB Initializer Hosted Service starting initialization.");
-        await _cosmosDbService.InitializeDatabaseAsync();
-        _logger.LogInformation("Cosmos DB Initializer Hosted Service has completed startup tasks.");
+        _logger.LogInformation("Database Initializer Hosted Service starting initialization.");
+        await _transactionRepository.InitializeAsync();
+        _logger.LogInformation("Database Initializer Hosted Service has completed startup tasks.");
     }
 
     /// <summary>
@@ -147,7 +170,7 @@ public class CosmosDbInitializerHostedService : IHostedService
     /// </summary>
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Cosmos DB Initializer Hosted Service stopping.");
+        _logger.LogInformation("Database Initializer Hosted Service stopping.");
         return Task.CompletedTask;
     }
 }

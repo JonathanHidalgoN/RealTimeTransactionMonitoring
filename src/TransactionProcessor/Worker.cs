@@ -55,7 +55,7 @@ public class Worker : BackgroundService
         // Create a new dependency scope to resolve scoped services like the anomaly detector.
         using var scope = _serviceProvider.CreateScope();
         var anomalyDetector = scope.ServiceProvider.GetRequiredService<ITransactionAnomalyDetector>();
-        var cosmosDbService = scope.ServiceProvider.GetRequiredService<ICosmosDbService>();
+        var transactionRepository = scope.ServiceProvider.GetRequiredService<ITransactionRepository>();
 
         try
         {
@@ -66,11 +66,10 @@ public class Worker : BackgroundService
                 // Detect anomalies and enrich the transaction with the result.
                 string? anomalyFlag = await anomalyDetector.DetectAsync(kafkaTransaction);
                 var processedTransaction = kafkaTransaction with { AnomalyFlag = anomalyFlag };
-                TransactionForCosmos transactionForCosmos = TransactionForCosmos.FromDomainTransaction(processedTransaction);
 
                 // Store the processed transaction in the database.
-                await cosmosDbService.AddTransactionAsync(transactionForCosmos);
-                _logger.LogInformation("Successfully processed and stored transaction {TransactionId}", transactionForCosmos.id);
+                await transactionRepository.AddTransactionAsync(processedTransaction);
+                _logger.LogInformation("Successfully processed and stored transaction {TransactionId}", processedTransaction.Id);
             }
         }
         catch (JsonException ex)
