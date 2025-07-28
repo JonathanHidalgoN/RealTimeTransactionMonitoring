@@ -10,5 +10,6 @@ public static class AppConstants
     public const string RedisDbConfigPrefix = "Redis";
     public const string MessagingConfigPrefix = "Messaging";
     public const string EventHubsConfigPrefix = "EventHubs";
+    public const string MongoDbConfigPrefix = "MongoDb";
     public const string KafkaDefaultName = "Kafka";
 }
