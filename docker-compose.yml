@@ -73,7 +73,7 @@ services:
     depends_on:
       kafka:
         condition: service_started
-      cosmosdb-emulator:
+      mongodb:
         condition: service_healthy
     environment:
       DOTNET_ENVIRONMENT: "Development"
@@ -81,9 +81,9 @@ services:
       AZURE_CLIENT_ID: "${AZURE_CLIENT_ID}"
       AZURE_CLIENT_SECRET: "${AZURE_CLIENT_SECRET}"
       AZURE_TENANT_ID: "${AZURE_TENANT_ID}"
-      CosmosDb__DatabaseName: "${COSMOSDB_DATABASE_NAME}"
-      CosmosDb__ContainerName: "${COSMOSDB_CONTAINER_NAME}"
-      CosmosDb__PartitionKeyPath: "${COSMOSDB_PARTITION_KEY_PATH}"
+      MongoDb__ConnectionString: "mongodb://admin:password123@mongodb:27017"
+      MongoDb__DatabaseName: "FinancialMonitoring"
+      MongoDb__CollectionName: "transactions"
       EventHubs__EventHubName: "${EVENTHUBS_EVENTHUB_NAME}"
       EventHubs__BlobContainerName: "${EVENTHUBS_BLOB_CONTAINER_NAME}"
       Messaging__Provider: "${MESSAGE_PROVIDER}"
@@ -96,30 +96,26 @@ services:
     stdin_open: true
     tty: true
 
-  #https://learn.microsoft.com/en-us/azure/cosmos-db/emulator-linux
-  #https://blog.hungovercoders.com/datagriff/2024/06/29/cosmos-emulator-docker-local.html
-  cosmosdb-emulator:
-    container_name: cosmosdb-emulator
-    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
+  # MongoDB for local development - much faster than Cosmos emulator
+  mongodb:
+    container_name: mongodb
+    image: mongo:7.0
     ports:
-      - "8081:8081"
-      - "10251:10251"
-      - "10252:10252"
-      - "10253:10253"
-      - "10254:10254"
+      - "27017:27017"
     environment:
-      AZURE_COSMOS_EMULATOR_PARTITION_COUNT: 1
-      AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE: "true"
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: FinancialMonitoring
     volumes:
-      - cosmosdb_emulator_data:/tmp/cosmos/appdata
+      - mongodb_data:/data/db
     networks:
       - financial_monitoring_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "-k", "https://localhost:8081/_explorer/emulator.pem"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 50s
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   financialmonitoring-api:
     container_name: financialmonitoring_api
@@ -140,17 +136,15 @@ services:
       AZURE_CLIENT_SECRET: "${AZURE_CLIENT_SECRET}"
       AZURE_TENANT_ID: "${AZURE_TENANT_ID}"
       APPLICATIONINSIGHTS_CONNECTION_STRING: ""
-      CosmosDb__EndpointUri: ""
-      CosmosDb__PrimaryKey: ""
-      CosmosDb__DatabaseName: "${COSMOSDB_DATABASE_NAME}"
-      CosmosDb__ContainerName: "${COSMOSDB_CONTAINER_NAME}"
-      CosmosDb__PartitionKeyPath: "${COSMOSDB_PARTITION_KEY_PATH}"
+      MongoDb__ConnectionString: "mongodb://admin:password123@mongodb:27017"
+      MongoDb__DatabaseName: "FinancialMonitoring"
+      MongoDb__CollectionName: "transactions"
       # ASPNETCORE_URLS: "http://+:8080;https://+:8081"
       ASPNETCORE_URLS: "http://+:8080"
       DOTNET_USE_POLLING_FILE_WATCHER: "true"
     depends_on:
-      cosmosdb-emulator:
-        condition: service_healthy # API depends on the database emulator being ready
+      mongodb:
+        condition: service_healthy # API depends on the database being ready
     networks:
       - financial_monitoring_network
 
@@ -160,4 +154,4 @@ networks:
     driver: bridge
 
 volumes:
-  cosmosdb_emulator_data: {}
+  mongodb_data: {}

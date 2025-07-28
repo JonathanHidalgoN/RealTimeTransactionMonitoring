@@ -36,29 +36,23 @@ services:
     networks:
       - test_network
 
-  cosmosdb-emulator:
-    container_name: cosmosdb-emulator-test
-    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
+  mongodb-test:
+    container_name: mongodb-test
+    image: mongo:7.0
     ports:
-      - "8082:8081"
-      - "10255:10251"
-      - "10256:10252"
-      - "10257:10253"
-      - "10258:10254"
+      - "27018:27017"
     environment:
-      AZURE_COSMOS_EMULATOR_PARTITION_COUNT: 1
-      AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE: "false"
-      AZURE_COSMOS_EMULATOR_IP_ADDRESS_OVERRIDE: "127.0.0.1"
-    volumes:
-      - cosmosdb_test_data:/tmp/cosmos/appdata
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: TestFinancialMonitoring
     networks:
       - test_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "-k", "https://localhost:8081/_explorer/emulator.pem"]
-      interval: 30s
-      timeout: 30s
-      retries: 20
-      start_period: 300s
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   redis:
     image: redis:7-alpine
@@ -81,17 +75,15 @@ services:
     depends_on:
       kafka:
         condition: service_started
-      cosmosdb-emulator:
+      mongodb-test:
         condition: service_healthy
       redis:
         condition: service_healthy
     environment:
       DOTNET_ENVIRONMENT: "Testing"
-      CosmosDb__EndpointUri: "https://cosmosdb-emulator:8081"
-      CosmosDb__PrimaryKey: "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
-      CosmosDb__DatabaseName: "TestFinancialMonitoring"
-      CosmosDb__ContainerName: "transactions"
-      CosmosDb__PartitionKeyPath: "/id"
+      MongoDb__ConnectionString: "mongodb://admin:password123@mongodb-test:27017"
+      MongoDb__DatabaseName: "TestFinancialMonitoring"
+      MongoDb__CollectionName: "transactions"
       Redis__ConnectionString: "redis:6379"
       Kafka__BootstrapServers: "kafka:29092"
       EventHubs__EventHubName: "transactions"
@@ -114,17 +106,15 @@ services:
     ports:
       - "5101:8080"
     depends_on:
-      cosmosdb-emulator:
+      mongodb-test:
         condition: service_healthy
       redis:
         condition: service_healthy
     environment:
       DOTNET_ENVIRONMENT: "Testing"
-      CosmosDb__EndpointUri: "https://cosmosdb-emulator:8081"
-      CosmosDb__PrimaryKey: "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
-      CosmosDb__DatabaseName: "TestFinancialMonitoring"
-      CosmosDb__ContainerName: "transactions"
-      CosmosDb__PartitionKeyPath: "/id"
+      MongoDb__ConnectionString: "mongodb://admin:password123@mongodb-test:27017"
+      MongoDb__DatabaseName: "TestFinancialMonitoring"
+      MongoDb__CollectionName: "transactions"
       Redis__ConnectionString: "redis:6379"
       ApiSettings__ApiKey: "integration-test-key"
       APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://test.in.ai.azure.com/"
@@ -146,7 +136,7 @@ services:
         condition: service_started
       kafka:
         condition: service_healthy
-      cosmosdb-emulator:
+      mongodb-test:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -155,10 +145,9 @@ services:
       ApiBaseUrl: "http://financialmonitoring-api-test:8080"
       ApiKey: "integration-test-key"
       Kafka__BootstrapServers: "kafka:29092"
-      CosmosDb__EndpointUri: "https://cosmosdb-emulator:8081"
-      CosmosDb__PrimaryKey: "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
-      CosmosDb__DatabaseName: "TestFinancialMonitoring"
-      CosmosDb__ContainerName: "transactions"
+      MongoDb__ConnectionString: "mongodb://admin:password123@mongodb-test:27017"
+      MongoDb__DatabaseName: "TestFinancialMonitoring"
+      MongoDb__CollectionName: "transactions"
       ASPNETCORE_ENVIRONMENT: "Testing"
     networks:
       - test_network
@@ -185,5 +174,4 @@ networks:
   test_network:
     driver: bridge
 
-volumes:
-  cosmosdb_test_data: {}
+volumes: {}
