@@ -2,9 +2,9 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 using FinancialMonitoring.Models;
 using System.Text.Json;
-using FinancialMonitoring.Abstractions.Persistence;
+using Microsoft.Extensions.Logging;
 
-namespace TransactionProcessor.Services;
+namespace FinancialMonitoring.Abstractions.Persistence;
 
 public class CosmosDbService : ICosmosDbService, IAsyncDisposable
 {
@@ -19,7 +19,7 @@ public class CosmosDbService : ICosmosDbService, IAsyncDisposable
         _settings = cosmosDbSettings.Value;
         _logger = logger;
 
-        _logger.LogInformation("Attempting to connect to Cosmos DB Emulator at {EndpointUri}", _settings.EndpointUri);
+        _logger.LogInformation("Attempting to connect to Cosmos DB at {EndpointUri}", _settings.EndpointUri);
 
         var clientOptions = new CosmosClientOptions
         {

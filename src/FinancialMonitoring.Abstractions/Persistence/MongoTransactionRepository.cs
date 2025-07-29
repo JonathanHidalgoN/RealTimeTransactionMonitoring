@@ -1,9 +1,9 @@
-using FinancialMonitoring.Abstractions.Persistence;
 using FinancialMonitoring.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using Microsoft.Extensions.Logging;
 
-namespace TransactionProcessor.Services;
+namespace FinancialMonitoring.Abstractions.Persistence;
 
 public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposable
 {
@@ -19,7 +19,7 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
         _logger = logger;
 
         _logger.LogInformation("Connecting to MongoDB at {ConnectionString}", _settings.ConnectionString);
-
+        
         _mongoClient = new MongoClient(_settings.ConnectionString);
         _database = _mongoClient.GetDatabase(_settings.DatabaseName);
         _collection = _database.GetCollection<Transaction>(_settings.CollectionName);
@@ -29,7 +29,7 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
     {
         try
         {
-            _logger.LogInformation("Initializing MongoDB database '{DatabaseName}' and collection '{CollectionName}'",
+            _logger.LogInformation("Initializing MongoDB database '{DatabaseName}' and collection '{CollectionName}'", 
                 _settings.DatabaseName, _settings.CollectionName);
 
             // Create index on Id field for faster queries
@@ -61,13 +61,13 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
         try
         {
             _logger.LogInformation("Adding transaction with ID '{TransactionId}' to MongoDB", transaction.Id);
-
+            
             await _collection.ReplaceOneAsync(
                 Builders<Transaction>.Filter.Eq(t => t.Id, transaction.Id),
                 transaction,
                 new ReplaceOptions { IsUpsert = true }
             );
-
+            
             _logger.LogInformation("Successfully added/updated transaction with ID '{TransactionId}'", transaction.Id);
         }
         catch (Exception ex)
@@ -84,7 +84,7 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
             _logger.LogInformation("Fetching transactions, Page: {PageNumber}, Size: {PageSize}", pageNumber, pageSize);
 
             var totalCount = await _collection.CountDocumentsAsync(FilterDefinition<Transaction>.Empty);
-
+            
             if (totalCount == 0)
             {
                 _logger.LogInformation("No transactions found in database");
@@ -119,15 +119,15 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
         try
         {
             _logger.LogInformation("Fetching transaction by ID: {Id}", id);
-
+            
             var filter = Builders<Transaction>.Filter.Eq(t => t.Id, id);
             var transaction = await _collection.Find(filter).FirstOrDefaultAsync();
-
+            
             if (transaction == null)
             {
                 _logger.LogWarning("Transaction with ID: {Id} not found", id);
             }
-
+            
             return transaction;
         }
         catch (Exception ex)
@@ -145,7 +145,7 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
 
             var filter = Builders<Transaction>.Filter.Ne(t => t.AnomalyFlag, null);
             var totalCount = await _collection.CountDocumentsAsync(filter);
-
+            
             if (totalCount == 0)
             {
                 _logger.LogInformation("No anomalous transactions found in database");
@@ -189,6 +189,6 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
     public async ValueTask DisposeAsync()
     {
         _logger.LogInformation("Disposing MongoDB client");
-        await ValueTask.CompletedTask;
+        await ValueTask.CompletedTask; // MongoDB client doesn't need explicit disposal
     }
 }
