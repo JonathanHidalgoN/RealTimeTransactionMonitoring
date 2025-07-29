@@ -1,5 +1,4 @@
 using TransactionProcessor;
-using TransactionProcessor.Services;
 using FinancialMonitoring.Abstractions.Persistence;
 using TransactionProcessor.AnomalyDetection;
 using FinancialMonitoring.Abstractions.Services;
