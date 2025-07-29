@@ -73,11 +73,11 @@ public class TransactionGenerator : ITransactionGenerator
         var hour = userLocalTime.Hour;
         var baseHourWeight = GetHourWeight(hour);
         var isWeekend = userLocalTime.DayOfWeek == DayOfWeek.Saturday || userLocalTime.DayOfWeek == DayOfWeek.Sunday;
-        
+
         var hourWeight = isWeekend ? baseHourWeight * WEEKEND_ACTIVITY_MULTIPLIER : baseHourWeight;
-        
+
         hourWeight = ApplyUserTypeHourAdjustment(hourWeight, hour, profile.Type, isWeekend);
-        
+
         if (_random.NextDouble() > hourWeight)
         {
             var activeHours = GetActiveHoursForUserType(profile.Type, isWeekend);
@@ -310,7 +310,7 @@ public class TransactionGenerator : ITransactionGenerator
     {
         var profiles = new List<UserProfile>();
         var userTypes = Enum.GetValues<UserType>();
-        
+
         for (int i = 0; i < USER_PROFILE_COUNT; i++)
         {
             var accountId = $"ACC{ACCOUNT_ID_BASE + i}";

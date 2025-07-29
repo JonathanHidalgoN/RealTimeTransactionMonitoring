@@ -34,7 +34,7 @@ public class CosmosTransactionRepository : ITransactionRepository, IAsyncDisposa
     public async Task AddTransactionAsync(Transaction transaction)
     {
         _logger.LogInformation("Adding transaction with ID '{TransactionId}' to Cosmos DB", transaction.Id);
-        
+
         // Convert domain Transaction to TransactionForCosmos (preserving the ID mapping)
         var cosmosTransaction = TransactionForCosmos.FromDomainTransaction(transaction);
         await _cosmosDbService.AddTransactionAsync(cosmosTransaction);
@@ -90,10 +90,10 @@ public class CosmosTransactionRepository : ITransactionRepository, IAsyncDisposa
     public async ValueTask DisposeAsync()
     {
         _logger.LogInformation("Disposing Cosmos DB repository");
-        
+
         if (_cosmosDbService is IAsyncDisposable cosmosDisposable)
             await cosmosDisposable.DisposeAsync();
-        
+
         if (_queryService is IAsyncDisposable queryDisposable)
             await queryDisposable.DisposeAsync();
     }

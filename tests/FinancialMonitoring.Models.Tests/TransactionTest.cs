@@ -6,10 +6,10 @@ public class TransactionTests
     private Account ValidSourceAccount() => new Account("ACC_SRC_VALID");
     private Account ValidDestinationAccount() => new Account("ACC_DEST_VALID");
     private Location ValidLocation() => new Location("New York", "NY", "US", "10001");
-    
+
     private Transaction CreateValidTransaction(
-        string? id = null, 
-        double? amount = null, 
+        string? id = null,
+        double? amount = null,
         long? timestamp = null,
         Account? sourceAccount = null,
         Account? destinationAccount = null,
@@ -30,10 +30,10 @@ public class TransactionTests
             anomalyFlag
         );
     }
-    
+
     private Transaction CreateTransactionWithNullChecking(
-        string id, 
-        double amount, 
+        string id,
+        double amount,
         long timestamp,
         Account sourceAccount,
         Account destinationAccount,
