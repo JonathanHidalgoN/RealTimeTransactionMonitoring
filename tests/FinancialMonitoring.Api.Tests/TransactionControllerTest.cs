@@ -35,6 +35,9 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
                     { "CosmosDb:DatabaseName", "TestDb" },
                     { "CosmosDb:ContainerName", "TestContainer" },
                     { "CosmosDb:PartitionKeyPath", "/id" },
+                    { "MongoDb:ConnectionString", "mongodb://localhost:27017" },
+                    { "MongoDb:DatabaseName", "TestFinancialMonitoring" },
+                    { "MongoDb:CollectionName", "transactions" },
                     { "Kafka:BootstrapServers", "test-kafka:9092" }
                 });
             });

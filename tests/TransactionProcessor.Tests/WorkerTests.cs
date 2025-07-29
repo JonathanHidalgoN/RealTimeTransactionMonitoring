@@ -15,7 +15,7 @@ public class WorkerTests
     private readonly Mock<ILogger<Worker>> _mockLogger;
     private readonly Mock<IMessageConsumer<Null, string>> _mockMessageConsumer;
     private readonly Mock<ITransactionAnomalyDetector> _mockAnomalyDetector;
-    private readonly Mock<ICosmosDbService> _mockCosmosDbService;
+    private readonly Mock<ITransactionRepository> _mockTransactionRepository;
     private readonly IServiceProvider _serviceProvider;
 
     public WorkerTests()
@@ -23,11 +23,11 @@ public class WorkerTests
         _mockLogger = new Mock<ILogger<Worker>>();
         _mockMessageConsumer = new Mock<IMessageConsumer<Null, string>>();
         _mockAnomalyDetector = new Mock<ITransactionAnomalyDetector>();
-        _mockCosmosDbService = new Mock<ICosmosDbService>();
+        _mockTransactionRepository = new Mock<ITransactionRepository>();
 
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddScoped(provider => _mockAnomalyDetector.Object);
-        serviceCollection.AddScoped(provider => _mockCosmosDbService.Object);
+        serviceCollection.AddScoped(provider => _mockTransactionRepository.Object);
         _serviceProvider = serviceCollection.BuildServiceProvider();
     }
 
@@ -49,7 +49,7 @@ public class WorkerTests
         await (Task)method!.Invoke(worker, new object[] { message })!;
 
         _mockAnomalyDetector.Verify(d => d.DetectAsync(It.IsAny<Transaction>()), Times.Once);
-        _mockCosmosDbService.Verify(c => c.AddTransactionAsync(It.IsAny<TransactionForCosmos>()), Times.Once);
+        _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>()), Times.Once);
     }
 
     [Fact]
