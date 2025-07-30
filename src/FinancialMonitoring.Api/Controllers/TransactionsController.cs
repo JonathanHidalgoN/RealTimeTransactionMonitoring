@@ -11,8 +11,8 @@ namespace FinancialMonitoring.Api.Controllers;
 /// API endpoints for querying financial transaction data.
 /// </summary>
 [ApiController]
-[ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/transactions")]
+[ApiVersion(AppConstants.ApiVersion)]
+[Route(AppConstants.TransactionsRouteTemplate)]
 [Authorize(AuthenticationSchemes = SecureApiKeyAuthenticationDefaults.SchemeName)]
 public class TransactionsController : ControllerBase
 {

@@ -59,7 +59,7 @@ public class HealthCheckTests : IClassFixture<WebApplicationFactory<Program>>
                 PageSize = 1
             });
 
-        var response = await client.GetAsync("/healthz");
+        var response = await client.GetAsync(AppConstants.HealthCheckEndpoint);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -82,7 +82,7 @@ public class HealthCheckTests : IClassFixture<WebApplicationFactory<Program>>
                 PageSize = 1
             });
 
-        var response = await client.GetAsync("/health");
+        var response = await client.GetAsync(AppConstants.DetailedHealthCheckEndpoint);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
@@ -117,7 +117,7 @@ public class HealthCheckTests : IClassFixture<WebApplicationFactory<Program>>
             .Setup(service => service.GetAllTransactionsAsync(1, 1))
             .ThrowsAsync(new InvalidOperationException("Database connection failed"));
 
-        var response = await client.GetAsync("/health");
+        var response = await client.GetAsync(AppConstants.DetailedHealthCheckEndpoint);
 
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
         Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
@@ -154,8 +154,8 @@ public class HealthCheckTests : IClassFixture<WebApplicationFactory<Program>>
                 PageSize = 1
             });
 
-        var healthzResponse = await client.GetAsync("/healthz");
-        var healthResponse = await client.GetAsync("/health");
+        var healthzResponse = await client.GetAsync(AppConstants.HealthCheckEndpoint);
+        var healthResponse = await client.GetAsync(AppConstants.DetailedHealthCheckEndpoint);
 
         Assert.True(healthzResponse.IsSuccessStatusCode ||
                    healthzResponse.StatusCode == HttpStatusCode.ServiceUnavailable);
@@ -178,7 +178,7 @@ public class HealthCheckTests : IClassFixture<WebApplicationFactory<Program>>
                 PageSize = 1
             });
 
-        var response = await client.GetAsync("/health");
+        var response = await client.GetAsync(AppConstants.DetailedHealthCheckEndpoint);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 

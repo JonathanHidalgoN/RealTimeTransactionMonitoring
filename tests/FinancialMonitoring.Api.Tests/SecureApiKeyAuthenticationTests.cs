@@ -62,10 +62,10 @@ public class SecureApiKeyAuthenticationTests : IClassFixture<WebApplicationFacto
             .Setup(service => service.GetAllTransactionsAsync(1, 20))
             .ReturnsAsync(expectedPagedResult);
 
-        var response = await client.GetAsync("/api/v1/transactions");
+        var response = await client.GetAsync(AppConstants.Routes.GetTransactionsPath());
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.True(response.Headers.Contains("X-Correlation-Id"));
+        Assert.True(response.Headers.Contains(AppConstants.CorrelationIdHeader));
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public class SecureApiKeyAuthenticationTests : IClassFixture<WebApplicationFacto
     {
         var client = _factory.CreateClient();
 
-        var response = await client.GetAsync("/api/v1/transactions");
+        var response = await client.GetAsync(AppConstants.Routes.GetTransactionsPath());
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -84,7 +84,7 @@ public class SecureApiKeyAuthenticationTests : IClassFixture<WebApplicationFacto
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, "invalid-key");
 
-        var response = await client.GetAsync("/api/v1/transactions");
+        var response = await client.GetAsync(AppConstants.Routes.GetTransactionsPath());
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -95,7 +95,7 @@ public class SecureApiKeyAuthenticationTests : IClassFixture<WebApplicationFacto
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, "");
 
-        var response = await client.GetAsync("/api/v1/transactions");
+        var response = await client.GetAsync(AppConstants.Routes.GetTransactionsPath());
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -107,7 +107,7 @@ public class SecureApiKeyAuthenticationTests : IClassFixture<WebApplicationFacto
         client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, "test-api-key-123");
 
         var customCorrelationId = "custom-correlation-123";
-        client.DefaultRequestHeaders.Add("X-Correlation-Id", customCorrelationId);
+        client.DefaultRequestHeaders.Add(AppConstants.CorrelationIdHeader, customCorrelationId);
 
         var expectedPagedResult = new PagedResult<Transaction>
         {
@@ -121,24 +121,33 @@ public class SecureApiKeyAuthenticationTests : IClassFixture<WebApplicationFacto
             .Setup(service => service.GetAllTransactionsAsync(1, 20))
             .ReturnsAsync(expectedPagedResult);
 
-        var response = await client.GetAsync("/api/v1/transactions");
+        var response = await client.GetAsync(AppConstants.Routes.GetTransactionsPath());
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.True(response.Headers.Contains("X-Correlation-Id"));
+        Assert.True(response.Headers.Contains(AppConstants.CorrelationIdHeader));
 
-        var correlationIdHeader = response.Headers.GetValues("X-Correlation-Id").FirstOrDefault();
+        var correlationIdHeader = response.Headers.GetValues(AppConstants.CorrelationIdHeader).FirstOrDefault();
         Assert.Equal(customCorrelationId, correlationIdHeader);
     }
 
     [Theory]
-    [InlineData("GET", "/api/v1/transactions")]
-    [InlineData("GET", "/api/v1/transactions/test-id")]
-    [InlineData("GET", "/api/v1/transactions/anomalies")]
+    [InlineData("GET", "transactions")]
+    [InlineData("GET", "transactions/test-id")]
+    [InlineData("GET", "transactions/anomalies")]
     public async Task AllEndpoints_RequireAuthentication(string method, string endpoint)
     {
         var client = _factory.CreateClient();
+        
+        // Build full endpoint path using constants
+        var fullEndpoint = endpoint switch
+        {
+            "transactions" => AppConstants.Routes.GetTransactionsPath(),
+            "transactions/test-id" => AppConstants.Routes.GetTransactionByIdPath("test-id"),
+            "transactions/anomalies" => AppConstants.Routes.GetAnomaliesPath(),
+            _ => $"{AppConstants.Routes.GetVersionedApiPath()}/{endpoint}"
+        };
 
-        var request = new HttpRequestMessage(new HttpMethod(method), endpoint);
+        var request = new HttpRequestMessage(new HttpMethod(method), fullEndpoint);
         var response = await client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);

@@ -70,7 +70,7 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
 
         for (int i = 0; i < 2; i++) // Well under the limit of 3
         {
-            var response = await client.GetAsync("/api/v1/transactions");
+            var response = await client.GetAsync(AppConstants.Routes.GetTransactionsPath());
             Assert.True(response.IsSuccessStatusCode, $"Request {i + 1} should succeed");
 
             Assert.True(response.Headers.Contains("X-RateLimit-Limit") ||
@@ -96,7 +96,7 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
             .Setup(service => service.GetAllTransactionsAsync(It.IsAny<int>(), It.IsAny<int>()))
             .ReturnsAsync(expectedPagedResult);
 
-        var response = await client.GetAsync("/api/v1/transactions");
+        var response = await client.GetAsync(AppConstants.Routes.GetTransactionsPath());
 
         Assert.True(response.IsSuccessStatusCode);
 
@@ -113,7 +113,7 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
 
         for (int i = 0; i < 10; i++)
         {
-            var response = await client.GetAsync("/healthz");
+            var response = await client.GetAsync(AppConstants.HealthCheckEndpoint);
             Assert.True(response.StatusCode == HttpStatusCode.OK ||
                        response.StatusCode == HttpStatusCode.ServiceUnavailable,
                        $"Health check {i + 1} should not be rate limited");

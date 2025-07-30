@@ -21,7 +21,7 @@ public class ApiResponse<T>
     public string? CorrelationId { get; set; }
 
     [JsonPropertyName("version")]
-    public string Version { get; set; } = "1.0";
+    public string Version { get; set; } = AppConstants.ApiVersion;
 
     public static ApiResponse<T> SuccessResponse(T data, string? correlationId = null)
     {
@@ -52,7 +52,7 @@ public class ApiErrorResponse
     public string? CorrelationId { get; set; }
 
     [JsonPropertyName("version")]
-    public string Version { get; set; } = "1.0";
+    public string Version { get; set; } = AppConstants.ApiVersion;
 
     public static ApiErrorResponse FromProblemDetails(ProblemDetails problem, string? correlationId = null)
     {

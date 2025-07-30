@@ -11,7 +11,7 @@ namespace FinancialMonitoring.Api.Authentication;
 public static class SecureApiKeyAuthenticationDefaults
 {
     public const string SchemeName = "SecureApiKey";
-    public const string ApiKeyHeaderName = "X-Api-Key";
+    public static string ApiKeyHeaderName => AppConstants.ApiKeyHeader;
 }
 
 //https://learn.microsoft.com/en-us/aspnet/core/security/authentication/?view=aspnetcore-8.0

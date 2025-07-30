@@ -19,7 +19,6 @@
 
 ### .5 Testing Strategy
 - Add chaos engineering tests
-- Testing expertise is valuable for mid-level roles
 
 ### 6. Enhanced Monitoring & Alerting
 - Configure custom Azure Monitor alerts

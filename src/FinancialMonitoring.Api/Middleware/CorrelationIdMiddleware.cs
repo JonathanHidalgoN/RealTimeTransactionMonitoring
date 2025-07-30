@@ -1,3 +1,5 @@
+using FinancialMonitoring.Models;
+
 namespace FinancialMonitoring.Api.Middleware;
 
 /// <summary>
@@ -7,7 +9,7 @@ namespace FinancialMonitoring.Api.Middleware;
 /// https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/?view=aspnetcore-9.0
 public class CorrelationIdMiddleware
 {
-    private const string CorrelationIdHeaderName = "X-Correlation-Id";
+    private static readonly string CorrelationIdHeaderName = AppConstants.CorrelationIdHeader;
     private readonly RequestDelegate _next;
     private readonly ILogger<CorrelationIdMiddleware> _logger;
 
