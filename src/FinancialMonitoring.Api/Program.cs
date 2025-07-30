@@ -1,9 +1,12 @@
+using AspNetCoreRateLimit;
 using Azure.Identity;
 using FinancialMonitoring.Abstractions.Persistence;
 using FinancialMonitoring.Api.Authentication;
+using FinancialMonitoring.Api.Middleware;
 using FinancialMonitoring.Api.Services;
 using FinancialMonitoring.Models;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,7 +52,6 @@ builder.Services.AddAuthentication()
         options => { });
 
 builder.Services.AddAuthorization();
-// Skip ApplicationInsights validation in Testing environment
 if (builder.Environment.EnvironmentName != "Testing")
 {
     builder.Services.AddOptions<ApplicationInsightsSettings>()
@@ -57,7 +59,6 @@ if (builder.Environment.EnvironmentName != "Testing")
         .ValidateDataAnnotations()
         .ValidateOnStart();
 }
-// Configure database settings based on environment
 if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing"))
 {
     builder.Services.AddOptions<MongoDbSettings>()
@@ -76,14 +77,12 @@ builder.Services.AddOptions<ApiSettings>()
     .Bind(builder.Configuration.GetSection("ApiSettings"))
     .ValidateDataAnnotations()
     .ValidateOnStart();
-// Only add ApplicationInsights in non-Testing environments
 if (builder.Environment.EnvironmentName != "Testing")
 {
     builder.Services.AddApplicationInsightsTelemetry();
 }
 builder.Services.AddHealthChecks();
 
-// Configure repository based on environment
 if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing"))
 {
     Console.WriteLine("Configuring MongoDB repository for local development/testing");
@@ -92,7 +91,6 @@ if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Te
 else
 {
     Console.WriteLine("Configuring Cosmos DB repository for production");
-    // Register existing Cosmos services for production
     builder.Services.AddSingleton<ICosmosDbService, CosmosDbService>();
     builder.Services.AddSingleton<ITransactionQueryService, CosmosDbTransactionQueryService>();
     builder.Services.AddSingleton<ITransactionRepository, CosmosTransactionRepository>();
