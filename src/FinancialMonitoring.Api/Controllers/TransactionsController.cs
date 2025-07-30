@@ -1,5 +1,6 @@
 using FinancialMonitoring.Abstractions.Persistence;
 using FinancialMonitoring.Api.Authentication;
+using FinancialMonitoring.Api.Models;
 using FinancialMonitoring.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,8 +12,9 @@ namespace FinancialMonitoring.Api.Controllers;
 /// API endpoints for querying financial transaction data.
 /// </summary>
 [ApiController]
-[Route("api/transactions")]
-[Authorize(AuthenticationSchemes = ApiKeyAuthenticationDefaults.SchemeName)]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/transactions")]
+[Authorize(AuthenticationSchemes = SecureApiKeyAuthenticationDefaults.SchemeName)]
 public class TransactionsController : ControllerBase
 {
     private readonly ITransactionRepository _transactionRepository;
@@ -36,23 +38,23 @@ public class TransactionsController : ControllerBase
     /// <param name="pageSize">The number of transactions per page.</param>
     /// <returns>A paginated result of transactions.</returns>
     [HttpGet]
-    [ProducesResponseType(typeof(PagedResult<Transaction>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<PagedResult<Transaction>>> GetAllTransactions(
+    [ProducesResponseType(typeof(ApiResponse<PagedResult<Transaction>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<PagedResult<Transaction>>>> GetAllTransactions(
         [FromQuery][Range(1, int.MaxValue)] int pageNumber = 1,
         [FromQuery][Range(1, 100)] int pageSize = 20)
     {
-        try
-        {
-            _logger.LogInformation("API: Getting all transactions - Page: {PageNumber}, Size: {PageSize}", pageNumber, pageSize);
-            var pagedResult = await _transactionRepository.GetAllTransactionsAsync(pageNumber, pageSize);
-            return Ok(pagedResult);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "API: Error occurred while getting all transactions.");
-            return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing your request.");
-        }
+        var correlationId = HttpContext.TraceIdentifier;
+        _logger.LogInformation("Getting all transactions - Page: {PageNumber}, Size: {PageSize}, CorrelationId: {CorrelationId}",
+            pageNumber, pageSize, correlationId);
+
+        var pagedResult = await _transactionRepository.GetAllTransactionsAsync(pageNumber, pageSize);
+        var response = ApiResponse<PagedResult<Transaction>>.SuccessResponse(pagedResult, correlationId);
+
+        return Ok(response);
     }
 
     /// <summary>
@@ -61,32 +63,37 @@ public class TransactionsController : ControllerBase
     /// <param name="id">The ID of the transaction to retrieve.</param>
     /// <returns>The requested transaction if found; otherwise, a 404 Not Found response.</returns>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(Transaction), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<Transaction>> GetTransactionById(string id)
+    [ProducesResponseType(typeof(ApiResponse<Transaction>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<Transaction>>> GetTransactionById(string id)
     {
+        var correlationId = HttpContext.TraceIdentifier;
+
         if (string.IsNullOrWhiteSpace(id))
         {
-            return BadRequest("Transaction ID cannot be empty.");
+            _logger.LogWarning("Empty transaction ID provided for request {CorrelationId}", correlationId);
+            var problemDetails = Models.ProblemDetails.ValidationError("Transaction ID cannot be empty.", HttpContext.Request.Path);
+            var errorResponse = ApiErrorResponse.FromProblemDetails(problemDetails, correlationId);
+            return BadRequest(errorResponse);
         }
 
-        try
+        _logger.LogInformation("Getting transaction by ID: {TransactionId}, CorrelationId: {CorrelationId}", id, correlationId);
+
+        var transaction = await _transactionRepository.GetTransactionByIdAsync(id);
+        if (transaction == null)
         {
-            _logger.LogInformation("API: Getting transaction by ID: {TransactionId}", id);
-            var transaction = await _transactionRepository.GetTransactionByIdAsync(id);
-            if (transaction == null)
-            {
-                _logger.LogWarning("API: Transaction with ID {TransactionId} not found.", id);
-                return NotFound();
-            }
-            return Ok(transaction);
+            _logger.LogWarning("Transaction with ID {TransactionId} not found for request {CorrelationId}", id, correlationId);
+            var problemDetails = Models.ProblemDetails.NotFound($"Transaction with ID '{id}' was not found.", HttpContext.Request.Path);
+            var errorResponse = ApiErrorResponse.FromProblemDetails(problemDetails, correlationId);
+            return NotFound(errorResponse);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "API: Error occurred while getting transaction by ID: {TransactionId}", id);
-            return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing your request.");
-        }
+
+        var response = ApiResponse<Transaction>.SuccessResponse(transaction, correlationId);
+        return Ok(response);
     }
 
     /// <summary>
@@ -96,22 +103,22 @@ public class TransactionsController : ControllerBase
     /// <param name="pageSize">The number of transactions per page.</param>
     /// <returns>A paginated result of anomalous transactions.</returns>
     [HttpGet("anomalies")]
-    [ProducesResponseType(typeof(IEnumerable<Transaction>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<Transaction>>> GetAnomalousTransactions(
+    [ProducesResponseType(typeof(ApiResponse<PagedResult<Transaction>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<PagedResult<Transaction>>>> GetAnomalousTransactions(
         [FromQuery][Range(1, int.MaxValue)] int pageNumber = 1,
         [FromQuery][Range(1, 100)] int pageSize = 20)
     {
-        try
-        {
-            _logger.LogInformation("API: Getting anomalous transactions - Page: {PageNumber}, Size: {PageSize}", pageNumber, pageSize);
-            var transactions = await _transactionRepository.GetAnomalousTransactionsAsync(pageNumber, pageSize);
-            return Ok(transactions);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "API: Error occurred while getting anomalous transactions.");
-            return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing your request.");
-        }
+        var correlationId = HttpContext.TraceIdentifier;
+        _logger.LogInformation("Getting anomalous transactions - Page: {PageNumber}, Size: {PageSize}, CorrelationId: {CorrelationId}",
+            pageNumber, pageSize, correlationId);
+
+        var pagedResult = await _transactionRepository.GetAnomalousTransactionsAsync(pageNumber, pageSize);
+        var response = ApiResponse<PagedResult<Transaction>>.SuccessResponse(pagedResult, correlationId);
+
+        return Ok(response);
     }
 }
