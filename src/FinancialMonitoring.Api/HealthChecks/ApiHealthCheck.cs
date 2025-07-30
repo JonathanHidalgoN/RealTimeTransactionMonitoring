@@ -44,20 +44,20 @@ public class ApiHealthCheck : IHealthCheck
             {
                 _logger.LogWarning("API health check shows high memory usage: {WorkingSet} MB", workingSetMB);
                 return Task.FromResult(HealthCheckResult.Degraded(
-                    $"High memory usage detected ({workingSetMB} MB)", 
+                    $"High memory usage detected ({workingSetMB} MB)",
                     data: data));
             }
 
             _logger.LogDebug("API health check completed successfully");
             return Task.FromResult(HealthCheckResult.Healthy(
-                "API service is running normally", 
+                "API service is running normally",
                 data: data));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "API health check failed");
             return Task.FromResult(HealthCheckResult.Unhealthy(
-                "API service health check failed", 
+                "API service health check failed",
                 ex,
                 data: new Dictionary<string, object>
                 {

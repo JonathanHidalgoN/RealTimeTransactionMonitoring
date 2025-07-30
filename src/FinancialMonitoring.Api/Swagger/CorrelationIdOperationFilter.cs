@@ -12,7 +12,7 @@ public class CorrelationIdOperationFilter : IOperationFilter
     {
         // Add optional correlation ID parameter
         operation.Parameters ??= new List<OpenApiParameter>();
-        
+
         operation.Parameters.Add(new OpenApiParameter
         {
             Name = "X-Correlation-Id",
@@ -31,12 +31,12 @@ public class CorrelationIdOperationFilter : IOperationFilter
         foreach (var response in operation.Responses.Values)
         {
             response.Headers ??= new Dictionary<string, OpenApiHeader>();
-            
+
             response.Headers.TryAdd("X-Correlation-Id", new OpenApiHeader
             {
                 Description = "Correlation ID for request tracing and debugging",
-                Schema = new OpenApiSchema 
-                { 
+                Schema = new OpenApiSchema
+                {
                     Type = "string",
                     Format = "uuid"
                 }
@@ -83,7 +83,7 @@ public class CorrelationIdOperationFilter : IOperationFilter
         // Add error response examples
         if (operation.Responses.ContainsKey("400") || operation.Responses.ContainsKey("404") || operation.Responses.ContainsKey("500"))
         {
-            var errorResponses = operation.Responses.Where(r => 
+            var errorResponses = operation.Responses.Where(r =>
                 r.Key == "400" || r.Key == "404" || r.Key == "500").ToList();
 
             foreach (var (statusCode, response) in errorResponses)

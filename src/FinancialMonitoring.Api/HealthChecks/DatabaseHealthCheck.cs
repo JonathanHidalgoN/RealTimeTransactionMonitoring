@@ -40,21 +40,21 @@ public class DatabaseHealthCheck : IHealthCheck
             {
                 _logger.LogWarning("Database health check completed with slow response time: {Duration}ms", duration.TotalMilliseconds);
                 return HealthCheckResult.Degraded(
-                    $"Database responding slowly ({duration.TotalMilliseconds:F2}ms)", 
+                    $"Database responding slowly ({duration.TotalMilliseconds:F2}ms)",
                     data: data);
             }
 
             _logger.LogDebug("Database health check completed successfully in {Duration}ms", duration.TotalMilliseconds);
             return HealthCheckResult.Healthy(
-                $"Database responding normally ({duration.TotalMilliseconds:F2}ms)", 
+                $"Database responding normally ({duration.TotalMilliseconds:F2}ms)",
                 data: data);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Database health check failed");
             return HealthCheckResult.Unhealthy(
-                "Database connectivity failed", 
-                ex, 
+                "Database connectivity failed",
+                ex,
                 data: new Dictionary<string, object>
                 {
                     ["error"] = ex.Message,

@@ -62,17 +62,17 @@ builder.Services.Configure<IpRateLimitOptions>(options =>
     options.ClientIdHeader = "X-ClientId";
     options.GeneralRules = new List<RateLimitRule>
     {
-        new RateLimitRule 
-        { 
-            Endpoint = "*", 
-            Period = "1m", 
-            Limit = 1000 
+        new RateLimitRule
+        {
+            Endpoint = "*",
+            Period = "1m",
+            Limit = 1000
         },
-        new RateLimitRule 
-        { 
-            Endpoint = "*/transactions", 
-            Period = "1m", 
-            Limit = 100 
+        new RateLimitRule
+        {
+            Endpoint = "*/transactions",
+            Period = "1m",
+            Limit = 100
         }
     };
 });
@@ -204,7 +204,7 @@ builder.Services.AddSwaggerGen(c =>
 
     // Document rate limiting
     c.DocumentFilter<RateLimitDocumentFilter>();
-    
+
     // Document correlation IDs
     c.OperationFilter<CorrelationIdOperationFilter>();
 });

@@ -137,7 +137,7 @@ public class SecureApiKeyAuthenticationTests : IClassFixture<WebApplicationFacto
     public async Task AllEndpoints_RequireAuthentication(string method, string endpoint)
     {
         var client = _factory.CreateClient();
-        
+
         // Build full endpoint path using constants
         var fullEndpoint = endpoint switch
         {
