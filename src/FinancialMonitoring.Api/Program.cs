@@ -7,6 +7,7 @@ using FinancialMonitoring.Api.Services;
 using FinancialMonitoring.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,9 +47,50 @@ builder.Services.AddCors(options =>
                       });
 });
 
+// Rate Limiting
+//https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit?view=aspnetcore-8.0
+builder.Services.AddMemoryCache();
+builder.Services.AddInMemoryRateLimiting();
+builder.Services.Configure<IpRateLimitOptions>(options =>
+{
+    options.EnableEndpointRateLimiting = true;
+    options.StackBlockedRequests = false;
+    options.HttpStatusCode = 429;
+    options.RealIpHeader = "X-Real-IP";
+    options.ClientIdHeader = "X-ClientId";
+    options.GeneralRules = new List<RateLimitRule>
+    {
+        new RateLimitRule 
+        { 
+            Endpoint = "*", 
+            Period = "1m", 
+            Limit = 1000 
+        },
+        new RateLimitRule 
+        { 
+            Endpoint = "*/transactions", 
+            Period = "1m", 
+            Limit = 100 
+        }
+    };
+});
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
+// API Versioning
+//https://www.hanselman.com/blog/aspnet-core-restful-web-api-versioning-made-easy
+builder.Services.AddApiVersioning(opt =>
+{
+    opt.DefaultApiVersion = new ApiVersion(1, 0);
+    opt.AssumeDefaultVersionWhenUnspecified = true;
+    opt.ApiVersionReader = ApiVersionReader.Combine(
+        new UrlSegmentApiVersionReader(),
+        new HeaderApiVersionReader("X-Version")
+    );
+});
+
 builder.Services.AddAuthentication()
-    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(
-        ApiKeyAuthenticationDefaults.SchemeName,
+    .AddScheme<AuthenticationSchemeOptions, SecureApiKeyAuthenticationHandler>(
+        SecureApiKeyAuthenticationDefaults.SchemeName,
         options => { });
 
 builder.Services.AddAuthorization();
@@ -112,11 +154,15 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+
+// Middleware Pipeline - Order is critical!
+app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseCors(MyAllowSpecificOrigins);
+app.UseIpRateLimiting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapHealthChecks("/healthz");
-app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
