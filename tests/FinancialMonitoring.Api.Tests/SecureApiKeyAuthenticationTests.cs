@@ -1,0 +1,146 @@
+using System.Net;
+using System.Net.Http.Json;
+using Microsoft.AspNetCore.Mvc.Testing;
+using FinancialMonitoring.Models;
+using FinancialMonitoring.Abstractions.Persistence;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Moq;
+using Microsoft.Extensions.Configuration;
+using FinancialMonitoring.Api.Authentication;
+
+namespace FinancialMonitoring.Api.Tests;
+
+/// <summary>
+/// Tests for the secure API key authentication system
+/// </summary>
+public class SecureApiKeyAuthenticationTests : IClassFixture<WebApplicationFactory<Program>>
+{
+    private readonly WebApplicationFactory<Program> _factory;
+    private readonly Mock<ITransactionRepository> _mockRepository;
+
+    public SecureApiKeyAuthenticationTests(WebApplicationFactory<Program> factory)
+    {
+        _mockRepository = new Mock<ITransactionRepository>();
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureAppConfiguration((context, configBuilder) =>
+            {
+                configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    { "ApiSettings:ApiKey", "test-api-key-123" },
+                    { "MongoDb:ConnectionString", "mongodb://localhost:27017" },
+                    { "MongoDb:DatabaseName", "TestFinancialMonitoring" },
+                    { "MongoDb:CollectionName", "transactions" },
+                    { "ApplicationInsights:ConnectionString", "InstrumentationKey=test-key;IngestionEndpoint=https://test.in.applicationinsights.azure.com/" }
+                });
+            });
+
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll<ITransactionRepository>();
+                services.AddSingleton<ITransactionRepository>(_mockRepository.Object);
+            });
+        });
+    }
+
+    [Fact]
+    public async Task Request_WithValidApiKey_ShouldSucceed()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, "test-api-key-123");
+
+        var expectedPagedResult = new PagedResult<Transaction>
+        {
+            Items = new List<Transaction>(),
+            TotalCount = 0,
+            PageNumber = 1,
+            PageSize = 20
+        };
+
+        _mockRepository
+            .Setup(service => service.GetAllTransactionsAsync(1, 20))
+            .ReturnsAsync(expectedPagedResult);
+
+        var response = await client.GetAsync("/api/v1/transactions");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.Contains("X-Correlation-Id"));
+    }
+
+    [Fact]
+    public async Task Request_WithNoApiKey_ShouldReturn401()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/api/v1/transactions");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Request_WithInvalidApiKey_ShouldReturn401()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, "invalid-key");
+
+        var response = await client.GetAsync("/api/v1/transactions");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Request_WithEmptyApiKey_ShouldReturn401()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, "");
+
+        var response = await client.GetAsync("/api/v1/transactions");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Request_WithCustomCorrelationId_ShouldPreserveIt()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, "test-api-key-123");
+
+        var customCorrelationId = "custom-correlation-123";
+        client.DefaultRequestHeaders.Add("X-Correlation-Id", customCorrelationId);
+
+        var expectedPagedResult = new PagedResult<Transaction>
+        {
+            Items = new List<Transaction>(),
+            TotalCount = 0,
+            PageNumber = 1,
+            PageSize = 20
+        };
+
+        _mockRepository
+            .Setup(service => service.GetAllTransactionsAsync(1, 20))
+            .ReturnsAsync(expectedPagedResult);
+
+        var response = await client.GetAsync("/api/v1/transactions");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.Contains("X-Correlation-Id"));
+
+        var correlationIdHeader = response.Headers.GetValues("X-Correlation-Id").FirstOrDefault();
+        Assert.Equal(customCorrelationId, correlationIdHeader);
+    }
+
+    [Theory]
+    [InlineData("GET", "/api/v1/transactions")]
+    [InlineData("GET", "/api/v1/transactions/test-id")]
+    [InlineData("GET", "/api/v1/transactions/anomalies")]
+    public async Task AllEndpoints_RequireAuthentication(string method, string endpoint)
+    {
+        var client = _factory.CreateClient();
+
+        var request = new HttpRequestMessage(new HttpMethod(method), endpoint);
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+}
