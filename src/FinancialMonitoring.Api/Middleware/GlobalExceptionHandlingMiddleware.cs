@@ -1,6 +1,6 @@
 using System.Net;
 using System.Text.Json;
-using FinancialMonitoring.Api.Models;
+using FinancialMonitoring.Models;
 
 namespace FinancialMonitoring.Api.Middleware;
 

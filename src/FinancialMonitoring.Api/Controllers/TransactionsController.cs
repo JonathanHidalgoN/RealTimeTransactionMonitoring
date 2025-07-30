@@ -1,6 +1,5 @@
 using FinancialMonitoring.Abstractions.Persistence;
 using FinancialMonitoring.Api.Authentication;
-using FinancialMonitoring.Api.Models;
 using FinancialMonitoring.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -76,7 +75,7 @@ public class TransactionsController : ControllerBase
         if (string.IsNullOrWhiteSpace(id))
         {
             _logger.LogWarning("Empty transaction ID provided for request {CorrelationId}", correlationId);
-            var problemDetails = Models.ProblemDetails.ValidationError("Transaction ID cannot be empty.", HttpContext.Request.Path);
+            var problemDetails = FinancialMonitoring.Models.ProblemDetails.ValidationError("Transaction ID cannot be empty.", HttpContext.Request.Path);
             var errorResponse = ApiErrorResponse.FromProblemDetails(problemDetails, correlationId);
             return BadRequest(errorResponse);
         }
@@ -87,7 +86,7 @@ public class TransactionsController : ControllerBase
         if (transaction == null)
         {
             _logger.LogWarning("Transaction with ID {TransactionId} not found for request {CorrelationId}", id, correlationId);
-            var problemDetails = Models.ProblemDetails.NotFound($"Transaction with ID '{id}' was not found.", HttpContext.Request.Path);
+            var problemDetails = FinancialMonitoring.Models.ProblemDetails.NotFound($"Transaction with ID '{id}' was not found.", HttpContext.Request.Path);
             var errorResponse = ApiErrorResponse.FromProblemDetails(problemDetails, correlationId);
             return NotFound(errorResponse);
         }
