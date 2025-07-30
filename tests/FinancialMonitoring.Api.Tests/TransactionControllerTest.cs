@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using FinancialMonitoring.Api.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace FinancialMonitoring.Api.Tests;
 
@@ -50,7 +51,7 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
         });
 
         _client = _factory.CreateClient();
-        _client.DefaultRequestHeaders.Add(ApiKeyAuthenticationDefaults.ApiKeyHeaderName, "a-dummy-test-api-key");
+        _client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, "a-dummy-test-api-key");
     }
 
     [Fact]
@@ -76,18 +77,24 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
             .Setup(service => service.GetAllTransactionsAsync(1, 2))
             .ReturnsAsync(expectedPagedResult);
 
-        var response = await _client.GetAsync("/api/transactions?pageNumber=1&pageSize=2");
+        var response = await _client.GetAsync("/api/v1/transactions?pageNumber=1&pageSize=2");
 
         response.EnsureSuccessStatusCode();
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var actualResult = await response.Content.ReadFromJsonAsync<PagedResult<Transaction>>();
+        Assert.True(response.Headers.Contains("X-Correlation-Id"));
 
-        Assert.NotNull(actualResult);
-        Assert.NotNull(actualResult.Items);
-        Assert.Equal(expectedPagedResult.TotalCount, actualResult.TotalCount);
-        Assert.Equal(expectedTransactions.Count, actualResult.Items.Count);
-        Assert.Contains(actualResult.Items, t => t.Id == "tx1");
+        var actualApiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<Transaction>>>();
+
+        Assert.NotNull(actualApiResponse);
+        Assert.True(actualApiResponse.Success);
+        Assert.NotNull(actualApiResponse.Data);
+        Assert.NotNull(actualApiResponse.Data.Items);
+        Assert.Equal(expectedPagedResult.TotalCount, actualApiResponse.Data.TotalCount);
+        Assert.Equal(expectedTransactions.Count, actualApiResponse.Data.Items.Count);
+        Assert.Contains(actualApiResponse.Data.Items, t => t.Id == "tx1");
+        Assert.NotNull(actualApiResponse.CorrelationId);
+        Assert.Equal("1.0", actualApiResponse.Version);
     }
 
     [Fact]
@@ -101,12 +108,16 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
             .Setup(service => service.GetTransactionByIdAsync(transactionId))
             .ReturnsAsync(expectedTransaction);
 
-        var response = await _client.GetAsync($"/api/transactions/{transactionId}");
+        var response = await _client.GetAsync($"/api/v1/transactions/{transactionId}");
 
         response.EnsureSuccessStatusCode();
-        var actualTransaction = await response.Content.ReadFromJsonAsync<Transaction>();
-        Assert.NotNull(actualTransaction);
-        Assert.Equal(expectedTransaction.Id, actualTransaction.Id);
+        Assert.True(response.Headers.Contains("X-Correlation-Id"));
+
+        var actualApiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<Transaction>>();
+        Assert.NotNull(actualApiResponse);
+        Assert.True(actualApiResponse.Success);
+        Assert.NotNull(actualApiResponse.Data);
+        Assert.Equal(expectedTransaction.Id, actualApiResponse.Data.Id);
     }
 
     [Fact]
@@ -117,20 +128,54 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
             .Setup(service => service.GetTransactionByIdAsync(transactionId))
             .ReturnsAsync((Transaction?)null);
 
-        var response = await _client.GetAsync($"/api/transactions/{transactionId}");
+        var response = await _client.GetAsync($"/api/v1/transactions/{transactionId}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.True(response.Headers.Contains("X-Correlation-Id"));
+
+        var errorResponse = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+        Assert.NotNull(errorResponse);
+        Assert.False(errorResponse.Success);
+        Assert.NotNull(errorResponse.Error);
+        Assert.Equal(404, errorResponse.Error.Status);
     }
 
     [Theory]
-    [InlineData(" ")]
-    [InlineData(null)]
-    public async Task GetTransactionById_WithInvalidId_ReturnsBadRequest(string invalidId)
+    [InlineData("invalid-guid-format")]
+    [InlineData("123-456")]
+    public async Task GetTransactionById_WithValidIdFormat_WhenNotFound_ReturnsNotFound(string validIdFormat)
     {
-        var controller = new Controllers.TransactionsController(_mockRepository.Object, Mock.Of<ILogger<Controllers.TransactionsController>>());
+        _mockRepository
+            .Setup(service => service.GetTransactionByIdAsync(validIdFormat))
+            .ReturnsAsync((Transaction?)null);
 
-        var result = await controller.GetTransactionById(invalidId);
+        var response = await _client.GetAsync($"/api/v1/transactions/{validIdFormat}");
 
-        Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.True(response.Headers.Contains("X-Correlation-Id"));
+
+        var errorResponse = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+        Assert.NotNull(errorResponse);
+        Assert.False(errorResponse.Success);
+        Assert.NotNull(errorResponse.Error);
+        Assert.Equal(404, errorResponse.Error.Status);
+    }
+
+    [Fact]
+    public async Task GetTransactionById_WithSpecialCharacters_HandlesCorrectly()
+    {
+        var testIds = new[] { "test-id-123", "abc_def", "TEST123" };
+
+        foreach (var testId in testIds)
+        {
+            _mockRepository
+                .Setup(service => service.GetTransactionByIdAsync(testId))
+                .ReturnsAsync((Transaction?)null);
+
+            var response = await _client.GetAsync($"/api/v1/transactions/{testId}");
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.True(response.Headers.Contains("X-Correlation-Id"));
+        }
     }
 }
