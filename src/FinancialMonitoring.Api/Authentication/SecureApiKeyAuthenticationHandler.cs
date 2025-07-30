@@ -34,7 +34,7 @@ public class SecureApiKeyAuthenticationHandler : AuthenticationHandler<Authentic
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         var correlationId = Context.TraceIdentifier;
-        
+
         if (!Request.Headers.TryGetValue(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, out var apiKeyHeaderValues))
         {
             _logger.LogWarning("API key header missing for request {CorrelationId}", correlationId);

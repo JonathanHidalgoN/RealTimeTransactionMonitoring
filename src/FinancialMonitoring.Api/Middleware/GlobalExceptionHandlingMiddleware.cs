@@ -16,7 +16,7 @@ public class GlobalExceptionHandlingMiddleware
     private readonly IWebHostEnvironment _environment;
 
     public GlobalExceptionHandlingMiddleware(
-        RequestDelegate next, 
+        RequestDelegate next,
         ILogger<GlobalExceptionHandlingMiddleware> logger,
         IWebHostEnvironment environment)
     {
@@ -41,33 +41,33 @@ public class GlobalExceptionHandlingMiddleware
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         var correlationId = context.TraceIdentifier;
-        
-        _logger.LogError(exception, 
-            "Unhandled exception occurred for request {Method} {Path} with correlation ID {CorrelationId}", 
+
+        _logger.LogError(exception,
+            "Unhandled exception occurred for request {Method} {Path} with correlation ID {CorrelationId}",
             context.Request.Method, context.Request.Path, correlationId);
 
         //This will provide consisten exception handling and error responses
         var problemDetails = exception switch
         {
             ArgumentException => ProblemDetails.ValidationError(
-                _environment.IsDevelopment() ? exception.Message : "Invalid request parameters", 
+                _environment.IsDevelopment() ? exception.Message : "Invalid request parameters",
                 context.Request.Path),
-            
+
             UnauthorizedAccessException => ProblemDetails.Unauthorized(
-                "Authentication failed or insufficient permissions", 
+                "Authentication failed or insufficient permissions",
                 context.Request.Path),
-            
+
             KeyNotFoundException => ProblemDetails.NotFound(
-                "The requested resource was not found", 
+                "The requested resource was not found",
                 context.Request.Path),
-            
+
             InvalidOperationException => ProblemDetails.ValidationError(
-                _environment.IsDevelopment() ? exception.Message : "Invalid operation", 
+                _environment.IsDevelopment() ? exception.Message : "Invalid operation",
                 context.Request.Path),
-            
+
             _ => ProblemDetails.InternalServerError(
-                _environment.IsDevelopment() 
-                    ? $"{exception.Message}\n{exception.StackTrace}" 
+                _environment.IsDevelopment()
+                    ? $"{exception.Message}\n{exception.StackTrace}"
                     : "An unexpected error occurred",
                 context.Request.Path)
         };
