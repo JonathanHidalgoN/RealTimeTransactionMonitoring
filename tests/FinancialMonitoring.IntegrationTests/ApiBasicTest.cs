@@ -1,8 +1,10 @@
 using System.Net.Http.Json;
+using System.Text.Json;
+using FinancialMonitoring.Models;
 
 namespace FinancialMonitoring.IntegrationTests;
 
-//Test that the api respond to request
+//Test that the api respond to request with new modernized structure
 public class ApiBasicTest : IAsyncLifetime
 {
     private HttpClient _client = null!;
@@ -12,34 +14,106 @@ public class ApiBasicTest : IAsyncLifetime
         var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl") ?? "http://financialmonitoring-api-test:8080";
         var apiKey = Environment.GetEnvironmentVariable("ApiKey") ?? "integration-test-key";
         _client = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
-        _client.DefaultRequestHeaders.Add("X-API-Key", apiKey);
+        _client.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
         await Task.Delay(5000);
     }
 
     [Fact]
     public async Task Api_ShouldBeReachable()
     {
-        var response = await _client.GetAsync("/api/transactions?pageSize=1");
+        var response = await _client.GetAsync("/api/v1/transactions?pageSize=1");
         Assert.True(response.IsSuccessStatusCode, $"API should be reachable. Status: {response.StatusCode}");
+
+        Assert.True(response.Headers.Contains("X-Correlation-Id"));
     }
 
     [Fact]
     public async Task Api_ShouldRequireAuthentication()
     {
         using var unauthenticatedClient = new HttpClient { BaseAddress = _client.BaseAddress };
-        var response = await unauthenticatedClient.GetAsync("/api/transactions");
+        var response = await unauthenticatedClient.GetAsync("/api/v1/transactions");
         Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
-    public async Task Api_ShouldReturnPagedResults()
+    public async Task Api_ShouldReturnStandardizedResponse()
     {
-        var response = await _client.GetAsync("/api/transactions?pageNumber=1&pageSize=5");
+        var response = await _client.GetAsync("/api/v1/transactions?pageNumber=1&pageSize=5");
         Assert.True(response.IsSuccessStatusCode);
 
         var content = await response.Content.ReadAsStringAsync();
-        Assert.Contains("\"items\"", content.ToLower());
-        Assert.Contains("\"totalcount\"", content.ToLower());
+        var jsonDoc = JsonDocument.Parse(content);
+        var root = jsonDoc.RootElement;
+
+        Assert.True(root.TryGetProperty("success", out var success));
+        Assert.True(success.GetBoolean());
+
+        Assert.True(root.TryGetProperty("data", out var data));
+        Assert.True(data.TryGetProperty("items", out _));
+        Assert.True(data.TryGetProperty("totalCount", out _));
+
+        Assert.True(root.TryGetProperty("correlationId", out _));
+        Assert.True(root.TryGetProperty("timestamp", out _));
+        Assert.True(root.TryGetProperty("version", out var version));
+        Assert.Equal("1.0", version.GetString());
+    }
+
+    [Fact]
+    public async Task Api_HealthChecks_ShouldBeAccessible()
+    {
+        var healthzResponse = await _client.GetAsync("/healthz");
+        Assert.True(healthzResponse.IsSuccessStatusCode ||
+                   healthzResponse.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable);
+
+        var healthResponse = await _client.GetAsync("/health");
+        Assert.True(healthResponse.IsSuccessStatusCode ||
+                   healthResponse.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable);
+
+        if (healthResponse.IsSuccessStatusCode)
+        {
+            var content = await healthResponse.Content.ReadAsStringAsync();
+            var jsonDoc = JsonDocument.Parse(content);
+            var root = jsonDoc.RootElement;
+
+            Assert.True(root.TryGetProperty("status", out _));
+            Assert.True(root.TryGetProperty("checks", out _));
+        }
+    }
+
+    [Fact]
+    public async Task Api_ShouldSupportVersioning()
+    {
+        var v1Response = await _client.GetAsync("/api/v1/transactions?pageSize=1");
+        Assert.True(v1Response.IsSuccessStatusCode);
+
+        using var versionedClient = new HttpClient { BaseAddress = _client.BaseAddress };
+        versionedClient.DefaultRequestHeaders.Add("X-Api-Key", Environment.GetEnvironmentVariable("ApiKey") ?? "integration-test-key");
+        versionedClient.DefaultRequestHeaders.Add("X-Version", "1.0");
+
+        var headerVersionResponse = await versionedClient.GetAsync("/api/transactions?pageSize=1");
+    }
+
+    [Fact]
+    public async Task Api_ErrorResponse_ShouldBeStandardized()
+    {
+        var response = await _client.GetAsync("/api/v1/transactions/invalid-id-format");
+
+        if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            var jsonDoc = JsonDocument.Parse(content);
+            var root = jsonDoc.RootElement;
+
+            Assert.True(root.TryGetProperty("success", out var success));
+            Assert.False(success.GetBoolean());
+
+            Assert.True(root.TryGetProperty("error", out var error));
+            Assert.True(error.TryGetProperty("type", out _));
+            Assert.True(error.TryGetProperty("title", out _));
+            Assert.True(error.TryGetProperty("status", out _));
+
+            Assert.True(root.TryGetProperty("correlationId", out _));
+        }
     }
 
     public async Task DisposeAsync()
