@@ -7,6 +7,8 @@ using FinancialMonitoring.Api.HealthChecks;
 using FinancialMonitoring.Api.Services;
 using FinancialMonitoring.Api.Swagger;
 using FinancialMonitoring.Models;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
@@ -144,6 +146,12 @@ else
 }
 
 builder.Services.AddControllers();
+
+// FluentValidation Configuration
+builder.Services.AddFluentValidationAutoValidation()
+    .AddFluentValidationClientsideAdapters();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
@@ -223,6 +231,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 // Middleware Pipeline - Order is critical!
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseCors(MyAllowSpecificOrigins);
