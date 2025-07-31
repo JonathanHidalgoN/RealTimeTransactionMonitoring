@@ -148,6 +148,13 @@ graph TD
 * **Automated Scaling:** The API autoscales using the Horizontal Pod Autoscaler (HPA), and the cluster itself scales with the Cluster Autoscaler.
 * **Infrastructure as Code (IaC):** All Azure resources are defined and managed declaratively using **Terraform**.
 * **End-to-End CI/CD:** A **GitHub Actions** workflow automates the entire process from commit to cloud deployment for both the backend and front-end.
+* **Enterprise-Grade API Security & Performance:**
+    * **Modern HTTP Caching:** Uses ASP.NET Core OutputCache with intelligent policy-based caching for optimal performance
+    * **Comprehensive Middleware Pipeline:** Security headers, CORS, rate limiting, global exception handling, and request correlation
+    * **Input Validation:** FluentValidation framework ensures data integrity and prevents invalid requests
+    * **Security Headers:** Production-ready security headers (CSP, HSTS, X-Frame-Options, etc.) protect against common web vulnerabilities
+    * **Rate Limiting:** Configurable rate limiting prevents API abuse with different limits per endpoint type
+    * **API Key Authentication:** Secure API key-based authentication with time-constant comparison algorithms
 * **Secure Configuration & Identity:**
     * Secrets are stored securely in **Azure Key Vault**.
     * The API is secured using **API Key authentication**.
@@ -184,7 +191,7 @@ The transaction generator is interface-based (`ITransactionGenerator`) allowing 
 
 ## Technology Stack
 
-* **Languages & Frameworks:** C# 12, .NET 8, ASP.NET Core (Web API), Worker Service, Blazor WebAssembly, xUnit
+* **Languages & Frameworks:** C# 12, .NET 8, ASP.NET Core (Web API), Worker Service, Blazor WebAssembly, xUnit, FluentValidation
 * **Azure Cloud Services:**
     * Azure Kubernetes Service (AKS)
     * Azure Container Registry (ACR)
@@ -197,13 +204,58 @@ The transaction generator is interface-based (`ITransactionGenerator`) allowing 
     * Azure Active Directory (Workload Identity)
     * Application Insights & Log Analytics Workspace
     * Azure Storage (for Terraform remote state)
+* **API Features & Middleware:**
+    * ASP.NET Core OutputCache (Modern HTTP Response Caching)
+    * AspNetCoreRateLimit (Rate Limiting & Throttling)
+    * FluentValidation (Input Validation & Data Integrity)
+    * Custom Security Headers Middleware
+    * Global Exception Handling Middleware
+    * Correlation ID Tracking Middleware
+    * CORS Configuration
+    * API Key Authentication
 * **Tools & Concepts:** Docker, Kubernetes (Manifests with Kustomize), Terraform, GitHub Actions, Git, REST API, Dependency Injection
+
+## API Architecture & Documentation
+
+The Financial Monitoring API implements enterprise-grade patterns and practices. Detailed documentation is available in the `/docs/api/` directory:
+
+* **[Middleware Architecture](docs/api/middleware-architecture.md)** - Complete middleware pipeline with security, performance, and operational features
+* **[Caching and Performance](docs/api/caching-and-performance.md)** - HTTP response caching, OutputCache policies, and performance optimizations  
+* **[Validation and Security](docs/api/validation-and-security.md)** - Input validation, security headers, authentication, and protection mechanisms
+
+### API Middleware Pipeline
+
+The API uses a comprehensive middleware pipeline that processes every request:
+
+```mermaid
+graph LR
+    A[Request] --> B[Security Headers]
+    B --> C[Correlation ID]
+    C --> D[Global Exception Handling]
+    D --> E[CORS]
+    E --> F[Rate Limiting]
+    F --> G[Authentication]
+    G --> H[Authorization]
+    H --> I[Response Caching]
+    I --> J[Controller Action]
+    
+    style B fill:#ff9999
+    style F fill:#ffff99
+    style G fill:#cc99ff
+    style I fill:#99ff99
+```
 
 ## Project Structure
 
 ```
 .
 ├── .github/workflows/      # GitHub Actions CI/CD pipeline definitions
+├── docs/                   # Project documentation
+│   ├── api/               # API-specific documentation
+│   │   ├── caching-and-performance.md
+│   │   ├── middleware-architecture.md
+│   │   └── validation-and-security.md
+│   └── architecture/      # System architecture documentation
 ├── infra/                  # Terraform files for all Azure infrastructure
 ├── k8s-manifest/           # Kubernetes manifest files (Deployments, Services, etc.)
 ├── scripts/                # Deployment and configuration scripts
@@ -219,6 +271,10 @@ The transaction generator is interface-based (`ITransactionGenerator`) allowing 
 ├── src/                    # .NET source code
 │   ├── FinancialMonitoring.Abstractions/
 │   ├── FinancialMonitoring.Api/
+│   │   ├── Controllers/   # API controllers with caching and validation
+│   │   ├── Middleware/    # Custom middleware components
+│   │   ├── HealthChecks/  # Health check implementations
+│   │   └── Validation/    # FluentValidation rules and models
 │   ├── FinancialMonitoring.Models/
 │   ├── FinancialMonitoring.WebApp/
 │   ├── TransactionProcessor/
