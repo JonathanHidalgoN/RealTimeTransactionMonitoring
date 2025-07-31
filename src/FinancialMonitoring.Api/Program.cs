@@ -12,6 +12,7 @@ using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.Extensions.Caching.Memory;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +50,33 @@ builder.Services.AddCors(options =>
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
                       });
+});
+
+// Response Caching
+builder.Services.AddResponseCaching(options =>
+{
+    options.MaximumBodySize = 1024 * 1024; // 1MB
+    options.UseCaseSensitivePaths = false;
+    options.SizeLimit = 10 * 1024 * 1024; // 10MB cache size
+});
+
+
+//https://learn.microsoft.com/en-us/aspnet/core/performance/caching/output?view=aspnetcore-9.0
+builder.Services.AddOutputCache(options =>
+{
+    options.AddBasePolicy(builder => builder.Expire(TimeSpan.FromMinutes(5)));
+
+    options.AddPolicy("TransactionCache", builder =>
+        builder.Expire(TimeSpan.FromMinutes(2))
+               .SetVaryByQuery("pageNumber", "pageSize", "startDate", "endDate", "minAmount", "maxAmount"));
+
+    options.AddPolicy("TransactionByIdCache", builder =>
+        builder.Expire(TimeSpan.FromMinutes(10))
+               .SetVaryByRouteValue("id"));
+
+    options.AddPolicy("AnomalousTransactionCache", builder =>
+        builder.Expire(TimeSpan.FromMinutes(1))
+               .SetVaryByQuery("pageNumber", "pageSize"));
 });
 
 // Rate Limiting
@@ -230,7 +258,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-// Middleware Pipeline - Order is critical!
+app.UseResponseCaching();
+app.UseOutputCache();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();

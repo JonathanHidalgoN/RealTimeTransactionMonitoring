@@ -37,6 +37,7 @@ public class TransactionsController : ControllerBase
     /// <param name="request">The query parameters for filtering and pagination.</param>
     /// <returns>A paginated result of transactions.</returns>
     [HttpGet]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "TransactionCache")]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<Transaction>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -61,6 +62,7 @@ public class TransactionsController : ControllerBase
     /// <param name="id">The ID of the transaction to retrieve.</param>
     /// <returns>The requested transaction if found; otherwise, a 404 Not Found response.</returns>
     [HttpGet("{id}")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "TransactionByIdCache")]
     [ProducesResponseType(typeof(ApiResponse<Transaction>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
@@ -100,6 +102,7 @@ public class TransactionsController : ControllerBase
     /// <param name="request">The query parameters for filtering and pagination.</param>
     /// <returns>A paginated result of anomalous transactions.</returns>
     [HttpGet("anomalies")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "AnomalousTransactionCache")]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<Transaction>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
