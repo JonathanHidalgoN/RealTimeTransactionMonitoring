@@ -238,12 +238,20 @@ graph LR
     style H fill:#99ff99
 ```
 
+## AI-Assisted Development
+
+This project leverages AI as a **development mentor and teaching tool** rather than a one-shot automation solution. The AI assists in code review, architectural analysis, and documentation while maintaining human oversight and decision-making. 
+
+* **[AI Usage Documentation](docs/ai-usage.md)** - Philosophy and implementation of AI as a complementary development tool
+* **[AI Configuration (CLAUDE.md)](CLAUDE.md)** - Technical configuration for mentor-driven AI interactions
+
 ## Project Structure
 
 ```
 .
 ├── .github/workflows/      # GitHub Actions CI/CD pipeline definitions
 ├── docs/                   # Project documentation
+│   ├── ai-usage.md        # AI usage philosophy and guidelines  
 │   ├── api/               # API-specific documentation
 │   │   └── middleware-architecture.md
 │   └── architecture/      # System architecture documentation
