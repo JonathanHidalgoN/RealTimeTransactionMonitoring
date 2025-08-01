@@ -128,10 +128,8 @@ else
     builder.Services.AddScoped<ITransactionAnomalyDetector, AnomalyDetector>();
 }
 
-// This hosted service ensures the database and container/collection exist before the main worker starts.
 builder.Services.AddHostedService<DatabaseInitializerHostedService>();
 
-// Configure anomaly event publisher based on environment
 if (environment == "Development" || environment == "Testing")
 {
     Console.WriteLine("Using NoOp anomaly event publisher for local development");
