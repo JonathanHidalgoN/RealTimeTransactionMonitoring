@@ -43,6 +43,9 @@ public class SecurityHeadersTests : IClassFixture<WebApplicationFactory<Program>
         });
     }
 
+    /// <summary>
+    /// This test creates a mocked API client with the security middleware, then sends a GET request and passes if all expected security headers are present
+    /// </summary>
     [Fact]
     public async Task SecurityHeaders_ShouldBePresent_OnApiResponses()
     {
@@ -94,6 +97,9 @@ public class SecurityHeadersTests : IClassFixture<WebApplicationFactory<Program>
         Assert.False(response.Headers.Contains("Strict-Transport-Security"));
     }
 
+    /// <summary>
+    /// This test sends an unauthenticated request and verifies that all security headers are present even on error responses
+    /// </summary>
     [Fact]
     public async Task SecurityHeaders_ShouldBePresent_OnErrorResponses()
     {

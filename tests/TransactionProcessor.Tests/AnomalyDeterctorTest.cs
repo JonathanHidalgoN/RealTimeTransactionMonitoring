@@ -19,6 +19,9 @@ public class HighValueTransactionAnomalyDetectorTests
         _detector = new AnomalyDetector(_mockLogger.Object, _mockEventPublisher.Object);
     }
 
+    /// <summary>
+    /// This test verifies that high value transactions trigger anomaly detection and publish events
+    /// </summary>
     [Fact]
     public async Task DetectAsync_WithHighValueTransaction_ShouldPublishEventAndReturnFlag()
     {
@@ -35,6 +38,9 @@ public class HighValueTransactionAnomalyDetectorTests
         );
     }
 
+    /// <summary>
+    /// This test verifies that normal value transactions do not trigger anomaly detection or publish events
+    /// </summary>
     [Fact]
     public async Task DetectAsync_WithNormalValueTransaction_ShouldNotPublishEventAndReturnNull()
     {

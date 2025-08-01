@@ -45,6 +45,9 @@ public class StatefulAnomalyDetectorTests
         );
     }
 
+    /// <summary>
+    /// This test verifies that when no account stats exist, the first transaction returns no anomaly and saves initial stats
+    /// </summary>
     [Fact]
     public async Task DetectAsync_WhenNoPriorStatsExist_ReturnsNoAnomalyAndSavesNewStats()
     {
@@ -66,6 +69,9 @@ public class StatefulAnomalyDetectorTests
         _mockEventPublisher.Verify(p => p.PublishAsync(It.IsAny<Transaction>()), Times.Never());
     }
 
+    /// <summary>
+    /// This test verifies that normal subsequent transactions return no anomaly and update account statistics
+    /// </summary>
     [Fact]
     public async Task DetectAsync_WithNormalSubsequentTransaction_ReturnsNoAnomalyAndUpdatesStats()
     {
@@ -91,6 +97,9 @@ public class StatefulAnomalyDetectorTests
         _mockEventPublisher.Verify(p => p.PublishAsync(It.IsAny<Transaction>()), Times.Never());
     }
 
+    /// <summary>
+    /// This test verifies that anomalous transactions return appropriate flags and publish events for notification
+    /// </summary>
     [Fact]
     public async Task DetectAsync_WithAnomalousTransaction_ReturnsFlagAndPublishesEvent()
     {

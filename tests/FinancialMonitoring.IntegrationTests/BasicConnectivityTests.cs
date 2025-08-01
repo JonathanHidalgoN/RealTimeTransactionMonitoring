@@ -20,6 +20,9 @@ public class BasicConnectivityTests : IAsyncLifetime
         await Task.Delay(15000);
     }
 
+    /// <summary>
+    /// This test verifies that Kafka is reachable and can successfully send and persist messages
+    /// </summary>
     [Fact]
     public async Task Kafka_ShouldBeReachable()
     {
@@ -73,6 +76,9 @@ public class BasicConnectivityTests : IAsyncLifetime
         Assert.Fail($"Kafka connectivity failed after {maxRetries} attempts. Last error: {lastException?.Message}");
     }
 
+    /// <summary>
+    /// This test verifies that Redis is reachable and can successfully store and retrieve data
+    /// </summary>
     [Fact]
     public async Task Redis_ShouldBeReachable()
     {
@@ -101,6 +107,9 @@ public class BasicConnectivityTests : IAsyncLifetime
         }
     }
 
+    /// <summary>
+    /// This test verifies that MongoDB is reachable and can successfully insert and query documents
+    /// </summary>
     [Fact]
     public async Task MongoDB_ShouldBeReachable()
     {
@@ -137,6 +146,9 @@ public class BasicConnectivityTests : IAsyncLifetime
         }
     }
 
+    /// <summary>
+    /// This test verifies that the environment is properly configured with DOTNET_ENVIRONMENT set to Testing
+    /// </summary>
     [Fact]
     public void Environment_ShouldBeConfiguredForTesting()
     {

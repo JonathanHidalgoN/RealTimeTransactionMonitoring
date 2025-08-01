@@ -18,6 +18,9 @@ public class ApiBasicTest : IAsyncLifetime
         await Task.Delay(5000);
     }
 
+    /// <summary>
+    /// This test verifies that the API is reachable and returns a successful response with required headers
+    /// </summary>
     [Fact]
     public async Task Api_ShouldBeReachable()
     {
@@ -27,6 +30,9 @@ public class ApiBasicTest : IAsyncLifetime
         Assert.True(response.Headers.Contains("X-Correlation-Id"));
     }
 
+    /// <summary>
+    /// This test verifies that API endpoints require authentication and return 401 when no API key is provided
+    /// </summary>
     [Fact]
     public async Task Api_ShouldRequireAuthentication()
     {
@@ -35,6 +41,9 @@ public class ApiBasicTest : IAsyncLifetime
         Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    /// <summary>
+    /// This test verifies that API responses follow the standardized format with success, data, correlationId, and version fields
+    /// </summary>
     [Fact]
     public async Task Api_ShouldReturnStandardizedResponse()
     {
@@ -58,6 +67,9 @@ public class ApiBasicTest : IAsyncLifetime
         Assert.Equal("1.0", version.GetString());
     }
 
+    /// <summary>
+    /// This test verifies that health check endpoints are accessible and return appropriate status information
+    /// </summary>
     [Fact]
     public async Task Api_HealthChecks_ShouldBeAccessible()
     {
@@ -80,6 +92,9 @@ public class ApiBasicTest : IAsyncLifetime
         }
     }
 
+    /// <summary>
+    /// This test verifies that the API supports versioning through both URL path and header-based approaches
+    /// </summary>
     [Fact]
     public async Task Api_ShouldSupportVersioning()
     {
@@ -93,6 +108,9 @@ public class ApiBasicTest : IAsyncLifetime
         var headerVersionResponse = await versionedClient.GetAsync("/api/transactions?pageSize=1");
     }
 
+    /// <summary>
+    /// This test verifies that API error responses follow the standardized format with success, error, and correlationId fields
+    /// </summary>
     [Fact]
     public async Task Api_ErrorResponse_ShouldBeStandardized()
     {

@@ -2,6 +2,9 @@ namespace FinancialMonitoring.Models.Tests;
 
 public class AccountTests
 {
+    /// <summary>
+    /// This test creates an Account with a valid account ID and verifies the instance is created correctly
+    /// </summary>
     [Fact]
     public void Constructor_WithValidAccountId_ShouldCreateInstance()
     {
@@ -11,7 +14,9 @@ public class AccountTests
         Assert.Equal(validAccountId, account.AccountId);
     }
 
-    //Run 3 times with the data invalidAccountId 
+    /// <summary>
+    /// This test verifies that Account constructor throws ArgumentException when given null, empty, or whitespace account IDs
+    /// </summary>
     [Theory]
     [InlineData(null)]
     [InlineData("")]

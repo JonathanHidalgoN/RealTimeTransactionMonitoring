@@ -52,6 +52,9 @@ public class DockerComposeIntegrationTests : IAsyncLifetime
         }
     }
 
+    /// <summary>
+    /// This test verifies the complete end-to-end transaction flow from Kafka message to API retrieval via Docker Compose services
+    /// </summary>
     [Fact]
     public async Task EndToEndTransactionFlow_ShouldProcessTransactionFromKafkaToApi()
     {
@@ -95,6 +98,9 @@ public class DockerComposeIntegrationTests : IAsyncLifetime
         }
     }
 
+    /// <summary>
+    /// This test verifies that the API is responding and healthy within the Docker Compose environment
+    /// </summary>
     [Fact]
     public async Task HealthCheck_ApiShouldBeResponding()
     {
@@ -102,6 +108,9 @@ public class DockerComposeIntegrationTests : IAsyncLifetime
         Assert.True(response.IsSuccessStatusCode, $"API health check failed with status: {response.StatusCode}");
     }
 
+    /// <summary>
+    /// This test verifies that the Kafka producer can successfully send messages and receive persistence confirmation
+    /// </summary>
     [Fact]
     public async Task KafkaProducer_ShouldSendMessage()
     {

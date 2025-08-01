@@ -2,6 +2,9 @@ namespace FinancialMonitoring.Models.Tests;
 
 public class TransactionForCosmosTests
 {
+    /// <summary>
+    /// This test verifies that a domain Transaction is correctly converted to TransactionForCosmos model with all properties mapped
+    /// </summary>
     [Fact]
     public void FromDomainTransaction_ShouldCorrectlyMapToCosmosModel()
     {
@@ -29,6 +32,9 @@ public class TransactionForCosmosTests
         Assert.Equal(domainTransaction.AnomalyFlag, cosmosTransaction.AnomalyFlag);
     }
 
+    /// <summary>
+    /// This test verifies that a TransactionForCosmos model is correctly converted back to domain Transaction with all properties mapped
+    /// </summary>
     [Fact]
     public void ToTransaction_ShouldCorrectlyMapToDomainModel()
     {

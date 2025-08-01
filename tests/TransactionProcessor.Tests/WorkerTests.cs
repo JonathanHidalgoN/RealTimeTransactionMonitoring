@@ -31,6 +31,9 @@ public class WorkerTests
         _serviceProvider = serviceCollection.BuildServiceProvider();
     }
 
+    /// <summary>
+    /// This test verifies that valid messages are deserialized, processed through anomaly detection, and stored in the repository
+    /// </summary>
     [Fact]
     public async Task ProcessMessageAsync_WithValidMessage_ShouldProcessAndStoreTransaction()
     {
@@ -52,6 +55,9 @@ public class WorkerTests
         _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>()), Times.Once);
     }
 
+    /// <summary>
+    /// This test verifies that invalid JSON messages trigger error logging without crashing the worker
+    /// </summary>
     [Fact]
     public async Task ProcessMessageAsync_WithDeserializationError_ShouldLogError()
     {

@@ -128,6 +128,9 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
         _client.DefaultRequestHeaders.Add(ApiKeyAuthenticationDefaults.ApiKeyHeaderName, "integration-test-key");
     }
 
+    /// <summary>
+    /// This test verifies the complete end-to-end transaction processing from Kafka message to API retrieval using TestContainers
+    /// </summary>
     [Fact]
     public async Task EndToEndTransactionFlow_ShouldProcessTransactionFromKafkaToApi()
     {
@@ -160,6 +163,9 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
         Assert.Equal(transaction.Amount, retrievedTransaction.Amount);
     }
 
+    /// <summary>
+    /// This test verifies that high-value transactions trigger anomaly detection and are flagged appropriately in the full system flow
+    /// </summary>
     [Fact]
     public async Task EndToEndTransactionFlow_WithHighAmount_ShouldTriggerAnomalyDetection()
     {
@@ -191,6 +197,9 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
         Assert.NotNull(retrievedTransaction.AnomalyFlag);
     }
 
+    /// <summary>
+    /// This test verifies that the system can handle multiple transactions processed concurrently and retrieve them via API
+    /// </summary>
     [Fact]
     public async Task EndToEndTransactionFlow_MultipleTransactions_ShouldHandleVolume()
     {

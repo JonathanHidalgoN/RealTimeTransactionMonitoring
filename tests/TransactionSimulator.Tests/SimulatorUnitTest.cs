@@ -5,6 +5,9 @@ using FinancialMonitoring.Models;
 
 public class SimulatorTests
 {
+    /// <summary>
+    /// This test verifies that the transaction generator creates valid transactions with all required properties populated
+    /// </summary>
     [Fact]
     public void GenerateTransaction_ShouldReturnValidTransaction_WhenCalled()
     {

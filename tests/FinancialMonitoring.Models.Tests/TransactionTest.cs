@@ -55,6 +55,9 @@ public class TransactionTests
         );
     }
 
+    /// <summary>
+    /// This test creates a Transaction with valid parameters and verifies the instance is created with correct property values
+    /// </summary>
     [Fact]
     public void Constructor_WithValidParameters_ShouldCreateInstance()
     {
@@ -75,7 +78,9 @@ public class TransactionTests
         Assert.Null(transaction.AnomalyFlag);
     }
 
-    //Run 3 times with the data invalid id
+    /// <summary>
+    /// This test verifies that Transaction constructor throws ArgumentException when given null, empty, or whitespace IDs
+    /// </summary>
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -87,6 +92,9 @@ public class TransactionTests
         Assert.Equal("id", exception.ParamName);
     }
 
+    /// <summary>
+    /// This test verifies that Transaction constructor throws ArgumentOutOfRangeException when given a negative amount
+    /// </summary>
     [Fact]
     public void Constructor_WithNegativeAmount_ShouldThrowArgumentOutOfRangeException()
     {
@@ -95,6 +103,9 @@ public class TransactionTests
         Assert.Equal("amount", exception.ParamName);
     }
 
+    /// <summary>
+    /// This test verifies that Transaction constructor throws ArgumentNullException when source account is null
+    /// </summary>
     [Fact]
     public void Constructor_WithNullSourceAccount_ShouldThrowArgumentNullException()
     {
@@ -109,6 +120,9 @@ public class TransactionTests
         Assert.Equal("sourceAccount", exception.ParamName);
     }
 
+    /// <summary>
+    /// This test verifies that Transaction constructor throws ArgumentNullException when destination account is null
+    /// </summary>
     [Fact]
     public void Constructor_WithNullDestinationAccount_ShouldThrowArgumentNullException()
     {
@@ -123,6 +137,9 @@ public class TransactionTests
         Assert.Equal("destinationAccount", exception.ParamName);
     }
 
+    /// <summary>
+    /// This test verifies that Transaction constructor allows zero amount and creates a valid instance
+    /// </summary>
     [Fact]
     public void Constructor_WithZeroAmount_ShouldBeAllowed()
     {
