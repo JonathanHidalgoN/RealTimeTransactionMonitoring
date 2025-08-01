@@ -37,7 +37,7 @@ else
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
-    ?? new[] { "http://localhost:5124", "https://localhost:7258" };
+    ?? new[] { "http://localhost:5124", "https://localhost:7082" };
 
 Console.WriteLine($"CORS Policy: Allowing origins: {string.Join(", ", allowedOrigins)}");
 
@@ -47,8 +47,9 @@ builder.Services.AddCors(options =>
                       policy =>
                       {
                           policy.WithOrigins(allowedOrigins)
-                                .AllowAnyHeader()
-                                .AllowAnyMethod();
+                                .WithHeaders("X-Api-Key")
+                                .WithMethods("GET")
+                                .AllowCredentials();
                       });
 });
 
@@ -258,12 +259,12 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
+app.UseCors(MyAllowSpecificOrigins);
 app.UseResponseCaching();
 app.UseOutputCache();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
-app.UseCors(MyAllowSpecificOrigins);
 app.UseIpRateLimiting();
 app.UseAuthentication();
 app.UseAuthorization();
