@@ -130,7 +130,18 @@ else
 
 // This hosted service ensures the database and container/collection exist before the main worker starts.
 builder.Services.AddHostedService<DatabaseInitializerHostedService>();
-builder.Services.AddSingleton<IAnomalyEventPublisher, EventHubsAnomalyEventPublisher>();
+
+// Configure anomaly event publisher based on environment
+if (environment == "Development" || environment == "Testing")
+{
+    Console.WriteLine("Using NoOp anomaly event publisher for local development");
+    builder.Services.AddSingleton<IAnomalyEventPublisher, NoOpAnomalyEventPublisher>();
+}
+else
+{
+    Console.WriteLine("Using Azure Event Hubs anomaly event publisher for production");
+    builder.Services.AddSingleton<IAnomalyEventPublisher, EventHubsAnomalyEventPublisher>();
+}
 
 // The main background service that processes transactions.
 builder.Services.AddHostedService<Worker>();
