@@ -2,6 +2,7 @@ using FinancialMonitoring.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace FinancialMonitoring.Abstractions.Persistence;
 
@@ -32,20 +33,16 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
             _logger.LogInformation("Initializing MongoDB database '{DatabaseName}' and collection '{CollectionName}'",
                 _settings.DatabaseName, _settings.CollectionName);
 
-            // Create index on Id field for faster queries
-            var indexKeysDefinition = Builders<Transaction>.IndexKeys.Ascending(t => t.Id);
-            var createIndexModel = new CreateIndexModel<Transaction>(indexKeysDefinition, new CreateIndexOptions { Unique = true });
-            await _collection.Indexes.CreateOneAsync(createIndexModel);
 
-            // Create index on AnomalyFlag field for anomalous transaction queries
-            var anomalyIndexKeysDefinition = Builders<Transaction>.IndexKeys.Ascending(t => t.AnomalyFlag);
-            var anomalyCreateIndexModel = new CreateIndexModel<Transaction>(anomalyIndexKeysDefinition);
-            await _collection.Indexes.CreateOneAsync(anomalyCreateIndexModel);
+            await CreateIndexIfNotExistsAsync(
+                "idx_anomaly_flag",
+                Builders<Transaction>.IndexKeys.Ascending(t => t.AnomalyFlag),
+                new CreateIndexOptions { Background = true });
 
-            // Create index on Timestamp field for sorting
-            var timestampIndexKeysDefinition = Builders<Transaction>.IndexKeys.Descending(t => t.Timestamp);
-            var timestampCreateIndexModel = new CreateIndexModel<Transaction>(timestampIndexKeysDefinition);
-            await _collection.Indexes.CreateOneAsync(timestampCreateIndexModel);
+            await CreateIndexIfNotExistsAsync(
+                "idx_timestamp",
+                Builders<Transaction>.IndexKeys.Descending(t => t.Timestamp),
+                new CreateIndexOptions { Background = true });
 
             _logger.LogInformation("MongoDB initialization completed successfully");
         }
@@ -53,6 +50,52 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
         {
             _logger.LogError(ex, "Error initializing MongoDB database or collection");
             throw;
+        }
+    }
+
+    private async Task CreateIndexIfNotExistsAsync(string indexName, IndexKeysDefinition<Transaction> indexKeys, CreateIndexOptions options)
+    {
+        try
+        {
+            if (await IndexExistsAsync(indexName))
+            {
+                _logger.LogInformation("Index '{IndexName}' already exists, skipping creation", indexName);
+                return;
+            }
+
+            options.Name = indexName;
+
+            var createIndexModel = new CreateIndexModel<Transaction>(indexKeys, options);
+            await _collection.Indexes.CreateOneAsync(createIndexModel);
+
+            _logger.LogInformation("Successfully created index '{IndexName}'", indexName);
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "IndexOptionsConflict" || ex.CodeName == "IndexKeySpecsConflict")
+        {
+            _logger.LogWarning("Index '{IndexName}' already exists with different options: {ErrorMessage}", indexName, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create index '{IndexName}'", indexName);
+            throw;
+        }
+    }
+
+    private async Task<bool> IndexExistsAsync(string indexName)
+    {
+        try
+        {
+            using var cursor = await _collection.Indexes.ListAsync();
+            var indexes = await cursor.ToListAsync();
+
+            return indexes.Any(index =>
+                index.TryGetValue("name", out var nameValue) &&
+                nameValue.AsString == indexName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error checking if index '{IndexName}' exists, assuming it doesn't", indexName);
+            return false;
         }
     }
 
