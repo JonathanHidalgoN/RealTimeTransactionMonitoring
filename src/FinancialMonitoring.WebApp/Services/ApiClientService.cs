@@ -14,10 +14,11 @@ public class ApiClientService
 
     public async Task<PagedResult<Transaction>?> GetTransactionsAsync(int pageNumber = 1, int pageSize = 20)
     {
-        var requestUri = $"api/transactions?pageNumber={pageNumber}&pageSize={pageSize}";
+        var requestUri = $"api/v1.0/transactions?pageNumber={pageNumber}&pageSize={pageSize}";
         try
         {
-            return await _httpClient.GetFromJsonAsync<PagedResult<Transaction>>(requestUri);
+            var apiResponse = await _httpClient.GetFromJsonAsync<ApiResponse<PagedResult<Transaction>>>(requestUri);
+            return apiResponse?.Data;
         }
         catch (Exception ex)
         {
@@ -28,10 +29,11 @@ public class ApiClientService
 
     public async Task<PagedResult<Transaction>?> GetAnomaliesAsync(int pageNumber = 1, int pageSize = 20)
     {
-        var requestUri = $"api/transactions/anomalies?pageNumber={pageNumber}&pageSize={pageSize}";
+        var requestUri = $"api/v1.0/transactions/anomalies?pageNumber={pageNumber}&pageSize={pageSize}";
         try
         {
-            return await _httpClient.GetFromJsonAsync<PagedResult<Transaction>>(requestUri);
+            var apiResponse = await _httpClient.GetFromJsonAsync<ApiResponse<PagedResult<Transaction>>>(requestUri);
+            return apiResponse?.Data;
         }
         catch (Exception ex)
         {
