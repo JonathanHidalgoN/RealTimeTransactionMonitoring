@@ -16,6 +16,7 @@ public class Program
 
         var builder = WebAssemblyHostBuilder.CreateDefault(args);
         builder.Configuration.AddJsonFile("appsettings.json");
+        builder.Configuration.AddJsonFile("appsettings.Development.json", optional: true);
 
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
