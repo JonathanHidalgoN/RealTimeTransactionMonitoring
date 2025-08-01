@@ -23,7 +23,6 @@ envs/
 .env.dev
 .env.prod
 .env
-CLAUDE.md
 
 HOW-TO-RUN-LOAD*
 load-test-reports*
