@@ -62,8 +62,8 @@ var corsSettings = new CorsSettings();
 builder.Configuration.GetSection("Cors").Bind(corsSettings);
 
 // Use configured origins or build from port settings
-var allowedOrigins = corsSettings.AllowedOrigins.Length > 0 
-    ? corsSettings.AllowedOrigins 
+var allowedOrigins = corsSettings.AllowedOrigins.Length > 0
+    ? corsSettings.AllowedOrigins
     : CorsSettings.BuildDefaultOrigins(portSettings);
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -78,7 +78,7 @@ builder.Services.AddCors(options =>
                           policy.WithOrigins(allowedOrigins)
                                 .WithHeaders(corsSettings.AllowedHeaders)
                                 .WithMethods(corsSettings.AllowedMethods);
-                          
+
                           if (corsSettings.AllowCredentials)
                           {
                               policy.AllowCredentials();
