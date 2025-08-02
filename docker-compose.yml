@@ -101,7 +101,7 @@ services:
     container_name: mongodb
     image: mongo:7.0
     ports:
-      - "27017:27017"
+      - "${MONGODB_PORT:-27017}:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password123
@@ -124,7 +124,7 @@ services:
       dockerfile: ./src/FinancialMonitoring.Api/Dockerfile.dev
     command: dotnet watch run --no-launch-profile
     ports:
-      - "5100:8080"
+      - "${API_PORT:-5100}:8080"
       # - "7100:8081" # HTTPS
     volumes:
       - ./src:/source/src
@@ -140,6 +140,11 @@ services:
       MongoDb__ConnectionString: "mongodb://admin:password123@mongodb:27017"
       MongoDb__DatabaseName: "FinancialMonitoring"
       MongoDb__CollectionName: "transactions"
+      # Port configuration environment variables
+      API_PORT: "${API_PORT}"
+      BLAZOR_HTTP_PORT: "${BLAZOR_HTTP_PORT}"
+      BLAZOR_HTTPS_PORT: "${BLAZOR_HTTPS_PORT}"
+      MONGODB_PORT: "${MONGODB_PORT}"
       # ASPNETCORE_URLS: "http://+:8080;https://+:8081"
       ASPNETCORE_URLS: "http://+:8080"
       DOTNET_USE_POLLING_FILE_WATCHER: "true"
