@@ -130,7 +130,7 @@ It shows a loading indicator automatically and will display its own "No items" m
 
     protected override void OnInitialized()
     {
-        _timer = new Timer(10000); // 10 seconds
+        _timer = new Timer(AppConstants.DashboardRefreshInterval);
         _timer.Elapsed += async (sender, args) =>
         {
             // When the timer ticks, tell the DataGrid to reload its data from the server.
