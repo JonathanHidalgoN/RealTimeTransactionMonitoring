@@ -42,4 +42,11 @@ public interface ITransactionRepository
     /// <param name="pageSize">The number of items per page.</param>
     /// <returns>A <see cref="PagedResult{Transaction}"/> containing the anomalous transactions for the specified page.</returns>
     Task<PagedResult<Transaction>?> GetAnomalousTransactionsAsync(int pageNumber, int pageSize);
+
+    /// <summary>
+    /// Searches for transactions using advanced filtering criteria.
+    /// </summary>
+    /// <param name="searchRequest">The search criteria and pagination parameters.</param>
+    /// <returns>A <see cref="PagedResult{Transaction}"/> containing the matching transactions.</returns>
+    Task<PagedResult<Transaction>?> SearchTransactionsAsync(TransactionSearchRequest searchRequest);
 }

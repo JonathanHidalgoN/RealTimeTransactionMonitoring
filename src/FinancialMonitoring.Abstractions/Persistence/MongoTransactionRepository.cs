@@ -218,6 +218,135 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
         }
     }
 
+    public async Task<PagedResult<Transaction>?> SearchTransactionsAsync(TransactionSearchRequest searchRequest)
+    {
+        try
+        {
+            _logger.LogInformation("Searching transactions with advanced criteria, Page: {PageNumber}, Size: {PageSize}", 
+                searchRequest.PageNumber, searchRequest.PageSize);
+
+            var filterBuilder = Builders<Transaction>.Filter;
+            var filters = new List<FilterDefinition<Transaction>>();
+
+            // Time range filter
+            if (searchRequest.FromTimestamp.HasValue)
+            {
+                filters.Add(filterBuilder.Gte(t => t.Timestamp, searchRequest.FromTimestamp.Value));
+            }
+            if (searchRequest.ToTimestamp.HasValue)
+            {
+                filters.Add(filterBuilder.Lte(t => t.Timestamp, searchRequest.ToTimestamp.Value));
+            }
+
+            // Amount range filter
+            if (searchRequest.MinAmount.HasValue)
+            {
+                filters.Add(filterBuilder.Gte(t => t.Amount, searchRequest.MinAmount.Value));
+            }
+            if (searchRequest.MaxAmount.HasValue)
+            {
+                filters.Add(filterBuilder.Lte(t => t.Amount, searchRequest.MaxAmount.Value));
+            }
+
+            // Merchant filters
+            if (searchRequest.MerchantCategory.HasValue)
+            {
+                filters.Add(filterBuilder.Eq(t => t.MerchantCategory, searchRequest.MerchantCategory.Value));
+            }
+            if (!string.IsNullOrWhiteSpace(searchRequest.MerchantName))
+            {
+                filters.Add(filterBuilder.Regex(t => t.MerchantName, new MongoDB.Bson.BsonRegularExpression(searchRequest.MerchantName, "i")));
+            }
+
+            // Payment method filter
+            if (searchRequest.PaymentMethod.HasValue)
+            {
+                filters.Add(filterBuilder.Eq(t => t.PaymentMethod, searchRequest.PaymentMethod.Value));
+            }
+
+            // Account filters
+            if (!string.IsNullOrWhiteSpace(searchRequest.SourceAccountId))
+            {
+                filters.Add(filterBuilder.Eq(t => t.SourceAccount.AccountId, searchRequest.SourceAccountId));
+            }
+            if (!string.IsNullOrWhiteSpace(searchRequest.DestinationAccountId))
+            {
+                filters.Add(filterBuilder.Eq(t => t.DestinationAccount.AccountId, searchRequest.DestinationAccountId));
+            }
+
+            // Transaction type filter
+            if (searchRequest.TransactionType.HasValue)
+            {
+                filters.Add(filterBuilder.Eq(t => t.Type, searchRequest.TransactionType.Value));
+            }
+
+            // Anomaly filters
+            if (searchRequest.AnomaliesOnly)
+            {
+                filters.Add(filterBuilder.Ne(t => t.AnomalyFlag, null));
+            }
+            else if (!string.IsNullOrWhiteSpace(searchRequest.AnomalyFlag))
+            {
+                filters.Add(filterBuilder.Eq(t => t.AnomalyFlag, searchRequest.AnomalyFlag));
+            }
+
+            // Location filters
+            if (!string.IsNullOrWhiteSpace(searchRequest.City))
+            {
+                filters.Add(filterBuilder.Eq(t => t.Location.City, searchRequest.City));
+            }
+            if (!string.IsNullOrWhiteSpace(searchRequest.State))
+            {
+                filters.Add(filterBuilder.Eq(t => t.Location.State, searchRequest.State));
+            }
+
+            // Combine all filters
+            var finalFilter = filters.Count > 0 ? filterBuilder.And(filters) : FilterDefinition<Transaction>.Empty;
+
+            var totalCount = await _collection.CountDocumentsAsync(finalFilter);
+
+            if (totalCount == 0)
+            {
+                _logger.LogInformation("No transactions found matching search criteria");
+                return CreateEmptyPagedResult(searchRequest.PageNumber, searchRequest.PageSize);
+            }
+
+            // Build sort definition
+            var sortBuilder = Builders<Transaction>.Sort;
+            SortDefinition<Transaction> sort = searchRequest.SortBy?.ToLower() switch
+            {
+                "amount" => searchRequest.SortDirection?.ToLower() == "asc" 
+                    ? sortBuilder.Ascending(t => t.Amount) 
+                    : sortBuilder.Descending(t => t.Amount),
+                "timestamp" => searchRequest.SortDirection?.ToLower() == "asc" 
+                    ? sortBuilder.Ascending(t => t.Timestamp) 
+                    : sortBuilder.Descending(t => t.Timestamp),
+                _ => sortBuilder.Descending(t => t.Timestamp) // Default sort
+            };
+
+            var skip = (searchRequest.PageNumber - 1) * searchRequest.PageSize;
+            var transactions = await _collection
+                .Find(finalFilter)
+                .Sort(sort)
+                .Skip(skip)
+                .Limit(searchRequest.PageSize)
+                .ToListAsync();
+
+            return new PagedResult<Transaction>
+            {
+                Items = transactions,
+                TotalCount = (int)totalCount,
+                PageNumber = searchRequest.PageNumber,
+                PageSize = searchRequest.PageSize
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching transactions, returning empty result");
+            return CreateEmptyPagedResult(searchRequest.PageNumber, searchRequest.PageSize);
+        }
+    }
+
     private static PagedResult<Transaction> CreateEmptyPagedResult(int pageNumber, int pageSize)
     {
         return new PagedResult<Transaction>
