@@ -5,6 +5,7 @@ using MudBlazor.Services;
 using System.Net.Http;
 using FinancialMonitoring.WebApp.Services;
 using System.Globalization;
+using FinancialMonitoring.Models;
 
 public class Program
 {
@@ -25,7 +26,7 @@ public class Program
         {
             client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]!);
 
-            client.DefaultRequestHeaders.Add("X-Api-Key", builder.Configuration["ApiKey"]);
+            client.DefaultRequestHeaders.Add(AppConstants.ApiKeyHeader, builder.Configuration["ApiKey"]);
         });
 
         builder.Services.AddMudServices();
