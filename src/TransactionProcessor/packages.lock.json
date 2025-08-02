@@ -1398,7 +1398,10 @@
         }
       },
       "financialmonitoring.models": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "[8.0.0, )"
+        }
       }
     }
   }
