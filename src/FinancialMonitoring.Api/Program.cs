@@ -111,6 +111,13 @@ builder.Services.AddOutputCache(options =>
     options.AddPolicy("AnomalousTransactionCache", builder =>
         builder.Expire(TimeSpan.FromMinutes(1))
                .SetVaryByQuery("pageNumber", "pageSize"));
+
+    options.AddPolicy("AnalyticsCache", builder =>
+        builder.Expire(TimeSpan.FromMinutes(5)));
+
+    options.AddPolicy("TimeSeriesCache", builder =>
+        builder.Expire(TimeSpan.FromMinutes(2))
+               .SetVaryByQuery("hours", "intervalMinutes"));
 });
 
 // Rate Limiting
@@ -198,6 +205,7 @@ if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Te
 {
     Console.WriteLine("Configuring MongoDB repository for local development/testing");
     builder.Services.AddSingleton<ITransactionRepository, MongoTransactionRepository>();
+    builder.Services.AddSingleton<IAnalyticsRepository, MongoAnalyticsRepository>();
 }
 else
 {
@@ -205,6 +213,7 @@ else
     builder.Services.AddSingleton<ICosmosDbService, CosmosDbService>();
     builder.Services.AddSingleton<ITransactionQueryService, CosmosDbTransactionQueryService>();
     builder.Services.AddSingleton<ITransactionRepository, CosmosTransactionRepository>();
+    builder.Services.AddSingleton<IAnalyticsRepository, CosmosDbAnalyticsRepository>();
 }
 
 builder.Services.AddControllers();
