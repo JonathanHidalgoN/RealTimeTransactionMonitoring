@@ -38,7 +38,10 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
                     { "IpRateLimiting:GeneralRules:0:Limit", "5" },
                     { "IpRateLimiting:GeneralRules:1:Endpoint", "*/transactions" },
                     { "IpRateLimiting:GeneralRules:1:Period", "1m" },
-                    { "IpRateLimiting:GeneralRules:1:Limit", "3" }
+                    { "IpRateLimiting:GeneralRules:1:Limit", "3" },
+                    // More permissive CORS for testing
+                    { "AllowedOrigins:0", "http://localhost" },
+                    { "AllowedOrigins:1", "https://localhost" }
                 });
             });
 
