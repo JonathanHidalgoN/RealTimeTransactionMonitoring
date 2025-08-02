@@ -14,7 +14,7 @@ public class ApiClientService
 
     public async Task<PagedResult<Transaction>?> GetTransactionsAsync(int pageNumber = 1, int pageSize = 20)
     {
-        var requestUri = $"api/v1.0/transactions?pageNumber={pageNumber}&pageSize={pageSize}";
+        var requestUri = $"{AppConstants.Routes.GetTransactionsPath()}?pageNumber={pageNumber}&pageSize={pageSize}";
         try
         {
             var apiResponse = await _httpClient.GetFromJsonAsync<ApiResponse<PagedResult<Transaction>>>(requestUri);
@@ -29,7 +29,7 @@ public class ApiClientService
 
     public async Task<PagedResult<Transaction>?> GetAnomaliesAsync(int pageNumber = 1, int pageSize = 20)
     {
-        var requestUri = $"api/v1.0/transactions/anomalies?pageNumber={pageNumber}&pageSize={pageSize}";
+        var requestUri = $"{AppConstants.Routes.GetAnomaliesPath()}?pageNumber={pageNumber}&pageSize={pageSize}";
         try
         {
             var apiResponse = await _httpClient.GetFromJsonAsync<ApiResponse<PagedResult<Transaction>>>(requestUri);
