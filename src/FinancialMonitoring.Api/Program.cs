@@ -7,6 +7,7 @@ using FinancialMonitoring.Api.HealthChecks;
 using FinancialMonitoring.Api.Services;
 using FinancialMonitoring.Api.Swagger;
 using FinancialMonitoring.Models;
+using FinancialMonitoring.Models.Extensions;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
@@ -35,9 +36,37 @@ else
     Console.WriteLine("KEY_VAULT_URI not configured. Key Vault secrets will not be loaded.");
 }
 
+// Build port settings from environment variables
+var portSettings = builder.Configuration.BuildPortSettings();
+
+// Configure port settings for dependency injection
+builder.Services.Configure<PortSettings>(options =>
+{
+    options.Api = portSettings.Api;
+    options.BlazorHttp = portSettings.BlazorHttp;
+    options.BlazorHttps = portSettings.BlazorHttps;
+    options.MongoDb = portSettings.MongoDb;
+});
+
+// Log the port configuration being used
+Console.WriteLine($"Port Configuration:");
+Console.WriteLine($"  API Port: {portSettings.Api} (from {(builder.Configuration["API_PORT"] != null ? "environment" : "default")})");
+Console.WriteLine($"  Blazor HTTP Port: {portSettings.BlazorHttp} (from {(builder.Configuration["BLAZOR_HTTP_PORT"] != null ? "environment" : "default")})");
+Console.WriteLine($"  Blazor HTTPS Port: {portSettings.BlazorHttps} (from {(builder.Configuration["BLAZOR_HTTPS_PORT"] != null ? "environment" : "default")})");
+Console.WriteLine($"  MongoDB Port: {portSettings.MongoDb} (from {(builder.Configuration["MONGODB_PORT"] != null ? "environment" : "default")})");
+
+// Configure CORS settings
+builder.Services.Configure<CorsSettings>(builder.Configuration.GetSection("Cors"));
+
+var corsSettings = new CorsSettings();
+builder.Configuration.GetSection("Cors").Bind(corsSettings);
+
+// Use configured origins or build from port settings
+var allowedOrigins = corsSettings.AllowedOrigins.Length > 0 
+    ? corsSettings.AllowedOrigins 
+    : CorsSettings.BuildDefaultOrigins(portSettings);
+
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
-var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
-    ?? new[] { "http://localhost:5124", "https://localhost:7082" };
 
 Console.WriteLine($"CORS Policy: Allowing origins: {string.Join(", ", allowedOrigins)}");
 
@@ -47,9 +76,13 @@ builder.Services.AddCors(options =>
                       policy =>
                       {
                           policy.WithOrigins(allowedOrigins)
-                                .WithHeaders("X-Api-Key")
-                                .WithMethods("GET")
-                                .AllowCredentials();
+                                .WithHeaders(corsSettings.AllowedHeaders)
+                                .WithMethods(corsSettings.AllowedMethods);
+                          
+                          if (corsSettings.AllowCredentials)
+                          {
+                              policy.AllowCredentials();
+                          }
                       });
 });
 
