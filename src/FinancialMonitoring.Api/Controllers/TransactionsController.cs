@@ -120,4 +120,29 @@ public class TransactionsController : ControllerBase
 
         return Ok(response);
     }
+
+    /// <summary>
+    /// Searches for transactions using advanced filtering criteria.
+    /// </summary>
+    /// <param name="searchRequest">The search criteria and pagination parameters.</param>
+    /// <returns>A paginated result of transactions matching the search criteria.</returns>
+    [HttpPost("search")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "TransactionCache")]
+    [ProducesResponseType(typeof(ApiResponse<PagedResult<Transaction>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<PagedResult<Transaction>>>> SearchTransactions(
+        [FromBody] TransactionSearchRequest searchRequest)
+    {
+        var correlationId = HttpContext.TraceIdentifier;
+        _logger.LogInformation("Searching transactions with criteria - Page: {PageNumber}, Size: {PageSize}, CorrelationId: {CorrelationId}",
+            searchRequest.PageNumber, searchRequest.PageSize, correlationId);
+
+        var pagedResult = await _transactionRepository.SearchTransactionsAsync(searchRequest);
+        var response = ApiResponse<PagedResult<Transaction>>.SuccessResponse(pagedResult, correlationId);
+
+        return Ok(response);
+    }
 }
