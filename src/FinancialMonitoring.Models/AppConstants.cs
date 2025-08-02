@@ -17,6 +17,16 @@ public static class AppConstants
     // API Versioning
     public const string ApiVersion = "1.0";
 
+    // Default Ports
+    public const int DefaultApiPort = 5100;
+    public const int DefaultBlazorHttpPort = 5124;
+    public const int DefaultBlazorHttpsPort = 7082;
+    public const int DefaultMongoDbPort = 27017;
+
+    // Timeouts and Intervals
+    public const int DashboardRefreshInterval = 10_000;
+    public const int DefaultRequestTimeout = 30_000;
+
     // HTTP Headers
     public const string CorrelationIdHeader = "X-Correlation-Id";
     public const string ApiKeyHeader = "X-Api-Key";
