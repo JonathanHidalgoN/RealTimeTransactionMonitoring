@@ -1,5 +1,5 @@
 using FinancialMonitoring.Models;
-using FinancialMonitoring.WebApp.Models;
+using FinancialMonitoring.Models.Analytics;
 using System.Net.Http.Json;
 
 namespace FinancialMonitoring.WebApp.Services;
