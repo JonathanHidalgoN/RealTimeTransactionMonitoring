@@ -1,0 +1,288 @@
+@page "/analytics"
+@using FinancialMonitoring.Models
+@using FinancialMonitoring.WebApp.Services
+@using FinancialMonitoring.WebApp.Models
+@using System.Globalization
+@inject ApiClientService ApiClient
+
+<PageTitle>Advanced Analytics</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="pa-4">
+    <MudText Typo="Typo.h3" GutterBottom="true" Class="mb-6">
+        <MudIcon Icon="@Icons.Material.Filled.Analytics" Class="mr-3" />
+        Advanced Analytics & Insights
+    </MudText>
+
+    @if (_isLoading)
+    {
+        <MudContainer Class="d-flex justify-center align-center" Style="height: 400px;">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <MudText Class="ml-3">Loading detailed analytics...</MudText>
+        </MudContainer>
+    }
+    else
+    {
+        <!-- Time Range Selector -->
+        <MudCard Elevation="4" Class="pa-4 mb-6">
+            <MudCardContent>
+                <MudGrid Spacing="3" AlignItems="Center">
+                    <MudItem xs="12" md="4">
+                        <MudText Typo="Typo.h6">Time Range Analysis</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Adjust the time window for detailed trend analysis
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudSelect T="int" Label="Time Period" @bind-Value="_selectedHours" 
+                                  Variant="Variant.Outlined" Margin="Margin.Dense">
+                            <MudSelectItem Value="6">Last 6 Hours</MudSelectItem>
+                            <MudSelectItem Value="12">Last 12 Hours</MudSelectItem>
+                            <MudSelectItem Value="24">Last 24 Hours</MudSelectItem>
+                            <MudSelectItem Value="48">Last 2 Days</MudSelectItem>
+                            <MudSelectItem Value="72">Last 3 Days</MudSelectItem>
+                            <MudSelectItem Value="168">Last Week</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudButton StartIcon="@Icons.Material.Filled.Refresh" 
+                                  Variant="Variant.Filled" 
+                                  Color="Color.Primary"
+                                  OnClick="@RefreshAnalytics"
+                                  Disabled="@_isRefreshing"
+                                  FullWidth="true">
+                            @if (_isRefreshing)
+                            {
+                                <MudProgressCircular Size="Size.Small" Color="Color.Surface" Indeterminate="true" />
+                                <span class="ml-2">Refreshing...</span>
+                            }
+                            else
+                            {
+                                <span>Refresh Data</span>
+                            }
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+
+        <!-- Transaction Volume Trends -->
+        <MudCard Elevation="4" Class="pa-4 mb-6">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5">Transaction Volume Trends</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Hourly transaction counts and anomaly patterns over selected time period
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_transactionTimeSeriesData != null && _transactionTimeSeriesData.Any())
+                {
+                    <MudChart ChartType="ChartType.Line" 
+                             ChartSeries="@_chartSeries" 
+                             XAxisLabels="@_chartLabels" 
+                             Width="100%" 
+                             Height="400px"
+                             ChartOptions="@_chartOptions" />
+                    
+                    <!-- Chart Summary -->
+                    <MudDivider Class="my-4" />
+                    <MudGrid Spacing="3" Class="mt-4">
+                        <MudItem xs="12" sm="3">
+                            <MudText Typo="Typo.h6" Color="Color.Primary">
+                                @_transactionTimeSeriesData.Sum(x => x.Value).ToString("N0", CultureInfo.CurrentCulture)
+                            </MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Total Transactions</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="3">
+                            <MudText Typo="Typo.h6" Color="Color.Error">
+                                @((_anomalyTimeSeriesData?.Sum(x => x.Value) ?? 0).ToString("N0", CultureInfo.CurrentCulture))
+                            </MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Total Anomalies</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="3">
+                            <MudText Typo="Typo.h6" Color="Color.Info">
+                                @((_transactionTimeSeriesData.Any() ? _transactionTimeSeriesData.Average(x => x.Value) : 0).ToString("N1", CultureInfo.CurrentCulture))
+                            </MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Avg per Hour</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="3">
+                            <MudText Typo="Typo.h6" Color="Color.Success">
+                                @((_transactionTimeSeriesData.Any() ? _transactionTimeSeriesData.Max(x => x.Value) : 0).ToString("N0", CultureInfo.CurrentCulture))
+                            </MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Peak Hour</MudText>
+                        </MudItem>
+                    </MudGrid>
+                }
+                else
+                {
+                    <div class="d-flex justify-center align-center" style="height: 300px;">
+                        <MudText Color="Color.Secondary">No trend data available for selected period</MudText>
+                    </div>
+                }
+            </MudCardContent>
+        </MudCard>
+
+        <!-- Transaction Search & Filtering -->
+        <MudCard Elevation="4" Class="pa-4">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5">Transaction Investigation</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Search and filter transactions with advanced criteria
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText Typo="Typo.body1" Color="Color.Info" Class="mb-4">
+                    <MudIcon Icon="@Icons.Material.Filled.Construction" Class="mr-2" />
+                    Advanced search and filtering features are coming soon in the next update!
+                </MudText>
+                
+                <!-- Placeholder for advanced search features -->
+                <MudExpansionPanels Elevation="2">
+                    <MudExpansionPanel MaxHeight="400">
+                        <TitleContent>
+                            <div class="d-flex align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.FilterList" class="mr-3" />
+                                <MudText>Advanced Filtering (Preview)</MudText>
+                            </div>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudGrid Spacing="3">
+                                <MudItem xs="12" md="6">
+                                    <MudTextField T="string" Label="Merchant Name" 
+                                                 Variant="Variant.Outlined" 
+                                                 Margin="Margin.Dense"
+                                                 Disabled="true"
+                                                 HelperText="Search by merchant name" />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudSelect T="int" Label="Transaction Type" 
+                                              Variant="Variant.Outlined" 
+                                              Margin="Margin.Dense"
+                                              Disabled="true">
+                                        <MudSelectItem Value="0">All Types</MudSelectItem>
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudNumericField T="decimal?" Label="Min Amount" 
+                                                    Variant="Variant.Outlined" 
+                                                    Margin="Margin.Dense"
+                                                    Disabled="true"
+                                                    Format="C" />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudNumericField T="decimal?" Label="Max Amount" 
+                                                    Variant="Variant.Outlined" 
+                                                    Margin="Margin.Dense"
+                                                    Disabled="true"
+                                                    Format="C" />
+                                </MudItem>
+                            </MudGrid>
+                            <MudButton StartIcon="@Icons.Material.Filled.Search" 
+                                      Variant="Variant.Filled" 
+                                      Color="Color.Primary"
+                                      Class="mt-4"
+                                      Disabled="true">
+                                Search Transactions
+                            </MudButton>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+            </MudCardContent>
+        </MudCard>
+    }
+</MudContainer>
+
+@code {
+    private bool _isLoading = true;
+    private bool _isRefreshing = false;
+    private int _selectedHours = 24;
+
+    private List<TimeSeriesDataPoint>? _transactionTimeSeriesData;
+    private List<TimeSeriesDataPoint>? _anomalyTimeSeriesData;
+
+    // Chart data
+    private List<ChartSeries> _chartSeries = new();
+    private string[] _chartLabels = Array.Empty<string>();
+    private ChartOptions _chartOptions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        SetupChartOptions();
+        await LoadAnalyticsData();
+        _isLoading = false;
+    }
+
+    private async Task LoadAnalyticsData()
+    {
+        try
+        {
+            var transactionSeriesTask = ApiClient.GetTransactionTimeSeriesAsync(_selectedHours, 60);
+            var anomalySeriesTask = ApiClient.GetAnomalyTimeSeriesAsync(_selectedHours, 60);
+
+            await Task.WhenAll(transactionSeriesTask, anomalySeriesTask);
+
+            _transactionTimeSeriesData = await transactionSeriesTask;
+            _anomalyTimeSeriesData = await anomalySeriesTask;
+
+            UpdateChartData();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading analytics data: {ex.Message}");
+        }
+    }
+
+    private void UpdateChartData()
+    {
+        if (_transactionTimeSeriesData != null && _transactionTimeSeriesData.Any())
+        {
+            _chartLabels = _transactionTimeSeriesData
+                .Select(d => DateTimeOffset.FromUnixTimeMilliseconds(d.Timestamp).ToString(_selectedHours <= 24 ? "HH:mm" : "MMM dd HH:mm"))
+                .ToArray();
+
+            _chartSeries = new List<ChartSeries>
+            {
+                new ChartSeries
+                {
+                    Name = "Transaction Volume",
+                    Data = _transactionTimeSeriesData.Select(d => d.Value).ToArray()
+                }
+            };
+
+            if (_anomalyTimeSeriesData != null && _anomalyTimeSeriesData.Any())
+            {
+                _chartSeries.Add(new ChartSeries
+                {
+                    Name = "Anomaly Count",
+                    Data = _anomalyTimeSeriesData.Select(d => d.Value).ToArray()
+                });
+            }
+        }
+    }
+
+    private void SetupChartOptions()
+    {
+        _chartOptions = new ChartOptions
+        {
+            DisableLegend = false,
+            YAxisLines = true,
+            XAxisLines = false,
+            YAxisTicks = 1000,
+            MaxNumYAxisTicks = 8
+        };
+    }
+
+    private async Task RefreshAnalytics()
+    {
+        _isRefreshing = true;
+        StateHasChanged();
+
+        await LoadAnalyticsData();
+
+        _isRefreshing = false;
+        StateHasChanged();
+    }
+}

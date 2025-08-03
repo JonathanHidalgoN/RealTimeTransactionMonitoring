@@ -9,9 +9,24 @@
             <MudText Typo="Typo.h5" Color="Color.Secondary" Class="mb-6">
                 An end-to-end cloud-native application for ingesting, processing, and visualizing financial transaction data with stateful anomaly detection, deployed on Azure Kubernetes Service.
             </MudText>
-            <MudButton Href="/dashboard" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" Class="mt-4">
-                View Live Dashboard
-            </MudButton>
+            <div class="mt-6">
+                <MudButton Href="/dashboard" 
+                          Variant="Variant.Filled" 
+                          Color="Color.Primary" 
+                          Size="Size.Large" 
+                          StartIcon="@Icons.Material.Filled.Dashboard"
+                          Class="ma-2">
+                    Live Dashboard
+                </MudButton>
+                <MudButton Href="/analytics" 
+                          Variant="Variant.Outlined" 
+                          Color="Color.Primary" 
+                          Size="Size.Large" 
+                          StartIcon="@Icons.Material.Filled.Analytics"
+                          Class="ma-2">
+                    Advanced Analytics
+                </MudButton>
+            </div>
         </MudItem>
     </MudGrid>
 
