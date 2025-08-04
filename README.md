@@ -135,6 +135,10 @@ graph TD
     style ANOMALY_CHECK fill:#ff9999
     style EMAIL fill:#ffcc99
 ```
+### Blazor dashboard
+With a Blazor dasthboard to monitor transactions consuming the API 
+<img width="1658" height="959" alt="Screenshot from 2025-08-04 08-28-55" src="https://github.com/user-attachments/assets/f6086386-dc7e-405d-9026-147025ff77e6" />
+
 
 ## Key Features
 
