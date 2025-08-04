@@ -6,8 +6,8 @@ resource "azurerm_container_app_environment" "main" {
   log_analytics_workspace_id = azurerm_log_analytics_workspace.law.id
 
   tags = {
-    environment = "development"
-    project     = "RealTimeFinancialMonitoring"
+    environment  = "development"
+    project      = "RealTimeFinancialMonitoring"
     architecture = "containerapp"
   }
 }
@@ -18,7 +18,7 @@ resource "azurerm_container_app" "api" {
   name                         = "${var.resource_prefix}-api-${random_id.suffix.hex}"
   container_app_environment_id = azurerm_container_app_environment.main[0].id
   resource_group_name          = azurerm_resource_group.rg.name
-  revision_mode               = "Single"
+  revision_mode                = "Single"
 
   identity {
     type         = "UserAssigned"
@@ -84,7 +84,7 @@ resource "azurerm_container_app" "processor" {
   name                         = "${var.resource_prefix}-processor-${random_id.suffix.hex}"
   container_app_environment_id = azurerm_container_app_environment.main[0].id
   resource_group_name          = azurerm_resource_group.rg.name
-  revision_mode               = "Single"
+  revision_mode                = "Single"
 
   identity {
     type         = "UserAssigned"
@@ -145,7 +145,7 @@ resource "azurerm_container_app" "simulator" {
   name                         = "${var.resource_prefix}-simulator-${random_id.suffix.hex}"
   container_app_environment_id = azurerm_container_app_environment.main[0].id
   resource_group_name          = azurerm_resource_group.rg.name
-  revision_mode               = "Single"
+  revision_mode                = "Single"
 
   identity {
     type         = "UserAssigned"
