@@ -70,7 +70,7 @@ public class AnalyticsController : ControllerBase
         [FromQuery, Range(1, 1440)] int intervalMinutes = 60)
     {
         var correlationId = HttpContext.TraceIdentifier;
-        _logger.LogInformation("Getting transaction time series for {Hours} hours with {IntervalMinutes} minute intervals, CorrelationId: {CorrelationId}", 
+        _logger.LogInformation("Getting transaction time series for {Hours} hours with {IntervalMinutes} minute intervals, CorrelationId: {CorrelationId}",
             hours, intervalMinutes, correlationId);
 
         var toTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -100,7 +100,7 @@ public class AnalyticsController : ControllerBase
         [FromQuery, Range(1, 1440)] int intervalMinutes = 60)
     {
         var correlationId = HttpContext.TraceIdentifier;
-        _logger.LogInformation("Getting anomaly time series for {Hours} hours with {IntervalMinutes} minute intervals, CorrelationId: {CorrelationId}", 
+        _logger.LogInformation("Getting anomaly time series for {Hours} hours with {IntervalMinutes} minute intervals, CorrelationId: {CorrelationId}",
             hours, intervalMinutes, correlationId);
 
         var toTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

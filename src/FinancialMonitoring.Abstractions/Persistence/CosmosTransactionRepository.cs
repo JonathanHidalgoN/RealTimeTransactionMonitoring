@@ -84,15 +84,15 @@ public class CosmosTransactionRepository : ITransactionRepository, IAsyncDisposa
             return CreateEmptyPagedResult(searchRequest.PageNumber, searchRequest.PageSize);
         }
 
-        _logger.LogInformation("Searching transactions in Cosmos DB with advanced criteria, Page: {PageNumber}, Size: {PageSize}", 
+        _logger.LogInformation("Searching transactions in Cosmos DB with advanced criteria, Page: {PageNumber}, Size: {PageSize}",
             searchRequest.PageNumber, searchRequest.PageSize);
-        
+
         // For now, fall back to basic query - this can be enhanced when ITransactionQueryService is extended
         if (searchRequest.AnomaliesOnly)
         {
             return await _queryService!.GetAnomalousTransactionsAsync(searchRequest.PageNumber, searchRequest.PageSize);
         }
-        
+
         return await _queryService!.GetAllTransactionsAsync(searchRequest.PageNumber, searchRequest.PageSize);
     }
 

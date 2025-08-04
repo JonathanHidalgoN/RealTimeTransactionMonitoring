@@ -49,7 +49,7 @@ public class CosmosDbAnalyticsRepository : IAnalyticsRepository
 
             // Calculate last 24 hours statistics
             var last24Hours = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
-            
+
             var recent24HQuery = $"SELECT VALUE COUNT(1) FROM c WHERE c.timestamp >= {last24Hours}";
             var recent24HIterator = _container.GetItemQueryIterator<long>(recent24HQuery);
             var transactionsLast24Hours = (await recent24HIterator.ReadNextAsync()).FirstOrDefault();
@@ -76,7 +76,7 @@ public class CosmosDbAnalyticsRepository : IAnalyticsRepository
 
     public async Task<List<TimeSeriesDataPoint>> GetTransactionTimeSeriesAsync(long fromTimestamp, long toTimestamp, int intervalMinutes = 60)
     {
-        _logger.LogInformation("Getting transaction time series from {FromTimestamp} to {ToTimestamp} with {IntervalMinutes} minute intervals", 
+        _logger.LogInformation("Getting transaction time series from {FromTimestamp} to {ToTimestamp} with {IntervalMinutes} minute intervals",
             fromTimestamp, toTimestamp, intervalMinutes);
 
         try
@@ -87,7 +87,7 @@ public class CosmosDbAnalyticsRepository : IAnalyticsRepository
             for (var currentTime = fromTimestamp; currentTime < toTimestamp; currentTime += intervalMs)
             {
                 var nextTime = Math.Min(currentTime + intervalMs, toTimestamp);
-                
+
                 var query = $"SELECT VALUE COUNT(1) FROM c WHERE c.timestamp >= {currentTime} AND c.timestamp < {nextTime}";
                 var iterator = _container.GetItemQueryIterator<long>(query);
                 var count = (await iterator.ReadNextAsync()).FirstOrDefault();
@@ -106,7 +106,7 @@ public class CosmosDbAnalyticsRepository : IAnalyticsRepository
 
     public async Task<List<TimeSeriesDataPoint>> GetAnomalyTimeSeriesAsync(long fromTimestamp, long toTimestamp, int intervalMinutes = 60)
     {
-        _logger.LogInformation("Getting anomaly time series from {FromTimestamp} to {ToTimestamp} with {IntervalMinutes} minute intervals", 
+        _logger.LogInformation("Getting anomaly time series from {FromTimestamp} to {ToTimestamp} with {IntervalMinutes} minute intervals",
             fromTimestamp, toTimestamp, intervalMinutes);
 
         try
@@ -117,7 +117,7 @@ public class CosmosDbAnalyticsRepository : IAnalyticsRepository
             for (var currentTime = fromTimestamp; currentTime < toTimestamp; currentTime += intervalMs)
             {
                 var nextTime = Math.Min(currentTime + intervalMs, toTimestamp);
-                
+
                 var query = $"SELECT VALUE COUNT(1) FROM c WHERE c.timestamp >= {currentTime} AND c.timestamp < {nextTime} AND c.anomalyFlag != null";
                 var iterator = _container.GetItemQueryIterator<long>(query);
                 var count = (await iterator.ReadNextAsync()).FirstOrDefault();

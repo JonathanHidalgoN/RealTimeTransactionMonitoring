@@ -222,7 +222,7 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
     {
         try
         {
-            _logger.LogInformation("Searching transactions with advanced criteria, Page: {PageNumber}, Size: {PageSize}", 
+            _logger.LogInformation("Searching transactions with advanced criteria, Page: {PageNumber}, Size: {PageSize}",
                 searchRequest.PageNumber, searchRequest.PageSize);
 
             var filterBuilder = Builders<Transaction>.Filter;
@@ -315,11 +315,11 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
             var sortBuilder = Builders<Transaction>.Sort;
             SortDefinition<Transaction> sort = searchRequest.SortBy?.ToLower() switch
             {
-                "amount" => searchRequest.SortDirection?.ToLower() == "asc" 
-                    ? sortBuilder.Ascending(t => t.Amount) 
+                "amount" => searchRequest.SortDirection?.ToLower() == "asc"
+                    ? sortBuilder.Ascending(t => t.Amount)
                     : sortBuilder.Descending(t => t.Amount),
-                "timestamp" => searchRequest.SortDirection?.ToLower() == "asc" 
-                    ? sortBuilder.Ascending(t => t.Timestamp) 
+                "timestamp" => searchRequest.SortDirection?.ToLower() == "asc"
+                    ? sortBuilder.Ascending(t => t.Timestamp)
                     : sortBuilder.Descending(t => t.Timestamp),
                 _ => sortBuilder.Descending(t => t.Timestamp) // Default sort
             };

@@ -51,19 +51,19 @@ public class MongoAnalyticsRepository : IAnalyticsRepository
                     var sampleTransactions = await _transactions.Find(FilterDefinition<Transaction>.Empty)
                         .Limit(sampleSize)
                         .ToListAsync();
-                    
+
                     if (sampleTransactions.Count > 0)
                     {
                         var sampleVolume = sampleTransactions.Sum(t => t.Amount);
                         var sampleAverage = sampleTransactions.Average(t => t.Amount);
                         var sampleUniqueAccounts = sampleTransactions.Select(t => t.SourceAccount.AccountId).Distinct().Count();
-                        
+
                         // Extrapolate to full dataset
                         totalVolume = sampleVolume * (totalTransactions / (double)sampleTransactions.Count);
                         averageAmount = sampleAverage; // Average doesn't need extrapolation
                         uniqueAccounts = (long)(sampleUniqueAccounts * Math.Sqrt(totalTransactions / (double)sampleTransactions.Count)); // Conservative estimate
-                        
-                        _logger.LogInformation("Calculated from {SampleCount} transactions (of {TotalCount}): totalVolume: {TotalVolume}, averageAmount: {AverageAmount}, uniqueAccounts: {UniqueAccounts}", 
+
+                        _logger.LogInformation("Calculated from {SampleCount} transactions (of {TotalCount}): totalVolume: {TotalVolume}, averageAmount: {AverageAmount}, uniqueAccounts: {UniqueAccounts}",
                             sampleTransactions.Count, totalTransactions, totalVolume, averageAmount, uniqueAccounts);
                     }
                 }
@@ -76,7 +76,7 @@ public class MongoAnalyticsRepository : IAnalyticsRepository
             // Calculate last 24 hours statistics
             var last24Hours = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
             var recentFilter = Builders<Transaction>.Filter.Gte(x => x.Timestamp, last24Hours);
-            
+
             var transactionsLast24Hours = await _transactions.CountDocumentsAsync(recentFilter);
             var anomaliesLast24Hours = await _transactions.CountDocumentsAsync(
                 Builders<Transaction>.Filter.And(recentFilter, Builders<Transaction>.Filter.Ne(x => x.AnomalyFlag, null)));
@@ -99,7 +99,7 @@ public class MongoAnalyticsRepository : IAnalyticsRepository
 
     public async Task<List<TimeSeriesDataPoint>> GetTransactionTimeSeriesAsync(long fromTimestamp, long toTimestamp, int intervalMinutes = 60)
     {
-        _logger.LogInformation("Getting transaction time series from {FromTimestamp} to {ToTimestamp} with {IntervalMinutes} minute intervals", 
+        _logger.LogInformation("Getting transaction time series from {FromTimestamp} to {ToTimestamp} with {IntervalMinutes} minute intervals",
             fromTimestamp, toTimestamp, intervalMinutes);
 
         try
@@ -110,7 +110,7 @@ public class MongoAnalyticsRepository : IAnalyticsRepository
             for (var currentTime = fromTimestamp; currentTime < toTimestamp; currentTime += intervalMs)
             {
                 var nextTime = Math.Min(currentTime + intervalMs, toTimestamp);
-                
+
                 var filter = Builders<Transaction>.Filter.And(
                     Builders<Transaction>.Filter.Gte(x => x.Timestamp, currentTime),
                     Builders<Transaction>.Filter.Lt(x => x.Timestamp, nextTime));
@@ -130,7 +130,7 @@ public class MongoAnalyticsRepository : IAnalyticsRepository
 
     public async Task<List<TimeSeriesDataPoint>> GetAnomalyTimeSeriesAsync(long fromTimestamp, long toTimestamp, int intervalMinutes = 60)
     {
-        _logger.LogInformation("Getting anomaly time series from {FromTimestamp} to {ToTimestamp} with {IntervalMinutes} minute intervals", 
+        _logger.LogInformation("Getting anomaly time series from {FromTimestamp} to {ToTimestamp} with {IntervalMinutes} minute intervals",
             fromTimestamp, toTimestamp, intervalMinutes);
 
         try
@@ -141,7 +141,7 @@ public class MongoAnalyticsRepository : IAnalyticsRepository
             for (var currentTime = fromTimestamp; currentTime < toTimestamp; currentTime += intervalMs)
             {
                 var nextTime = Math.Min(currentTime + intervalMs, toTimestamp);
-                
+
                 var filter = Builders<Transaction>.Filter.And(
                     Builders<Transaction>.Filter.Gte(x => x.Timestamp, currentTime),
                     Builders<Transaction>.Filter.Lt(x => x.Timestamp, nextTime),
@@ -181,7 +181,7 @@ public class MongoAnalyticsRepository : IAnalyticsRepository
             };
 
             var results = await _transactions.Aggregate<BsonDocument>(pipeline).ToListAsync();
-            
+
             return results.Select(doc => new MerchantAnalytics(
                 doc["_id"]["merchantName"].AsString,
                 (MerchantCategory)doc["_id"]["merchantCategory"].AsInt32,
@@ -218,7 +218,7 @@ public class MongoAnalyticsRepository : IAnalyticsRepository
             };
 
             var results = await _transactions.Aggregate<BsonDocument>(pipeline).ToListAsync();
-            
+
             return results.Select(doc => new MerchantAnalytics(
                 "Category Total",
                 (MerchantCategory)doc["_id"].AsInt32,
