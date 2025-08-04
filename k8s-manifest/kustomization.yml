@@ -1,3 +1,5 @@
+# Defines the Kustomization for the application, bundling all related Kubernetes manifests into a single, manageable package.
+# This file specifies the resources to be deployed and applies common labels to all of them.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 

@@ -1,3 +1,5 @@
+# Provides centralized, environment-agnostic configuration for all application components.
+# This ConfigMap stores non-sensitive settings like Azure resource names and feature flags, which are mounted as environment variables into the pods.
 apiVersion: v1
 kind: ConfigMap
 metadata:

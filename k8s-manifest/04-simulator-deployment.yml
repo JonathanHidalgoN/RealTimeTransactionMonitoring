@@ -1,3 +1,5 @@
+# Defines the Kubernetes Deployment for the Transaction Simulator.
+# This service generates and sends synthetic financial transaction data to the Event Hubs `transactions` topic for processing.
 apiVersion: apps/v1
 kind: Deployment
 metadata:

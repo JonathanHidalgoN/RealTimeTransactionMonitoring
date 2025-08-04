@@ -1,3 +1,5 @@
+# Configures a cert-manager ClusterIssuer for automatically provisioning and renewing TLS certificates from Let's Encrypt.
+# This enables HTTPS for the API ingress, ensuring secure communication.
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:

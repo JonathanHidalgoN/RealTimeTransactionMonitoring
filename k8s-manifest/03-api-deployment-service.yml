@@ -1,3 +1,6 @@
+# Defines the Kubernetes Deployment and Service for the Financial Monitoring API.
+# The Deployment manages the API pods, specifying the container image, health probes, and resource limits.
+# The Service exposes the API internally within the cluster via a stable ClusterIP.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
