@@ -25,7 +25,7 @@ infra:
 	@echo "After the commands complete successfully, run: make terraform-continue"
 	@echo ""
 
-apps: 
+apps:
 	@$(MAKE) build-push
 	@$(MAKE) k8s-setup
 	@echo ""
@@ -61,7 +61,6 @@ bootstrap:
 
 terraform:
 	# This target is intentionally left blank.
-	# The 'infra' target provides instructions for manual terraform deployment.
 
 terraform-continue:
 	@echo "Continuing infrastructure deployment..."
