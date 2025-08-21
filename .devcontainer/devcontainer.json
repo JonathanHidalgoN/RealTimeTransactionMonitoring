@@ -1,24 +1,27 @@
 {
 "name": "Real-Time Financial Monitoring",
 "image": "mcr.microsoft.com/devcontainers/dotnet:8.0",
-
 "features": {
-"ghcr.io/devcontainers/features/azure-cli:1": {
-            "version": "latest"
-        },
-"ghcr.io/devcontainers/features/terraform:1": {
-            "version": "latest"
-        },
-"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
-        "kubectl": "1.31",
-          "helm": "latest"
-        },
-"ghcr.io/devcontainers/features/docker-from-docker:1": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {
     "version": "latest"
-        }
+    },
+    "ghcr.io/devcontainers/features/terraform:1": {
+    "version": "latest"
 },
-
-"forwardPorts": [5000, 5001],
-
+"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+    "kubectl": "1.31",
+    "helm": "latest"
+},
+"ghcr.io/devcontainers/features/docker-from-docker:1": {
+    "version": "latest",
+    "forwardSshAuthSocket": true
+}
+},
+"onCreateCommand": "apt-get update && apt-get install -y bash-completion && echo
+'source /usr/share/bash-completion/bash_completion' >> /root/.bashrc",
+"forwardPorts": [
+5000,
+5001
+],
 "postCreateCommand": "dotnet restore"
 }
