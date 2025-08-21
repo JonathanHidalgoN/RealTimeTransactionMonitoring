@@ -1,0 +1,24 @@
+{
+"name": "Real-Time Financial Monitoring",
+"image": "mcr.microsoft.com/devcontainers/dotnet:8.0",
+
+"features": {
+"ghcr.io/devcontainers/features/azure-cli:1": {
+            "version": "latest"
+        },
+"ghcr.io/devcontainers/features/terraform:1": {
+            "version": "latest"
+        },
+"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+        "kubectl": "1.31",
+          "helm": "latest"
+        },
+"ghcr.io/devcontainers/features/docker-from-docker:1": {
+    "version": "latest"
+        }
+},
+
+"forwardPorts": [5000, 5001],
+
+"postCreateCommand": "dotnet restore"
+}
