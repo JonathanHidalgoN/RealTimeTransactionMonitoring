@@ -33,3 +33,5 @@ src/FinancialMonitoring.WebApp/wwwroot/appsettings.json.backup
 infra/tfplan
 INTERVIEW_QUESTIONS.md
 API_MODERNIZATION_PLAN.md
+devOpsPlan.md
+.claude/
