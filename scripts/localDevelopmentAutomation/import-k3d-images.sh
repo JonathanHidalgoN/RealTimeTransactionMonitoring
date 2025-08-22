@@ -20,7 +20,7 @@ declare -A localImages
 localImages["financialmonitoring-api"]="src/FinancialMonitoring.Api/Dockerfile.dev"
 localImages["transactionprocessor"]="src/TransactionProcessor/Dockerfile.dev"
 localImages["transactionsimulator"]="src/TransactionSimulator/Dockerfile.dev"
-localImages["webApp"]="src/FinancialMonitoring.WebApp/Dockerfile"
+localImages["webapp"]="src/FinancialMonitoring.WebApp/Dockerfile"
 
 echo -e "${YELLOW}--- Importing local images into k3d cluster ---${NC}"
 for localImage in "${!localImages[@]}"; do

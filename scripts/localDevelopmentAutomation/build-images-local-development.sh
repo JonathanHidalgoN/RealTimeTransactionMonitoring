@@ -20,18 +20,18 @@ declare -A localImages
 localImages["financialmonitoring-api"]="src/FinancialMonitoring.Api/Dockerfile.dev"
 localImages["transactionprocessor"]="src/TransactionProcessor/Dockerfile.dev"
 localImages["transactionsimulator"]="src/TransactionSimulator/Dockerfile.dev"
-localImages["webApp"]="src/FinancialMonitoring.WebApp/Dockerfile"
+localImages["webapp"]="src/FinancialMonitoring.WebApp/Dockerfile"
 
 for localImage in "${!localImages[@]}"; do
     IMAGE_NAME="${REGISTRY_PREFIX}${localImage}:${TAG}"
     DOCKERFILE_PATH="${localImages[$localImage]}"
 
-    echo -e "\n${YELLOW}--- Building ${localImage} ---${NC}"
+    echo -e "\n${YELLOW}--- Building ${localImage}:${TAG} ---${NC}"
     echo -e "${CYAN}Image: ${IMAGE_NAME}${NC}"
     echo -e "${CYAN}Dockerfile: ${DOCKERFILE_PATH}${NC}"
 
     docker build -t "${IMAGE_NAME}" -f "${DOCKERFILE_PATH}" .
-    echo -e "${GREEN}✓ Successfully built ${localImage}.${NC}"
+    echo -e "${GREEN}✓ Successfully built ${localImage}:${TAG}.${NC}"
 done
 
 echo -e "${GREEN}  All local Docker images built successfully!         ${NC}"
