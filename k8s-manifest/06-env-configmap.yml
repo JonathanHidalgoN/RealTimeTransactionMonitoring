@@ -4,6 +4,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: env-config
+  namespace: finmon-app
+  labels:
+    project: financial-monitoring
+    environment: development
 data:
   KEY_VAULT_URI: "https://finmon-kv-0aaa81f1.vault.azure.net/"
   AZURE_CLIENT_ID: "e48d319f-dd71-4f1a-b39a-36d8a6531660"

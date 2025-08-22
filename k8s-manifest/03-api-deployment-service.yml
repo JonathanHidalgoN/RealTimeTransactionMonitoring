@@ -5,6 +5,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api-deployment
+  namespace: finmon-app
+  labels:
+    project: financial-monitoring
+    environment: development
 spec:
   replicas: 1
   selector:
@@ -52,6 +56,9 @@ kind: Service
 metadata:
   name: api-service
   namespace: finmon-app
+  labels:
+    project: financial-monitoring
+    environment: development
 spec:
   type: ClusterIP
   selector:

@@ -5,6 +5,9 @@ kind: Deployment
 metadata:
   name: simulator-deployment
   namespace: finmon-app
+  labels:
+    project: financial-monitoring
+    environment: development
 spec:
   replicas: 1
   selector:
