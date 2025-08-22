@@ -1,0 +1,18 @@
+# Configures a cert-manager ClusterIssuer for automatically provisioning and renewing TLS certificates from Let's Encrypt.
+# This enables HTTPS for the API ingress, ensuring secure communication.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+  labels:
+    project: financial-monitoring
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: joni7840850@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+    solvers:
+    - http01:
+        ingress:
+          ingressClassName: nginx

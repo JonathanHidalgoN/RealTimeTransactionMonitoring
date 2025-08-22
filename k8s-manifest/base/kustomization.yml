@@ -1,0 +1,19 @@
+# Base Kustomization - Common resources for all environments
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: finmon-app
+
+resources:
+- 00-serviceaccount.yml
+- 01-namespace.yml
+- 02-processor-deployment.yml
+- 04-simulator-deployment.yml
+- 03-api-deployment-service.yml
+- 06-env-configmap.yml
+- 07-api-hpa.yml
+- 08-cluster-issuer.yml
+- 09-api-ingress.yml
+
+commonLabels:
+  project: financial-monitoring
