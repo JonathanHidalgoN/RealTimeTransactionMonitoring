@@ -23,7 +23,7 @@ localImages["transactionsimulator"]="src/TransactionSimulator/Dockerfile.dev"
 localImages["webapp"]="src/FinancialMonitoring.WebApp/Dockerfile"
 
 for localImage in "${!localImages[@]}"; do
-    IMAGE_NAME="${REGISTRY_PREFIX}${localImage}:${TAG}"
+    IMAGE_NAME="${localImage}:${TAG}"
     DOCKERFILE_PATH="${localImages[$localImage]}"
 
     echo -e "\n${YELLOW}--- Building ${localImage}:${TAG} ---${NC}"
