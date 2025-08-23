@@ -14,6 +14,9 @@ public static class AppConstants
     public const string MongoDbConfigPrefix = "MongoDb";
     public const string KafkaDefaultName = "Kafka";
 
+    //Env variables names
+    public const string runTimeEnvVarName = "DOTNET_ENVIRONMENT";
+
     // API Versioning
     public const string ApiVersion = "1.0";
 
