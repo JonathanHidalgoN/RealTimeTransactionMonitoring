@@ -30,7 +30,7 @@ This guide will take you from a fresh Azure subscription to a fully working Real
 
 ### 1. Bootstrap Azure Infrastructure
 ```bash
-./scripts/bootstrap.sh
+./scripts/cloudDeployment/bootstrap.sh
 ```
 **What it does:** Creates resource groups, storage accounts, service principals, Terraform backend
 
@@ -67,7 +67,7 @@ echo "ACR Name: $ACR_NAME"
 
 ### 4. Setup Application Configuration
 ```bash
-./scripts/setup_app_config.sh
+./scripts/cloudDeployment/setup_app_config.sh
 ```
 **What it does:** Populates Key Vault with secrets, creates environment configuration
 
@@ -79,16 +79,16 @@ AKS_NAME=$(cd infra && terraform output -raw aks_cluster_name)
 az aks get-credentials --resource-group "$RESOURCE_GROUP" --name "$AKS_NAME" --overwrite-existing
 
 # Install NGINX Ingress Controller
-./scripts/setup-ingress-controller.sh
+./scripts/cloudDeployment/setup-ingress-controller.sh
 
 # Install cert-manager for SSL
-./scripts/install-cert-manager.sh
+./scripts/cloudDeployment/install-cert-manager.sh
 ```
 **Critical Output:** Note the LoadBalancer IP from ingress controller setup
 
 ### 6. Build and Push Container Images
 ```bash
-./scripts/build-and-push-acr.sh
+./scripts/cloudDeployment/build-and-push-acr.sh
 ```
 **What it does:** Builds and pushes API, TransactionProcessor, TransactionSimulator to ACR
 
@@ -115,7 +115,7 @@ kubectl patch configmap env-config -n finmon-app --type merge -p "{
 
 ### 8. Deploy Applications to Kubernetes
 ```bash
-kubectl apply -f k8s-manifest/
+kubectl apply -k k8s-manifest/overlays/cloud/
 ```
 
 ### 9.**CRITICAL MANUAL STEP** - Update DNS
@@ -129,7 +129,7 @@ kubectl get service -n ingress-nginx
 
 ### 10. Deploy Blazor Frontend
 ```bash
-./scripts/deploy-blazor-static-app.sh
+./scripts/cloudDeployment/deploy-blazor-static-app.sh
 ```
 **Output:** Provides Static Web App URL
 
@@ -198,13 +198,13 @@ kubectl logs -f deployment/cert-manager -n cert-manager
 
 ```bash
 # Stop cluster when not in use
-./scripts/cost-management.sh stop
+./scripts/generalUtils/cost-management.sh stop
 
 # Start for development work
-./scripts/cost-management.sh work
+./scripts/generalUtils/cost-management.sh work
 
 # Scale for demo (2 nodes)
-./scripts/cost-management.sh demo
+./scripts/generalUtils/cost-management.sh demo
 ```
 
 ## Summary

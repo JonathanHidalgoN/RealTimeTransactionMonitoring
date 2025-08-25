@@ -1,40 +1,39 @@
 #!/bin/bash
-# Purpose: Applies Kubernetes manifests individually using kubectl apply -f.
-#          Ensures resources are applied in a logical order.
+# Purpose: Applies Kubernetes manifests for local development using Kustomize overlay.
+#          Uses the local overlay to apply all resources with proper local configuration.
 
 set -e
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
+RED='\033[0;31m'
 NC='\033[0m'
 
 echo -e "${CYAN}======================================================${NC}"
-echo -e "${CYAN}  Applying Kubernetes Manifests Individually          ${NC}"
+echo -e "${CYAN}  Applying Local Kubernetes Manifests via Kustomize   ${NC}"
 echo -e "${CYAN}======================================================${NC}"
 echo ""
 
-K8S_MANIFEST_DIR="k8s-manifest"
+KUSTOMIZE_OVERLAY_PATH="k8s-manifest/overlays/local"
 
-# Define the order of files to apply
-declare -a files_to_apply=(
-    "${K8S_MANIFEST_DIR}/01-namespace.yml"
-    "${K8S_MANIFEST_DIR}/06-env-configmap.yml"
-    "${K8S_MANIFEST_DIR}/02-processor-deployment.yml"
-    "${K8S_MANIFEST_DIR}/04-simulator-deployment.yml"
-    "${K8S_MANIFEST_DIR}/03-api-deployment-service.yml"
-)
+# Check if the kustomize overlay directory exists
+if [ ! -d "$KUSTOMIZE_OVERLAY_PATH" ]; then
+    echo -e "${RED}Error: Kustomize overlay directory not found: ${KUSTOMIZE_OVERLAY_PATH}${NC}" >&2
+    exit 1
+fi
 
-for file in "${files_to_apply[@]}"; do
-    if [ -f "$file" ]; then
-        echo -e "${YELLOW}--- Applying ${file} ---${NC}"
-        kubectl apply -f "$file"
-        echo -e "${GREEN}✓ Successfully applied ${file}.${NC}"
-    else
-        echo -e "${RED}Error: File not found: ${file}${NC}" >&2
-        exit 1
-    fi
-done
+echo -e "${YELLOW}--- Applying Kustomize overlay: ${KUSTOMIZE_OVERLAY_PATH} ---${NC}"
+echo ""
 
-echo -e "${GREEN}  All Kubernetes Manifests Applied Successfully!      ${NC}"
+kubectl apply -k "$KUSTOMIZE_OVERLAY_PATH"
+
+echo ""
+echo -e "${GREEN}✓ Successfully applied all local Kubernetes manifests!${NC}"
+echo ""
+echo -e "${CYAN}Resources deployed:${NC}"
+kubectl get all -n finmon-app
+
+echo ""
+echo -e "${GREEN}  Local Kubernetes Environment Ready!                 ${NC}"
 echo ""
