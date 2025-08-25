@@ -24,7 +24,7 @@ localImages["webapp"]="src/FinancialMonitoring.WebApp/Dockerfile"
 
 echo -e "${YELLOW}--- Importing local images into k3d cluster ---${NC}"
 for localImage in "${!localImages[@]}"; do
-    IMAGE_NAME="${REGISTRY_PREFIX}${localImage}:${TAG}"
+    IMAGE_NAME="${localImage}:${TAG}"
     echo -e "${CYAN}Importing ${IMAGE_NAME}...${NC}"
     k3d image import "${IMAGE_NAME}" --cluster finmon-local
     echo -e "${GREEN}✓ Successfully imported ${IMAGE_NAME}.${NC}"
