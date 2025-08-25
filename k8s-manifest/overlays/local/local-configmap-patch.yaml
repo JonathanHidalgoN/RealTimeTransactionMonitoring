@@ -13,3 +13,5 @@ data:
   MongoDb__ConnectionString: "mongodb://localhost:27017"
   MongoDb__DatabaseName: "FinancialTransactionsDb"
   MongoDb__CollectionName: "transactions"
+
+  DOTNET_ENVIRONMENT: "Development"
