@@ -8,6 +8,4 @@ metadata:
   labels:
     project: financial-monitoring
 data:
-  # Anomaly Detection Configuration
-  # Options: "stateless" (no Redis dependency) or "stateful" (requires Redis)
   AnomalyDetection__Mode: "stateless"
