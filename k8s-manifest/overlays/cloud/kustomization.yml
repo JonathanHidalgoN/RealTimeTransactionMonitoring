@@ -6,6 +6,9 @@ namespace: finmon-app
 resources:
 - ../../base
 
+patchesStrategicMerge:
+- cloud-configmap-patch.yaml
+
 commonLabels:
   project: financial-monitoring
   environment: production

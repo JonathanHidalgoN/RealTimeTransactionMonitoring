@@ -1,0 +1,18 @@
+# Local development ConfigMap patch for k3d cluster
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env-config
+  namespace: finmon-app
+data:
+  # Use Kafka for messaging in local development
+  Messaging__Provider: "kafka"
+  
+  # Kafka Configuration
+  Kafka__BootstrapServers: "localhost:9092"
+  Kafka__TopicName: "transactions"
+  
+  # MongoDB Configuration
+  MongoDb__ConnectionString: "mongodb://localhost:27017"
+  MongoDb__DatabaseName: "FinancialTransactionsDb"
+  MongoDb__CollectionName: "transactions"

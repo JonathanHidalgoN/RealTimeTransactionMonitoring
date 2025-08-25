@@ -5,12 +5,16 @@ namespace: finmon-app
 
 resources:
 - ../../base
+- local-mongodb-secret.yaml
+- local-kafka-secret.yaml
+- local-api-secret.yaml
 
 commonLabels:
   project: financial-monitoring
   environment: local
 
-# Remove cloud-specific resources and patch images for local development
+# Remove cloud-specific resources, patch images, and configure for local development
 patchesStrategicMerge:
 - remove-cloud-resources.yaml
 - local-images-patch.yaml
+- local-configmap-patch.yaml
