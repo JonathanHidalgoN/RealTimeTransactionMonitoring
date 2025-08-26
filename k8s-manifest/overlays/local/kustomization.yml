@@ -8,6 +8,12 @@ resources:
 - local-mongodb-secret.yaml
 - local-api-secret.yaml
 
+patchesStrategicMerge:
+- remove-cloud-resources.yaml
+- local-images-patch.yaml
+- local-configmap-patch.yaml
+- simulator-deployment-patch.yaml
+
 commonLabels:
   project: financial-monitoring
   environment: local
