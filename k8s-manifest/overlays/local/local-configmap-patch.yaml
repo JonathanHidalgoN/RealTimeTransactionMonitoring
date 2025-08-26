@@ -7,10 +7,11 @@ metadata:
 data:
   Messaging__Provider: "kafka"
 
-  Kafka__BootstrapServers: "localhost:9092"
+  Kafka__BootstrapServers: "192.168.5.54:9092"
+  Kafka__GroupId: "transaction-processor-group"
   Kafka__TopicName: "transactions"
 
-  MongoDb__ConnectionString: "mongodb://localhost:27017"
+  MongoDb__ConnectionString: "mongodb://192.168.5.54:27017"
   MongoDb__DatabaseName: "FinancialTransactionsDb"
   MongoDb__CollectionName: "transactions"
 

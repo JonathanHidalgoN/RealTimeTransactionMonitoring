@@ -1,0 +1,73 @@
+# External service definitions for local development
+# Using headless services with manual endpoints for better DNS compatibility
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-external
+  namespace: finmon-app
+  annotations:
+    # Prevent Kubernetes from auto-managing endpoints
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+  labels:
+    project: financial-monitoring
+    environment: local
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service
+  # Remove selector so Kubernetes doesn't auto-create endpoints
+  ports:
+  - name: kafka
+    port: 9092
+    targetPort: 9092
+    protocol: TCP
+
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: kafka-external
+  namespace: finmon-app
+subsets:
+- addresses:
+  - ip: "192.168.5.1"
+  ports:
+  - name: kafka
+    port: 9092
+    protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-external
+  namespace: finmon-app
+  annotations:
+    # Prevent Kubernetes from auto-managing endpoints
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+  labels:
+    project: financial-monitoring
+    environment: local
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service
+  # Remove selector so Kubernetes doesn't auto-create endpoints
+  ports:
+  - name: mongodb
+    port: 27017
+    targetPort: 27017
+    protocol: TCP
+
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: mongodb-external
+  namespace: finmon-app
+subsets:
+- addresses:
+  - ip: "192.168.5.1"
+  ports:
+  - name: mongodb
+    port: 27017
+    protocol: TCP
