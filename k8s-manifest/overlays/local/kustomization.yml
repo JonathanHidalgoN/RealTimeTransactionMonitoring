@@ -6,7 +6,6 @@ namespace: finmon-app
 resources:
 - ../../base
 - local-mongodb-secret.yaml
-- local-kafka-secret.yaml
 - local-api-secret.yaml
 
 commonLabels:
