@@ -5,7 +5,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Confluent.Kafka;
-using System.IO;
 
 namespace TransactionSimulator;
 
@@ -36,7 +35,7 @@ public class Simulator : BackgroundService
 
             try
             {
-                File.AppendAllText("/tmp/healthy", string.Empty);
+                File.AppendAllText("/tmp/healthy", $"{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss UTC}\n");
             }
             catch (Exception ex)
             {
