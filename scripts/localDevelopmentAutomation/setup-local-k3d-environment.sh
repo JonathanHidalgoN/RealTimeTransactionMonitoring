@@ -70,33 +70,10 @@ start_compose() {
     echo -e "${YELLOW}Starting Docker Compose for external dependencies...${NC}"
     cd "$PROJECT_ROOT"
     
-    if docker compose -f docker-compose-k3d-local.yml ps | grep -q "running"; then
-        echo -e "${YELLOW}Dependencies already running, restarting...${NC}"
-        docker compose -f docker-compose-k3d-local.yml down
-    fi
-    
     docker compose -f docker-compose-k3d-local.yml up -d
     
-    echo -e "${YELLOW}Waiting for services to be healthy...${NC}"
-    sleep 10
-    
-    # Wait for Kafka to be ready
-    local max_attempts=30
-    local attempt=1
-    while [ $attempt -le $max_attempts ]; do
-        if docker compose -f docker-compose-k3d-local.yml exec -T kafka kafka-broker-api-versions --bootstrap-server localhost:9092 &>/dev/null; then
-            echo -e "${GREEN}✓ Kafka is ready${NC}"
-            break
-        fi
-        echo -e "${YELLOW}Waiting for Kafka... (attempt $attempt/$max_attempts)${NC}"
-        sleep 5
-        ((attempt++))
-    done
-    
-    if [ $attempt -gt $max_attempts ]; then
-        echo -e "${RED}✗ Kafka failed to start within expected time${NC}"
-        exit 1
-    fi
+    echo -e "${YELLOW}Waiting for services to be ready...${NC}"
+    sleep 30
     
     echo -e "${GREEN}✓ External dependencies are running${NC}"
     echo ""
@@ -136,11 +113,6 @@ show_status() {
     fi
     echo ""
     
-    echo -e "${CYAN}Port Forwarding Info:${NC}"
-    echo -e "  • Kafka: localhost:9092"
-    echo -e "  • MongoDB: localhost:27017"
-    echo -e "  • API: kubectl port-forward svc/api-service 5100:80 -n finmon-app"
-    echo ""
 }
 
 teardown_environment() {
