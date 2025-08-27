@@ -11,9 +11,9 @@
     <PackageReference Include="NBomber" Version="6.0.0" />
     <PackageReference Include="NBomber.Http" Version="6.0.0" />
     <PackageReference Include="Confluent.Kafka" Version="2.10.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.5" />
   </ItemGroup>
 
   <ItemGroup>
