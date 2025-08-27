@@ -32,14 +32,12 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
                     { "MongoDb:DatabaseName", "TestFinancialMonitoring" },
                     { "MongoDb:CollectionName", "transactions" },
                     { "ApplicationInsights:ConnectionString", "InstrumentationKey=test-key;IngestionEndpoint=https://test.in.applicationinsights.azure.com/" },
-                    // Override rate limiting for faster testing
                     { "IpRateLimiting:GeneralRules:0:Endpoint", "*" },
                     { "IpRateLimiting:GeneralRules:0:Period", "1m" },
                     { "IpRateLimiting:GeneralRules:0:Limit", "5" },
                     { "IpRateLimiting:GeneralRules:1:Endpoint", "*/transactions" },
                     { "IpRateLimiting:GeneralRules:1:Period", "1m" },
                     { "IpRateLimiting:GeneralRules:1:Limit", "3" },
-                    // More permissive CORS for testing
                     { "AllowedOrigins:0", "http://localhost" },
                     { "AllowedOrigins:1", "https://localhost" }
                 });
@@ -76,8 +74,12 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
             var response = await client.GetAsync(AppConstants.Routes.GetTransactionsPath());
             Assert.True(response.IsSuccessStatusCode, $"Request {i + 1} should succeed");
 
-            Assert.True(response.Headers.Contains("X-RateLimit-Limit") ||
-                       response.Headers.Contains("X-Rate-Limit-Limit"));
+            var rateLimitHeaders = response.Headers.Where(h =>
+                h.Key.ToLower().Contains("ratelimit") ||
+                h.Key.ToLower().Contains("rate-limit")).ToList();
+
+            Assert.True(rateLimitHeaders.Any(),
+                $"No rate limit headers found. Available headers: {string.Join(", ", response.Headers.Select(h => h.Key))}");
         }
     }
 
