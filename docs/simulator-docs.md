@@ -4,57 +4,6 @@
 
 The Transaction Simulator is data generation service that creates financial transaction data. It generates transactions with behavioral patterns based on real-world characteristics and user personas.
 
-## Architecture
-
-```mermaid
-graph TB
-    subgraph "Transaction Simulator"
-        SIM[Simulator Service]
-        GEN[Transaction Generator]
-        DATA[Static Data Sources]
-        MSG[Message Producer]
-    end
-
-    subgraph "User Profiles"
-        UP1[Student]
-        UP2[Young Professional]
-        UP3[Family Person]
-        UP4[High Net Worth]
-        UP5[Small Business]
-        UP6[Retiree]
-        UP7[Freelancer]
-    end
-
-    subgraph "Data Sources"
-        LOC[Location Data<br/>50+ US Cities]
-        MER[Merchant Data<br/>70+ Real Merchants]
-        CAT[Category Patterns<br/>12 Categories]
-    end
-
-    subgraph "Message Targets"
-        KAFKA[Kafka<br/>Local Dev]
-        EH[Azure Event Hubs<br/>Production]
-    end
-
-    SIM --> GEN
-    GEN --> DATA
-    DATA --> LOC
-    DATA --> MER
-    DATA --> CAT
-
-    GEN --> UP1
-    GEN --> UP2
-    GEN --> UP3
-    GEN --> UP4
-    GEN --> UP5
-    GEN --> UP6
-    GEN --> UP7
-
-    SIM --> MSG
-    MSG --> KAFKA
-    MSG --> EH
-```
-
 ## Key Features
 
 ### Transaction Generation

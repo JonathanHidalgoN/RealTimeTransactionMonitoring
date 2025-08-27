@@ -9,50 +9,38 @@ The Transaction Processor is the core event-driven service responsible for consu
 ```mermaid
 graph TB
     subgraph "Message Sources"
-        KAFKA[Kafka<br/>Local Dev]
-        EH_IN[Azure Event Hubs<br/>Transactions Topic]
+        MSQ[Message Queue]
     end
 
     subgraph "Transaction Processor"
         WORKER[Worker Service]
         ANOMALY[Anomaly Detection Engine]
         CACHE[Redis Cache Service]
-        DB_INIT[Database Initializer]
     end
 
     subgraph "Anomaly Detection Modes"
-        STATELESS[Stateless Detector<br/>Simple Rule-Based]
         STATEFUL[Stateful Detector<br/>Historical Analysis]
     end
 
     subgraph "Data Persistence"
-        MONGO[MongoDB<br/>Local Dev]
-        COSMOS[Azure Cosmos DB<br/>Production]
+        DATABASE[Database]
     end
 
     subgraph "Event Publishing"
         EH_OUT[Azure Event Hubs<br/>Anomalies Topic]
-        NOOP[NoOp Publisher<br/>Local Dev]
         LOGIC[Azure Logic Apps<br/>Notifications]
     end
 
-    KAFKA --> WORKER
-    EH_IN --> WORKER
+    MSQ --> WORKER
 
     WORKER --> ANOMALY
-    ANOMALY --> STATELESS
     ANOMALY --> STATEFUL
-    STATEFUL --> CACHE
+    STATEFUL <--> CACHE
 
-    WORKER --> MONGO
-    WORKER --> COSMOS
+    WORKER --> DATABASE
 
     ANOMALY --> EH_OUT
-    ANOMALY --> NOOP
     EH_OUT --> LOGIC
-
-    DB_INIT --> MONGO
-    DB_INIT --> COSMOS
 ```
 
 ## Key Features
