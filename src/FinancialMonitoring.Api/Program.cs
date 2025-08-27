@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Caching.Memory;
 
-public class Program
+public partial class Program
 {
     public static void Main(string[] args)
     {
@@ -377,12 +377,12 @@ public class Program
             app.UseHttpsRedirection();
         }
 
-        app.UseCors("_myAllowSpecificOrigins");
         app.UseResponseCaching();
         app.UseOutputCache();
         app.UseMiddleware<SecurityHeadersMiddleware>();
         app.UseMiddleware<CorrelationIdMiddleware>();
         app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+        app.UseCors("_myAllowSpecificOrigins");
         app.UseIpRateLimiting();
         app.UseAuthentication();
         app.UseAuthorization();
