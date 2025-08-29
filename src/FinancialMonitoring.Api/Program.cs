@@ -124,6 +124,11 @@ public partial class Program
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        builder.Services.AddOptions<RateLimitSettings>()
+            .Bind(builder.Configuration.GetSection("RateLimitSettings"))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         builder.Services.AddControllers();
 
         builder.Services.AddFluentValidationAutoValidation()
@@ -223,36 +228,41 @@ public partial class Program
     }
 
     /// <summary>
-    /// Configures rate limiting
+    /// Configures rate limiting with configurable settings
     /// </summary>
     private static void ConfigureRateLimiting(WebApplicationBuilder builder)
     {
+        var rateLimitSettings = builder.Configuration.GetSection("RateLimitSettings").Get<RateLimitSettings>() ?? new RateLimitSettings();
+
         builder.Services.AddMemoryCache();
         builder.Services.AddInMemoryRateLimiting();
         builder.Services.Configure<IpRateLimitOptions>(options =>
         {
-            options.EnableEndpointRateLimiting = true;
-            options.StackBlockedRequests = false;
-            options.HttpStatusCode = 429;
-            options.RealIpHeader = "X-Real-IP";
-            options.ClientIdHeader = "X-ClientId";
-            options.GeneralRules = new List<RateLimitRule>
+            options.EnableEndpointRateLimiting = rateLimitSettings.EnableEndpointRateLimiting;
+            options.StackBlockedRequests = rateLimitSettings.StackBlockedRequests;
+            options.HttpStatusCode = rateLimitSettings.HttpStatusCode;
+            options.RealIpHeader = rateLimitSettings.RealIpHeader;
+            options.ClientIdHeader = rateLimitSettings.ClientIdHeader;
+            
+            // Convert our settings to AspNetCoreRateLimit's RateLimitRule format
+            options.GeneralRules = rateLimitSettings.GeneralRules.Select(rule => new RateLimitRule
             {
-                new RateLimitRule
-                {
-                    Endpoint = "*",
-                    Period = "1m",
-                    Limit = 1000
-                },
-                new RateLimitRule
-                {
-                    Endpoint = "*/transactions",
-                    Period = "1m",
-                    Limit = 100
-                }
-            };
+                Endpoint = rule.Endpoint,
+                Period = rule.Period,
+                Limit = rule.Limit
+            }).ToList();
         });
         builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
+        Console.WriteLine($"Rate Limiting Configuration:");
+        Console.WriteLine($"  Endpoint Rate Limiting: {(rateLimitSettings.EnableEndpointRateLimiting ? "enabled" : "disabled")}");
+        Console.WriteLine($"  Stack Blocked Requests: {rateLimitSettings.StackBlockedRequests}");
+        Console.WriteLine($"  HTTP Status Code: {rateLimitSettings.HttpStatusCode}");
+        Console.WriteLine($"  Rules: {rateLimitSettings.GeneralRules.Count} configured");
+        foreach (var rule in rateLimitSettings.GeneralRules)
+        {
+            Console.WriteLine($"    {rule.Endpoint}: {rule.Limit} requests per {rule.Period}");
+        }
     }
 
     /// <summary>
