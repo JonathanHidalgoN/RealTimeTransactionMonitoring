@@ -53,7 +53,7 @@ graph TB
     subgraph "Container Registry"
         ACR[Azure Container Registry]
     end
-    
+
     subgraph "Web Application"
         SWA[Azure Static Web Apps<br/>Blazor UI]
     end
@@ -78,7 +78,9 @@ graph TB
     KV --> API
     KV --> PROC
     KV --> SIM
-    
+
+    API --> SWA
+
     %% Services send telemetry TO App Insights
     API --> INSIGHTS
     PROC --> INSIGHTS
@@ -154,7 +156,7 @@ Real-time monitoring dashboard built with Blazor WebAssembly:
 - **Intelligent Anomaly Detection**: Stateful detection using historical account patterns
 - **Instant Notifications**: Automated alerts via Azure Logic Apps
 
-### Security & Monitoring  
+### Security & Monitoring
 - **Azure AD Workload Identity**: Passwordless authentication
 - **API Key Authentication**: Secure REST API access
 - **Application Insights**: Distributed tracing and monitoring
@@ -214,7 +216,7 @@ graph LR
     F --> G[Authentication]
     G --> H[Output Cache]
     H --> I[Controller Action]
-    
+
     style B fill:#ff9999
     style F fill:#ffff99
     style G fill:#cc99ff
@@ -245,7 +247,7 @@ cd src/FinancialMonitoring.WebApp && dotnet run
 make deploy
 
 # Or step-by-step
-make infra        # Deploy infrastructure  
+make infra        # Deploy infrastructure
 make apps         # Deploy applications
 make frontend     # Deploy frontend
 ```
@@ -262,7 +264,7 @@ make frontend     # Deploy frontend
 │   └── overview.md            # System architecture
 ├── src/                     # .NET Applications
 │   ├── FinancialMonitoring.Api/        # REST API service
-│   ├── TransactionProcessor/           # Event processing engine  
+│   ├── TransactionProcessor/           # Event processing engine
 │   ├── TransactionSimulator/           # Data generation service
 │   └── FinancialMonitoring.WebApp/     # Blazor dashboard
 ├── infra/                   # Terraform Infrastructure
@@ -308,7 +310,7 @@ This project uses AI as a development mentor and teaching tool. See [AI Usage Do
 ## Future Enhancements
 
 - **OAuth 2.0/JWT Authentication**: Enhanced API security with standard authentication flows
-- **Multi-Environment CI/CD**: Staging and production pipelines with manual approvals  
+- **Multi-Environment CI/CD**: Staging and production pipelines with manual approvals
 - **Advanced Dashboards**: Custom Azure dashboards for system health visualization
 - **Advanced Anomaly Detection**: Enhanced rule-based detection with multiple algorithms
 
