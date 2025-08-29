@@ -174,17 +174,17 @@ Real-time monitoring dashboard built with Blazor WebAssembly:
 
 ## Intelligent Transaction Generation
 
-Professional-grade synthetic data generation for testing, development, and ML training.
+Professional-grade synthetic data generation for testing and development.
 
 ### Smart User Personas
 - **7 User Types**: Students, Young Professionals, Families, Retirees, High Net Worth, Small Business, Freelancers
 - **Behavioral Patterns**: Realistic spending habits, time preferences, and geographic distribution
 - **50+ US Cities**: Authentic location data with travel probability modeling
 
-### ML-Ready Features
+### Advanced Features
 - **Temporal Intelligence**: Business hours, weekend patterns, timezone awareness
 - **Amount Distribution**: Category-specific ranges with normal distribution curves
-- **Anomaly Injection**: Controlled suspicious patterns for model training
+- **Anomaly Injection**: Controlled suspicious patterns for testing
 
 **Technical Details**: [Transaction Simulator Documentation](docs/simulator-docs.md)
 
@@ -276,13 +276,18 @@ make frontend     # Deploy frontend
 Comprehensive testing strategy with unit, integration, and load tests.
 
 ```bash
-# Run all tests
+# Build test environment
+docker compose -f docker-compose.test.yml build
+
+# Run unit tests only
+dotnet test --configuration Release --logger "console;verbosity=minimal"
+
+# Run full test suite (unit, integration, load)
 ./scripts/generalUtils/run-tests.sh
 
-# Individual test types
-dotnet test tests/FinancialMonitoring.Api.Tests/        # Unit tests
-dotnet test tests/FinancialMonitoring.IntegrationTests/ # E2E tests  
-dotnet test tests/FinancialMonitoring.LoadTests/        # Performance
+# Run specific test types
+docker compose -f docker-compose.test.yml run --rm integration-tests
+docker compose -f docker-compose.test.yml run --rm load-tests
 ```
 
 ## Documentation
@@ -305,7 +310,7 @@ This project uses AI as a development mentor and teaching tool. See [AI Usage Do
 - **OAuth 2.0/JWT Authentication**: Enhanced API security with standard authentication flows
 - **Multi-Environment CI/CD**: Staging and production pipelines with manual approvals  
 - **Advanced Dashboards**: Custom Azure dashboards for system health visualization
-- **Machine Learning Integration**: ML.NET integration for advanced anomaly detection
+- **Advanced Anomaly Detection**: Enhanced rule-based detection with multiple algorithms
 
 ---
 
