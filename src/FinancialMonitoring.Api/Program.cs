@@ -2,6 +2,7 @@ using AspNetCoreRateLimit;
 using Azure.Identity;
 using FinancialMonitoring.Abstractions.Persistence;
 using FinancialMonitoring.Api.Authentication;
+using FinancialMonitoring.Api.Extensions;
 using FinancialMonitoring.Api.Middleware;
 using FinancialMonitoring.Api.HealthChecks;
 using FinancialMonitoring.Api.Services;
@@ -113,6 +114,16 @@ public partial class Program
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        builder.Services.AddOptions<CacheSettings>()
+            .Bind(builder.Configuration.GetSection("CacheSettings"))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        builder.Services.AddOptions<ResponseCacheSettings>()
+            .Bind(builder.Configuration.GetSection("ResponseCacheSettings"))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         builder.Services.AddControllers();
 
         builder.Services.AddFluentValidationAutoValidation()
@@ -162,36 +173,53 @@ public partial class Program
     /// </summary>
     private static void ConfigureCaching(WebApplicationBuilder builder)
     {
+        var cacheSettings = builder.Configuration.GetSection("CacheSettings").Get<CacheSettings>() ?? new CacheSettings();
+        var responseCacheSettings = builder.Configuration.GetSection("ResponseCacheSettings").Get<ResponseCacheSettings>() ?? new ResponseCacheSettings();
+
         builder.Services.AddResponseCaching(options =>
         {
-            options.MaximumBodySize = 1024 * 1024; // 1MB
-            options.UseCaseSensitivePaths = false;
-            options.SizeLimit = 10 * 1024 * 1024; // 10MB cache size
+            options.MaximumBodySize = responseCacheSettings.MaximumBodySizeBytes;
+            options.UseCaseSensitivePaths = responseCacheSettings.UseCaseSensitivePaths;
+            options.SizeLimit = responseCacheSettings.SizeLimitBytes;
         });
 
         builder.Services.AddOutputCache(options =>
         {
-            options.AddBasePolicy(builder => builder.Expire(TimeSpan.FromMinutes(5)));
+            // Base policy - configurable, default disabled for real-time systems
+            options.AddBasePolicy(builder => builder.ConditionalExpire(cacheSettings.BasePolicyCacheSeconds));
 
+            // Transaction list cache - typically disabled for real-time data
             options.AddPolicy("TransactionCache", builder =>
-                builder.Expire(TimeSpan.FromMinutes(2))
-                       .SetVaryByQuery("pageNumber", "pageSize", "startDate", "endDate", "minAmount", "maxAmount"));
+                builder.ConditionalExpire(cacheSettings.TransactionCacheSeconds,
+                    b => b.SetVaryByQuery("pageNumber", "pageSize", "startDate", "endDate", "minAmount", "maxAmount")));
 
+            // Individual transaction cache - typically disabled
             options.AddPolicy("TransactionByIdCache", builder =>
-                builder.Expire(TimeSpan.FromMinutes(10))
-                       .SetVaryByRouteValue("id"));
+                builder.ConditionalExpire(cacheSettings.TransactionByIdCacheSeconds,
+                    b => b.SetVaryByRouteValue("id")));
 
+            // Anomalous transaction cache - typically disabled for real-time anomaly detection
             options.AddPolicy("AnomalousTransactionCache", builder =>
-                builder.Expire(TimeSpan.FromMinutes(1))
-                       .SetVaryByQuery("pageNumber", "pageSize"));
+                builder.ConditionalExpire(cacheSettings.AnomalousTransactionCacheSeconds,
+                    b => b.SetVaryByQuery("pageNumber", "pageSize")));
 
+            // Analytics cache - can be enabled for performance as aggregated data tolerates some staleness
             options.AddPolicy("AnalyticsCache", builder =>
-                builder.Expire(TimeSpan.FromMinutes(5)));
+                builder.ConditionalExpire(cacheSettings.AnalyticsCacheSeconds));
 
+            // Time series cache - typically disabled for real-time charts
             options.AddPolicy("TimeSeriesCache", builder =>
-                builder.Expire(TimeSpan.FromMinutes(2))
-                       .SetVaryByQuery("hours", "intervalMinutes"));
+                builder.ConditionalExpire(cacheSettings.TimeSeriesCacheSeconds,
+                    b => b.SetVaryByQuery("hours", "intervalMinutes")));
         });
+
+        Console.WriteLine($"Cache Configuration:");
+        Console.WriteLine($"  Response Cache: {responseCacheSettings.MaximumBodySizeMB}MB max body, {responseCacheSettings.SizeLimitMB}MB total");
+        Console.WriteLine($"  Transaction Cache: {(cacheSettings.TransactionCacheSeconds > 0 ? $"{cacheSettings.TransactionCacheSeconds}s" : "disabled")}");
+        Console.WriteLine($"  Transaction By ID Cache: {(cacheSettings.TransactionByIdCacheSeconds > 0 ? $"{cacheSettings.TransactionByIdCacheSeconds}s" : "disabled")}");
+        Console.WriteLine($"  Anomalous Transaction Cache: {(cacheSettings.AnomalousTransactionCacheSeconds > 0 ? $"{cacheSettings.AnomalousTransactionCacheSeconds}s" : "disabled")}");
+        Console.WriteLine($"  Analytics Cache: {(cacheSettings.AnalyticsCacheSeconds > 0 ? $"{cacheSettings.AnalyticsCacheSeconds}s" : "disabled")}");
+        Console.WriteLine($"  Time Series Cache: {(cacheSettings.TimeSeriesCacheSeconds > 0 ? $"{cacheSettings.TimeSeriesCacheSeconds}s" : "disabled")}");
     }
 
     /// <summary>
