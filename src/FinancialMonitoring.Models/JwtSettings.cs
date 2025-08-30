@@ -23,4 +23,5 @@ public class JwtSettings
     public bool ValidateLifetime { get; set; } = true;
     public bool ValidateIssuer { get; set; } = true;
     public bool ValidateAudience { get; set; } = true;
+    public bool ValidateIssuerSigningKey { get; set; } = true;
 }
