@@ -6,13 +6,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
-namespace FinancialMonitoring.Api.Controllers;
+namespace FinancialMonitoring.Api.Controllers.V1;
 
 /// <summary>
-/// API endpoints for transaction analytics and statistics.
+/// API endpoints for transaction analytics and statistics (V1 - API Key authentication).
 /// </summary>
 [ApiController]
-[ApiVersion(AppConstants.ApiVersion)]
+[ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/analytics")]
 [Authorize(AuthenticationSchemes = SecureApiKeyAuthenticationDefaults.SchemeName)]
 public class AnalyticsController : ControllerBase
