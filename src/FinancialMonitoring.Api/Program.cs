@@ -9,12 +9,15 @@ using FinancialMonitoring.Api.Services;
 using FinancialMonitoring.Api.Swagger;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Models.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 public partial class Program
 {
@@ -126,6 +129,11 @@ public partial class Program
 
         builder.Services.AddOptions<RateLimitSettings>()
             .Bind(builder.Configuration.GetSection("RateLimitSettings"))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        builder.Services.AddOptions<JwtSettings>()
+            .Bind(builder.Configuration.GetSection("JwtSettings"))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
@@ -243,7 +251,7 @@ public partial class Program
             options.HttpStatusCode = rateLimitSettings.HttpStatusCode;
             options.RealIpHeader = rateLimitSettings.RealIpHeader;
             options.ClientIdHeader = rateLimitSettings.ClientIdHeader;
-            
+
             // Convert our settings to AspNetCoreRateLimit's RateLimitRule format
             options.GeneralRules = rateLimitSettings.GeneralRules.Select(rule => new RateLimitRule
             {
@@ -280,10 +288,41 @@ public partial class Program
             );
         });
 
+        var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>() ?? new JwtSettings();
+
         builder.Services.AddAuthentication()
             .AddScheme<AuthenticationSchemeOptions, SecureApiKeyAuthenticationHandler>(
                 SecureApiKeyAuthenticationDefaults.SchemeName,
-                options => { });
+                options => { })
+            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = jwtSettings.ValidateIssuer,
+                    ValidateAudience = jwtSettings.ValidateAudience,
+                    ValidateLifetime = jwtSettings.ValidateLifetime,
+                    ValidateIssuerSigningKey = jwtSettings.ValidateIssuerSigningKey,
+                    ValidIssuer = jwtSettings.Issuer,
+                    ValidAudience = jwtSettings.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+                    ClockSkew = TimeSpan.FromMinutes(jwtSettings.ClockSkewMinutes)
+                };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        Console.WriteLine($"JWT Authentication failed: {context.Exception.Message}");
+                        return Task.CompletedTask;
+                    },
+                    OnTokenValidated = context =>
+                    {
+                        Console.WriteLine($"JWT Token validated for user: {context.Principal?.Identity?.Name}");
+                        return Task.CompletedTask;
+                    }
+                };
+            });
+
 
         builder.Services.AddAuthorization();
     }
