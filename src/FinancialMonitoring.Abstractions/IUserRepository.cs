@@ -1,4 +1,4 @@
-namespace FinancialMonitoring.Models;
+namespace FinancialMonitoring.Abstractions;
 
 /// <summary>
 /// Repository interface for managing authenticated users
