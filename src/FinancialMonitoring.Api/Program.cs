@@ -148,6 +148,7 @@ public partial class Program
 
         builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
         builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+        builder.Services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
 
         ConfigureSwagger(builder);
     }
