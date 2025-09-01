@@ -2,7 +2,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using FinancialMonitoring.Abstractions;
 using FinancialMonitoring.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -16,8 +15,8 @@ public class JwtTokenService : IJwtTokenService
 {
     private readonly JwtSettings _jwtSettings;
     private readonly ILogger<JwtTokenService> _logger;
-    
-    // In-memory storage for refresh tokens (in production, use Redis or database)
+
+    //TODO: USE DATABASE
     private static readonly Dictionary<string, RefreshTokenData> _refreshTokens = new();
 
     public JwtTokenService(IOptions<JwtSettings> jwtSettings, ILogger<JwtTokenService> logger)
@@ -30,7 +29,7 @@ public class JwtTokenService : IJwtTokenService
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(_jwtSettings.SecretKey);
-        
+
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -63,8 +62,7 @@ public class JwtTokenService : IJwtTokenService
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(randomBytes);
         var refreshToken = Convert.ToBase64String(randomBytes);
-        
-        // Store refresh token with expiration
+
         _refreshTokens[refreshToken] = new RefreshTokenData
         {
             CreatedAt = DateTime.UtcNow,
