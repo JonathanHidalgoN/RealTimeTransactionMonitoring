@@ -2,11 +2,13 @@ using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Abstractions.Persistence;
+using FinancialMonitoring.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
 using Microsoft.Extensions.Configuration;
 using FinancialMonitoring.Api.Authentication;
+using FinancialMonitoring.Api.Services;
 
 namespace FinancialMonitoring.Api.Tests;
 
@@ -39,7 +41,12 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
                     { "IpRateLimiting:GeneralRules:1:Period", "1m" },
                     { "IpRateLimiting:GeneralRules:1:Limit", "3" },
                     { "AllowedOrigins:0", "http://localhost" },
-                    { "AllowedOrigins:1", "https://localhost" }
+                    { "AllowedOrigins:1", "https://localhost" },
+                    { "JwtSettings:SecretKey", "test-secret-key-that-is-very-long-for-hmac-sha256" },
+                    { "JwtSettings:Issuer", "TestIssuer" },
+                    { "JwtSettings:Audience", "TestAudience" },
+                    { "JwtSettings:ExpiresInMinutes", "15" },
+                    { "JwtSettings:RefreshTokenExpiryInDays", "7" }
                 });
             });
 
@@ -47,6 +54,22 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
             {
                 services.RemoveAll<ITransactionRepository>();
                 services.AddSingleton<ITransactionRepository>(_mockRepository.Object);
+                
+                // Add missing authentication services that InMemoryUserRepository needs
+                services.RemoveAll<IPasswordHashingService>();
+                services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
+                services.RemoveAll<IJwtTokenService>();
+                services.AddScoped<IJwtTokenService, JwtTokenService>();
+                
+                // Configure JWT options
+                services.Configure<JwtSettings>(options =>
+                {
+                    options.SecretKey = "test-secret-key-that-is-very-long-for-hmac-sha256";
+                    options.Issuer = "TestIssuer";
+                    options.Audience = "TestAudience";
+                    options.AccessTokenExpiryMinutes = 15;
+                    options.RefreshTokenExpiryDays = 7;
+                });
             });
         });
     }
