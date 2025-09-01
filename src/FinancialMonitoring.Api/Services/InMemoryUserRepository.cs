@@ -9,13 +9,16 @@ namespace FinancialMonitoring.Api.Services;
 public class InMemoryUserRepository : IUserRepository
 {
     private readonly List<AuthUser> _users;
+    private readonly IPasswordHashingService _passwordHashingService;
     private int _nextId = 4;
 
-    public InMemoryUserRepository()
+    public InMemoryUserRepository(IPasswordHashingService passwordHashingService)
     {
-        var adminSalt = GenerateRandomSalt();
-        var analystSalt = GenerateRandomSalt();
-        var viewerSalt = GenerateRandomSalt();
+        _passwordHashingService = passwordHashingService;
+        
+        var adminSalt = _passwordHashingService.GenerateRandomSalt();
+        var analystSalt = _passwordHashingService.GenerateRandomSalt();
+        var viewerSalt = _passwordHashingService.GenerateRandomSalt();
 
         _users = new List<AuthUser>
         {
