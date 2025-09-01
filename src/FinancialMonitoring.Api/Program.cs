@@ -145,6 +145,8 @@ public partial class Program
 
         builder.Services.AddEndpointsApiExplorer();
 
+        builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+
         ConfigureSwagger(builder);
     }
 
@@ -323,8 +325,12 @@ public partial class Program
                 };
             });
 
-
-        builder.Services.AddAuthorization();
+        builder.Services.AddAuthorization(options =>
+        {
+            options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+            options.AddPolicy("Viewer", policy => policy.RequireRole("Viewer"));
+            options.AddPolicy("Analyst", policy => policy.RequireRole("Analyst"));
+        });
     }
 
     /// <summary>
