@@ -26,9 +26,9 @@ public class AuthUser
     public AuthUserRole Role { get; set; } = AuthUserRole.Viewer;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
+
     public DateTime? LastLoginAt { get; set; }
-    
+
     public bool IsActive { get; set; } = true;
 
     [MaxLength(50)]
