@@ -1,5 +1,4 @@
 using FluentValidation;
-using FinancialMonitoring.Models;
 
 namespace FinancialMonitoring.Api.Validation;
 
