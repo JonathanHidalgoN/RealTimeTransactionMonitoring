@@ -4,7 +4,6 @@ using FinancialMonitoring.Api.Validation;
 using FinancialMonitoring.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace FinancialMonitoring.Api.Controllers.V1;
 
