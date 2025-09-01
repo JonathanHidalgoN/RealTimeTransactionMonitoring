@@ -1,5 +1,6 @@
 using AspNetCoreRateLimit;
 using Azure.Identity;
+using FinancialMonitoring.Abstractions;
 using FinancialMonitoring.Abstractions.Persistence;
 using FinancialMonitoring.Api.Authentication;
 using FinancialMonitoring.Api.Extensions;
@@ -146,6 +147,7 @@ public partial class Program
         builder.Services.AddEndpointsApiExplorer();
 
         builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+        builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
         ConfigureSwagger(builder);
     }
