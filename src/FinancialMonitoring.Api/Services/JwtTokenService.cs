@@ -5,6 +5,7 @@ using System.Text;
 using FinancialMonitoring.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using FinancialMonitoring.Abstractions;
 
 namespace FinancialMonitoring.Api.Services;
 

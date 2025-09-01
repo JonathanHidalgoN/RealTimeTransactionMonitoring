@@ -1,8 +1,7 @@
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using FinancialMonitoring.Api.Authentication;
 using FinancialMonitoring.Models;
+using FinancialMonitoring.Abstractions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +19,7 @@ public class AuthController : ControllerBase
     private readonly ILogger<AuthController> _logger;
     private readonly IUserRepository _userRepository;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly IPasswordHashingService _passwordHashingService;
 
     /// <summary>
     /// Initializes a new instance of the AuthController
@@ -27,11 +27,13 @@ public class AuthController : ControllerBase
     public AuthController(
         ILogger<AuthController> logger,
         IUserRepository userRepository,
-        IJwtTokenService jwtTokenService)
+        IJwtTokenService jwtTokenService,
+        IPasswordHashingService passwordHashingService)
     {
         _logger = logger;
         _userRepository = userRepository;
         _jwtTokenService = jwtTokenService;
+        _passwordHashingService = passwordHashingService;
     }
 
     /// <summary>
@@ -56,7 +58,7 @@ public class AuthController : ControllerBase
                     Models.ProblemDetails.Unauthorized("Invalid username or password")));
             }
 
-            if (!VerifyPassword(request.Password, user.PasswordHash))
+            if (!_passwordHashingService.VerifyPassword(request.Password, user.PasswordHash, user.Salt))
             {
                 _logger.LogWarning("Login attempt with invalid password for user: {Username}", request.Username);
                 return Unauthorized(ApiErrorResponse.FromProblemDetails(
@@ -204,11 +206,13 @@ public class AuthController : ControllerBase
                     Models.ProblemDetails.ValidationError("Email already exists")));
             }
 
+            var salt = _passwordHashingService.GenerateRandomSalt();
             var newUser = new AuthUser
             {
                 Username = request.Username,
                 Email = request.Email,
-                PasswordHash = HashPassword(request.Password),
+                Salt = salt,
+                PasswordHash = _passwordHashingService.HashPassword(request.Password, salt),
                 Role = request.Role,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
@@ -277,17 +281,5 @@ public class AuthController : ControllerBase
         }
     }
 
-    private static string HashPassword(string password)
-    {
-        using var sha256 = SHA256.Create();
-        var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password + "alt"));
-        return Convert.ToBase64String(hashedBytes);
-    }
-
-    private static bool VerifyPassword(string password, string hashedPassword)
-    {
-        var hashedInput = HashPassword(password);
-        return hashedInput == hashedPassword;
-    }
 }
 
