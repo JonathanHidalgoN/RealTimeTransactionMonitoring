@@ -1,8 +1,7 @@
-using System.Security.Cryptography;
-using System.Text;
 using FinancialMonitoring.Abstractions;
+using FinancialMonitoring.Models;
 
-namespace FinancialMonitoring.Models;
+namespace FinancialMonitoring.Api.Services;
 
 /// <summary>
 /// In-memory implementation of user repository for development and testing
@@ -14,6 +13,10 @@ public class InMemoryUserRepository : IUserRepository
 
     public InMemoryUserRepository()
     {
+        var adminSalt = GenerateRandomSalt();
+        var analystSalt = GenerateRandomSalt();
+        var viewerSalt = GenerateRandomSalt();
+
         _users = new List<AuthUser>
         {
             new()
@@ -21,7 +24,8 @@ public class InMemoryUserRepository : IUserRepository
                 Id = 1,
                 Username = "admin",
                 Email = "admin@financialmonitoring.com",
-                PasswordHash = HashPassword("Admin123!"),
+                Salt = adminSalt,
+                PasswordHash = _passwordHashingService.HashPassword("Admin123!", adminSalt),
                 Role = AuthUserRole.Admin,
                 FirstName = "System",
                 LastName = "Administrator",
@@ -33,7 +37,8 @@ public class InMemoryUserRepository : IUserRepository
                 Id = 2,
                 Username = "analyst",
                 Email = "analyst@financialmonitoring.com",
-                PasswordHash = HashPassword("Analyst123!"),
+                Salt = analystSalt,
+                PasswordHash = _passwordHashingService.HashPassword("Analyst123!", analystSalt),
                 Role = AuthUserRole.Analyst,
                 FirstName = "Financial",
                 LastName = "Analyst",
@@ -45,7 +50,8 @@ public class InMemoryUserRepository : IUserRepository
                 Id = 3,
                 Username = "viewer",
                 Email = "viewer@financialmonitoring.com",
-                PasswordHash = HashPassword("Viewer123!"),
+                Salt = viewerSalt,
+                PasswordHash = _passwordHashingService.HashPassword("Viewer123!", viewerSalt),
                 Role = AuthUserRole.Viewer,
                 FirstName = "Report",
                 LastName = "Viewer",
@@ -107,10 +113,4 @@ public class InMemoryUserRepository : IUserRepository
         return Task.CompletedTask;
     }
 
-    private static string HashPassword(string password)
-    {
-        using var sha256 = SHA256.Create();
-        var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password + "FinancialMonitoringSalt"));
-        return Convert.ToBase64String(hashedBytes);
-    }
 }
