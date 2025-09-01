@@ -1,3 +1,4 @@
+using FinancialMonitoring.Models;
 namespace FinancialMonitoring.Abstractions;
 
 /// <summary>
