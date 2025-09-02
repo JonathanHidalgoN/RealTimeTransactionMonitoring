@@ -79,12 +79,6 @@ public class Program
     /// </summary>
     private static void ConfigureProductionServices(IHostApplicationBuilder builder)
     {
-        // Configure Azure services settings
-        builder.Services.AddOptions<MessagingSettings>()
-            .Bind(builder.Configuration.GetSection(AppConstants.EventHubsConfigPrefix))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
         builder.Services.AddOptions<ApplicationInsightsSettings>()
             .Bind(builder.Configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix))
             .ValidateDataAnnotations()
