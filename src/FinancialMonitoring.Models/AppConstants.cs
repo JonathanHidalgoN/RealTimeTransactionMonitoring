@@ -13,6 +13,12 @@ public static class AppConstants
     public const string EventHubsConfigPrefix = "EventHubs";
     public const string MongoDbConfigPrefix = "MongoDb";
     public const string KafkaDefaultName = "Kafka";
+    public const string ApiSettingsConfigPrefix = "ApiSettings";
+    public const string CacheSettingsConfigPrefix = "CacheSettings";
+    public const string ResponseCacheSettingsConfigPrefix = "ResponseCacheSettings";
+    public const string RateLimitSettingsConfigPrefix = "RateLimitSettings";
+    public const string JwtSettingsConfigPrefix = "JwtSettings";
+    public const string CorsConfigPrefix = "Cors";
 
     //Env variables names
     public const string runTimeEnvVarName = "DOTNET_ENVIRONMENT";
@@ -44,6 +50,10 @@ public static class AppConstants
     // Health Check Endpoints
     public const string HealthCheckEndpoint = "/healthz";
     public const string DetailedHealthCheckEndpoint = "/health";
+    
+    // Health Check Names
+    public const string ApiHealthCheckName = "api";
+    public const string DatabaseHealthCheckName = "database";
 
     // Route Helpers
     public static class Routes

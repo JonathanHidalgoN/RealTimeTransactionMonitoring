@@ -110,31 +110,31 @@ public partial class Program
 
         ConfigureApiServices(builder);
         builder.Services.AddHealthChecks()
-            .AddCheck<ApiHealthCheck>("api")
-            .AddCheck<DatabaseHealthCheck>("database");
+            .AddCheck<ApiHealthCheck>(AppConstants.ApiHealthCheckName)
+            .AddCheck<DatabaseHealthCheck>(AppConstants.DatabaseHealthCheckName);
 
         builder.Services.AddOptions<ApiSettings>()
-            .Bind(builder.Configuration.GetSection("ApiSettings"))
+            .Bind(builder.Configuration.GetSection(AppConstants.ApiSettingsConfigPrefix))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
         builder.Services.AddOptions<CacheSettings>()
-            .Bind(builder.Configuration.GetSection("CacheSettings"))
+            .Bind(builder.Configuration.GetSection(AppConstants.CacheSettingsConfigPrefix))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
         builder.Services.AddOptions<ResponseCacheSettings>()
-            .Bind(builder.Configuration.GetSection("ResponseCacheSettings"))
+            .Bind(builder.Configuration.GetSection(AppConstants.ResponseCacheSettingsConfigPrefix))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
         builder.Services.AddOptions<RateLimitSettings>()
-            .Bind(builder.Configuration.GetSection("RateLimitSettings"))
+            .Bind(builder.Configuration.GetSection(AppConstants.RateLimitSettingsConfigPrefix))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
         builder.Services.AddOptions<JwtSettings>()
-            .Bind(builder.Configuration.GetSection("JwtSettings"))
+            .Bind(builder.Configuration.GetSection(AppConstants.JwtSettingsConfigPrefix))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
@@ -158,10 +158,10 @@ public partial class Program
     /// </summary>
     private static void ConfigureCors(WebApplicationBuilder builder, PortSettings portSettings)
     {
-        builder.Services.Configure<CorsSettings>(builder.Configuration.GetSection("Cors"));
+        builder.Services.Configure<CorsSettings>(builder.Configuration.GetSection(AppConstants.CorsConfigPrefix));
 
         var corsSettings = new CorsSettings();
-        builder.Configuration.GetSection("Cors").Bind(corsSettings);
+        builder.Configuration.GetSection(AppConstants.CorsConfigPrefix).Bind(corsSettings);
 
         var allowedOrigins = corsSettings.AllowedOrigins.Length > 0
             ? corsSettings.AllowedOrigins
@@ -191,8 +191,8 @@ public partial class Program
     /// </summary>
     private static void ConfigureCaching(WebApplicationBuilder builder)
     {
-        var cacheSettings = builder.Configuration.GetSection("CacheSettings").Get<CacheSettings>() ?? new CacheSettings();
-        var responseCacheSettings = builder.Configuration.GetSection("ResponseCacheSettings").Get<ResponseCacheSettings>() ?? new ResponseCacheSettings();
+        var cacheSettings = builder.Configuration.GetSection(AppConstants.CacheSettingsConfigPrefix).Get<CacheSettings>() ?? new CacheSettings();
+        var responseCacheSettings = builder.Configuration.GetSection(AppConstants.ResponseCacheSettingsConfigPrefix).Get<ResponseCacheSettings>() ?? new ResponseCacheSettings();
 
         builder.Services.AddResponseCaching(options =>
         {
@@ -245,7 +245,7 @@ public partial class Program
     /// </summary>
     private static void ConfigureRateLimiting(WebApplicationBuilder builder)
     {
-        var rateLimitSettings = builder.Configuration.GetSection("RateLimitSettings").Get<RateLimitSettings>() ?? new RateLimitSettings();
+        var rateLimitSettings = builder.Configuration.GetSection(AppConstants.RateLimitSettingsConfigPrefix).Get<RateLimitSettings>() ?? new RateLimitSettings();
 
         builder.Services.AddMemoryCache();
         builder.Services.AddInMemoryRateLimiting();
@@ -293,7 +293,7 @@ public partial class Program
             );
         });
 
-        var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>() ?? new JwtSettings();
+        var jwtSettings = builder.Configuration.GetSection(AppConstants.JwtSettingsConfigPrefix).Get<JwtSettings>() ?? new JwtSettings();
 
         builder.Services.AddAuthentication()
             .AddScheme<AuthenticationSchemeOptions, SecureApiKeyAuthenticationHandler>(
