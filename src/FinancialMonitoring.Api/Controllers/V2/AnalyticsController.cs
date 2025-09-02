@@ -38,7 +38,7 @@ public class AnalyticsController : ControllerBase
     /// <returns>Global transaction analytics.</returns>
     [HttpGet("overview")]
     [Authorize(Roles = "Admin,Analyst")]
-    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "AnalyticsCache")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.AnalyticsCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<TransactionAnalytics>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
@@ -74,7 +74,7 @@ public class AnalyticsController : ControllerBase
     /// <returns>Time series data for transaction counts.</returns>
     [HttpGet("timeseries/transactions")]
     [Authorize(Roles = "Admin,Analyst")]
-    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "TimeSeriesCache")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.TimeSeriesCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<List<TimeSeriesDataPoint>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -116,7 +116,7 @@ public class AnalyticsController : ControllerBase
     /// <returns>Time series data for anomaly counts.</returns>
     [HttpGet("timeseries/anomalies")]
     [Authorize(Roles = "Admin,Analyst")]
-    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "TimeSeriesCache")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.TimeSeriesCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<List<TimeSeriesDataPoint>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -157,7 +157,7 @@ public class AnalyticsController : ControllerBase
     /// <returns>Analytics data for top merchants.</returns>
     [HttpGet("merchants/top")]
     [Authorize(Roles = "Admin,Analyst")]
-    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "AnalyticsCache")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.AnalyticsCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<List<MerchantAnalytics>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -193,7 +193,7 @@ public class AnalyticsController : ControllerBase
     /// <returns>Analytics data grouped by merchant category.</returns>
     [HttpGet("merchants/categories")]
     [Authorize(Roles = "Admin,Analyst")]
-    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "AnalyticsCache")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.AnalyticsCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<List<MerchantAnalytics>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]

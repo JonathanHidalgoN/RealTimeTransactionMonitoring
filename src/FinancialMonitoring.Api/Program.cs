@@ -203,30 +203,24 @@ public partial class Program
 
         builder.Services.AddOutputCache(options =>
         {
-            // Base policy - configurable, default disabled for real-time systems
             options.AddBasePolicy(builder => builder.ConditionalExpire(cacheSettings.BasePolicyCacheSeconds));
 
-            // Transaction list cache - typically disabled for real-time data
-            options.AddPolicy("TransactionCache", builder =>
+            options.AddPolicy(AppConstants.TransactionCachePolicy, builder =>
                 builder.ConditionalExpire(cacheSettings.TransactionCacheSeconds,
                     b => b.SetVaryByQuery("pageNumber", "pageSize", "startDate", "endDate", "minAmount", "maxAmount")));
 
-            // Individual transaction cache - typically disabled
-            options.AddPolicy("TransactionByIdCache", builder =>
+            options.AddPolicy(AppConstants.TransactionByIdCachePolicy, builder =>
                 builder.ConditionalExpire(cacheSettings.TransactionByIdCacheSeconds,
                     b => b.SetVaryByRouteValue("id")));
 
-            // Anomalous transaction cache - typically disabled for real-time anomaly detection
-            options.AddPolicy("AnomalousTransactionCache", builder =>
+            options.AddPolicy(AppConstants.AnomalousTransactionCachePolicy, builder =>
                 builder.ConditionalExpire(cacheSettings.AnomalousTransactionCacheSeconds,
                     b => b.SetVaryByQuery("pageNumber", "pageSize")));
 
-            // Analytics cache - can be enabled for performance as aggregated data tolerates some staleness
-            options.AddPolicy("AnalyticsCache", builder =>
+            options.AddPolicy(AppConstants.AnalyticsCachePolicy, builder =>
                 builder.ConditionalExpire(cacheSettings.AnalyticsCacheSeconds));
 
-            // Time series cache - typically disabled for real-time charts
-            options.AddPolicy("TimeSeriesCache", builder =>
+            options.AddPolicy(AppConstants.TimeSeriesCachePolicy, builder =>
                 builder.ConditionalExpire(cacheSettings.TimeSeriesCacheSeconds,
                     b => b.SetVaryByQuery("hours", "intervalMinutes")));
         });

@@ -39,7 +39,7 @@ public class TransactionsController : ControllerBase
     /// <returns>A paginated result of transactions based on user permissions.</returns>
     [HttpGet]
     [Authorize(Roles = "Admin,Analyst,Viewer")]
-    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "TransactionCache")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.TransactionCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<Transaction>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -76,7 +76,7 @@ public class TransactionsController : ControllerBase
     /// <returns>The requested transaction if found and accessible; otherwise, a 404 Not Found or 403 Forbidden response.</returns>
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin,Analyst")]
-    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "TransactionByIdCache")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.TransactionByIdCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<Transaction>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
@@ -122,7 +122,7 @@ public class TransactionsController : ControllerBase
     /// <returns>A paginated result of anomalous transactions.</returns>
     [HttpGet("anomalies")]
     [Authorize(Roles = "Admin,Analyst")]
-    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "AnomalousTransactionCache")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.AnomalousTransactionCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<Transaction>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -159,7 +159,7 @@ public class TransactionsController : ControllerBase
     /// <returns>A paginated result of transactions matching the search criteria.</returns>
     [HttpPost("search")]
     [Authorize(Roles = "Admin,Analyst")]
-    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "TransactionCache")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.TransactionCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<Transaction>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]

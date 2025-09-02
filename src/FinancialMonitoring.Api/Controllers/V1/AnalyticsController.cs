@@ -36,7 +36,7 @@ public class AnalyticsController : ControllerBase
     /// </summary>
     /// <returns>Global transaction analytics.</returns>
     [HttpGet("overview")]
-    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "AnalyticsCache")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.AnalyticsCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<TransactionAnalytics>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status429TooManyRequests)]
@@ -59,7 +59,7 @@ public class AnalyticsController : ControllerBase
     /// <param name="intervalMinutes">Interval in minutes for data points (default: 60).</param>
     /// <returns>Time series data for transaction counts.</returns>
     [HttpGet("timeseries/transactions")]
-    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "TimeSeriesCache")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.TimeSeriesCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<List<TimeSeriesDataPoint>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -89,7 +89,7 @@ public class AnalyticsController : ControllerBase
     /// <param name="intervalMinutes">Interval in minutes for data points (default: 60).</param>
     /// <returns>Time series data for anomaly counts.</returns>
     [HttpGet("timeseries/anomalies")]
-    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "TimeSeriesCache")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.TimeSeriesCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<List<TimeSeriesDataPoint>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -118,7 +118,7 @@ public class AnalyticsController : ControllerBase
     /// <param name="count">Number of top merchants to return (default: 10).</param>
     /// <returns>Analytics data for top merchants.</returns>
     [HttpGet("merchants/top")]
-    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "AnalyticsCache")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.AnalyticsCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<List<MerchantAnalytics>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -141,7 +141,7 @@ public class AnalyticsController : ControllerBase
     /// </summary>
     /// <returns>Analytics data grouped by merchant category.</returns>
     [HttpGet("merchants/categories")]
-    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = "AnalyticsCache")]
+    [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.AnalyticsCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<List<MerchantAnalytics>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status429TooManyRequests)]

@@ -54,6 +54,13 @@ public static class AppConstants
     // Health Check Names
     public const string ApiHealthCheckName = "api";
     public const string DatabaseHealthCheckName = "database";
+    
+    // Cache Policy Names
+    public const string TransactionCachePolicy = "TransactionCache";
+    public const string TransactionByIdCachePolicy = "TransactionByIdCache";
+    public const string AnomalousTransactionCachePolicy = "AnomalousTransactionCache";
+    public const string AnalyticsCachePolicy = "AnalyticsCache";
+    public const string TimeSeriesCachePolicy = "TimeSeriesCache";
 
     // Route Helpers
     public static class Routes
