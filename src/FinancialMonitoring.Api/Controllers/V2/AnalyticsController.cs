@@ -37,7 +37,7 @@ public class AnalyticsController : ControllerBase
     /// </summary>
     /// <returns>Global transaction analytics.</returns>
     [HttpGet("overview")]
-    [Authorize(Roles = "Admin,Analyst")]
+    [Authorize(Roles = AppConstants.AdminAnalystRoles)]
     [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.AnalyticsCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<TransactionAnalytics>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -73,7 +73,7 @@ public class AnalyticsController : ControllerBase
     /// <param name="intervalMinutes">Interval in minutes for data points (default: 60).</param>
     /// <returns>Time series data for transaction counts.</returns>
     [HttpGet("timeseries/transactions")]
-    [Authorize(Roles = "Admin,Analyst")]
+    [Authorize(Roles = AppConstants.AdminAnalystRoles)]
     [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.TimeSeriesCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<List<TimeSeriesDataPoint>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -115,7 +115,7 @@ public class AnalyticsController : ControllerBase
     /// <param name="intervalMinutes">Interval in minutes for data points (default: 60).</param>
     /// <returns>Time series data for anomaly counts.</returns>
     [HttpGet("timeseries/anomalies")]
-    [Authorize(Roles = "Admin,Analyst")]
+    [Authorize(Roles = AppConstants.AdminAnalystRoles)]
     [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.TimeSeriesCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<List<TimeSeriesDataPoint>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -156,7 +156,7 @@ public class AnalyticsController : ControllerBase
     /// <param name="count">Number of top merchants to return (default: 10).</param>
     /// <returns>Analytics data for top merchants.</returns>
     [HttpGet("merchants/top")]
-    [Authorize(Roles = "Admin,Analyst")]
+    [Authorize(Roles = AppConstants.AdminAnalystRoles)]
     [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.AnalyticsCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<List<MerchantAnalytics>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -192,7 +192,7 @@ public class AnalyticsController : ControllerBase
     /// </summary>
     /// <returns>Analytics data grouped by merchant category.</returns>
     [HttpGet("merchants/categories")]
-    [Authorize(Roles = "Admin,Analyst")]
+    [Authorize(Roles = AppConstants.AdminAnalystRoles)]
     [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.AnalyticsCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<List<MerchantAnalytics>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]

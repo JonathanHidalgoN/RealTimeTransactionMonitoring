@@ -50,17 +50,26 @@ public static class AppConstants
     // Health Check Endpoints
     public const string HealthCheckEndpoint = "/healthz";
     public const string DetailedHealthCheckEndpoint = "/health";
-    
+
     // Health Check Names
     public const string ApiHealthCheckName = "api";
     public const string DatabaseHealthCheckName = "database";
-    
+
     // Cache Policy Names
     public const string TransactionCachePolicy = "TransactionCache";
     public const string TransactionByIdCachePolicy = "TransactionByIdCache";
     public const string AnomalousTransactionCachePolicy = "AnomalousTransactionCache";
     public const string AnalyticsCachePolicy = "AnalyticsCache";
     public const string TimeSeriesCachePolicy = "TimeSeriesCache";
+
+    // Authorization Role Names
+    public const string AdminRole = "Admin";
+    public const string AnalystRole = "Analyst";
+    public const string ViewerRole = "Viewer";
+
+    // Common combinations
+    public const string AdminAnalystRoles = $"{AdminRole},{AnalystRole}";
+    public const string AllRoles = $"{AdminRole},{AnalystRole},{ViewerRole}";
 
     // Route Helpers
     public static class Routes

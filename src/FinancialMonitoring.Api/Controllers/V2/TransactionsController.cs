@@ -38,7 +38,7 @@ public class TransactionsController : ControllerBase
     /// <param name="request">The query parameters for filtering and pagination.</param>
     /// <returns>A paginated result of transactions based on user permissions.</returns>
     [HttpGet]
-    [Authorize(Roles = "Admin,Analyst,Viewer")]
+    [Authorize(Roles = AppConstants.AllRoles)]
     [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.TransactionCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<Transaction>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -75,7 +75,7 @@ public class TransactionsController : ControllerBase
     /// <param name="id">The ID of the transaction to retrieve.</param>
     /// <returns>The requested transaction if found and accessible; otherwise, a 404 Not Found or 403 Forbidden response.</returns>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Analyst")]
+    [Authorize(Roles = AppConstants.AdminAnalystRoles)]
     [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.TransactionByIdCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<Transaction>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -121,7 +121,7 @@ public class TransactionsController : ControllerBase
     /// <param name="request">The query parameters for filtering and pagination.</param>
     /// <returns>A paginated result of anomalous transactions.</returns>
     [HttpGet("anomalies")]
-    [Authorize(Roles = "Admin,Analyst")]
+    [Authorize(Roles = AppConstants.AdminAnalystRoles)]
     [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.AnomalousTransactionCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<Transaction>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -158,7 +158,7 @@ public class TransactionsController : ControllerBase
     /// <param name="searchRequest">The search criteria and pagination parameters.</param>
     /// <returns>A paginated result of transactions matching the search criteria.</returns>
     [HttpPost("search")]
-    [Authorize(Roles = "Admin,Analyst")]
+    [Authorize(Roles = AppConstants.AdminAnalystRoles)]
     [Microsoft.AspNetCore.OutputCaching.OutputCache(PolicyName = AppConstants.TransactionCachePolicy)]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<Transaction>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]

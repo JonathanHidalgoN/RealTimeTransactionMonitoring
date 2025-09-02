@@ -184,7 +184,7 @@ public class AuthController : ControllerBase
     /// <param name="request">User registration data</param>
     /// <returns>Created user information</returns>
     [HttpPost("register")]
-    [Authorize(Policy = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + "," + SecureApiKeyAuthenticationDefaults.SchemeName)]
+    [Authorize(Policy = AppConstants.AdminRole, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + "," + SecureApiKeyAuthenticationDefaults.SchemeName)]
     [ProducesResponseType(typeof(ApiResponse<RegisterResponse>), 201)]
     [ProducesResponseType(typeof(ApiErrorResponse), 400)]
     [ProducesResponseType(typeof(ApiErrorResponse), 409)]

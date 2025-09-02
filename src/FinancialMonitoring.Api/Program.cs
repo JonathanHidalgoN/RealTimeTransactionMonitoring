@@ -324,9 +324,9 @@ public partial class Program
 
         builder.Services.AddAuthorization(options =>
         {
-            options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
-            options.AddPolicy("Viewer", policy => policy.RequireRole("Viewer"));
-            options.AddPolicy("Analyst", policy => policy.RequireRole("Analyst"));
+            options.AddPolicy(AppConstants.AdminRole, policy => policy.RequireRole(AppConstants.AdminRole));
+            options.AddPolicy(AppConstants.ViewerRole, policy => policy.RequireRole(AppConstants.ViewerRole));
+            options.AddPolicy(AppConstants.AnalystRole, policy => policy.RequireRole(AppConstants.AnalystRole));
         });
     }
 
