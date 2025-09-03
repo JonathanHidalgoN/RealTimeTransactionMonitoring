@@ -18,7 +18,7 @@ public class JwtTokenServiceTests
     {
         _jwtSettings = new JwtSettings
         {
-            SecretKey = "test-secret-key",
+            SecretKey = "test-secret-key-that-is-long-enough-for-hmac-sha256-algorithm",
             Issuer = "TestIssuer",
             Audience = "TestAudience",
             AccessTokenExpiryMinutes = 15,
