@@ -29,10 +29,10 @@ public class PasswordHashingService : IPasswordHashingService
 
     public string HashPassword(string password, string salt)
     {
-        if (string.IsNullOrEmpty(password))
+        if (string.IsNullOrWhiteSpace(password))
             throw new ArgumentException("Password cannot be null or empty", nameof(password));
 
-        if (string.IsNullOrEmpty(salt))
+        if (string.IsNullOrWhiteSpace(salt))
             throw new ArgumentException("Salt cannot be null or empty", nameof(salt));
 
         using var sha256 = SHA256.Create();
@@ -45,14 +45,14 @@ public class PasswordHashingService : IPasswordHashingService
 
     public bool VerifyPassword(string password, string hashedPassword, string salt)
     {
-        if (string.IsNullOrEmpty(password))
-            return false;
+        if (string.IsNullOrWhiteSpace(password))
+            throw new ArgumentException("Password cannot be null or empty", nameof(password));
 
-        if (string.IsNullOrEmpty(hashedPassword))
-            return false;
+        if (string.IsNullOrWhiteSpace(hashedPassword))
+            throw new ArgumentException("Hashed password cannot be null or empty", nameof(hashedPassword));
 
-        if (string.IsNullOrEmpty(salt))
-            return false;
+        if (string.IsNullOrWhiteSpace(salt))
+            throw new ArgumentException("Salt cannot be null or empty", nameof(salt));
 
         try
         {
