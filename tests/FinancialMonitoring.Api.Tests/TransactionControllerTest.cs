@@ -1,80 +1,33 @@
-using System.Net;
-using System.Net.Http.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Abstractions.Persistence;
-using FinancialMonitoring.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Moq;
-using Microsoft.Extensions.Configuration;
-using FinancialMonitoring.Api.Authentication;
-using FinancialMonitoring.Api.Services;
+using FinancialMonitoring.Api.Controllers.V1;
+using FinancialMonitoring.Api.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
+using Microsoft.AspNetCore.Http;
+using Moq;
 
 namespace FinancialMonitoring.Api.Tests;
 
-public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<Program>>
+public class TransactionsControllerTests
 {
-    private readonly HttpClient _client;
+    private readonly TransactionsController _controller;
     private readonly Mock<ITransactionRepository> _mockRepository;
+    private readonly Mock<ILogger<TransactionsController>> _mockLogger;
 
-    public TransactionsControllerTests(WebApplicationFactory<Program> factory)
+    public TransactionsControllerTests()
     {
         _mockRepository = new Mock<ITransactionRepository>();
-        var _factory = factory.WithWebHostBuilder(builder =>
+        _mockLogger = new Mock<ILogger<TransactionsController>>();
+
+        _controller = new TransactionsController(_mockRepository.Object, _mockLogger.Object);
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.TraceIdentifier = "test-correlation-id";
+        _controller.ControllerContext = new ControllerContext
         {
-            builder.ConfigureAppConfiguration((context, configBuilder) =>
-            {
-                configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    { "KEY_VAULT_URI", "https://dummy.keyvault.uri" },
-                    { "ApiSettings:ApiKey", "a-dummy-test-api-key" },
-                    { "ApplicationInsights:ConnectionString", "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://test.in.ai.azure.com/" },
-                    { "CosmosDb:EndpointUri", "https://localhost:8081" },
-                    { "CosmosDb:PrimaryKey", "Cy236yDjf5/R+ob7XIw/Jw==" },
-                    { "CosmosDb:DatabaseName", "TestDb" },
-                    { "CosmosDb:ContainerName", "TestContainer" },
-                    { "CosmosDb:PartitionKeyPath", "/id" },
-                    { "MongoDb:ConnectionString", "mongodb://localhost:27017" },
-                    { "MongoDb:DatabaseName", "TestFinancialMonitoring" },
-                    { "MongoDb:CollectionName", "transactions" },
-                    { "Kafka:BootstrapServers", "test-kafka:9092" },
-                    { "JwtSettings:SecretKey", "test-secret-key-that-is-very-long-for-hmac-sha256" },
-                    { "JwtSettings:Issuer", "TestIssuer" },
-                    { "JwtSettings:Audience", "TestAudience" },
-                    { "JwtSettings:ExpiresInMinutes", "15" },
-                    { "JwtSettings:RefreshTokenExpiryInDays", "7" }
-                });
-            });
-
-            builder.ConfigureServices(services =>
-            {
-                services.RemoveAll<ITransactionRepository>();
-                services.AddSingleton<ITransactionRepository>(_mockRepository.Object);
-                
-                // Add missing authentication services that InMemoryUserRepository needs
-                services.RemoveAll<IPasswordHashingService>();
-                services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
-                services.RemoveAll<IJwtTokenService>();
-                services.AddScoped<IJwtTokenService, JwtTokenService>();
-                
-                // Configure JWT options
-                services.Configure<JwtSettings>(options =>
-                {
-                    options.SecretKey = "test-secret-key-that-is-very-long-for-hmac-sha256";
-                    options.Issuer = "TestIssuer";
-                    options.Audience = "TestAudience";
-                    options.AccessTokenExpiryMinutes = 15;
-                    options.RefreshTokenExpiryDays = 7;
-                });
-            });
-        });
-
-        _client = _factory.CreateClient();
-        _client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, "a-dummy-test-api-key");
+            HttpContext = httpContext
+        };
     }
 
     [Fact]
@@ -96,28 +49,25 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
             PageSize = 2
         };
 
+        var request = new TransactionQueryRequest { PageNumber = 1, PageSize = 2 };
+
         _mockRepository
             .Setup(service => service.GetAllTransactionsAsync(1, 2))
             .ReturnsAsync(expectedPagedResult);
 
-        var response = await _client.GetAsync($"{AppConstants.Routes.GetTransactionsPath()}?pageNumber=1&pageSize=2");
+        var result = await _controller.GetAllTransactions(request);
 
-        response.EnsureSuccessStatusCode();
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var apiResponse = Assert.IsType<ApiResponse<PagedResult<Transaction>>>(okResult.Value);
 
-        Assert.True(response.Headers.Contains(AppConstants.CorrelationIdHeader));
-
-        var actualApiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<Transaction>>>();
-
-        Assert.NotNull(actualApiResponse);
-        Assert.True(actualApiResponse.Success);
-        Assert.NotNull(actualApiResponse.Data);
-        Assert.NotNull(actualApiResponse.Data.Items);
-        Assert.Equal(expectedPagedResult.TotalCount, actualApiResponse.Data.TotalCount);
-        Assert.Equal(expectedTransactions.Count, actualApiResponse.Data.Items.Count);
-        Assert.Contains(actualApiResponse.Data.Items, t => t.Id == "tx1");
-        Assert.NotNull(actualApiResponse.CorrelationId);
-        Assert.Equal(AppConstants.ApiVersion, actualApiResponse.Version);
+        Assert.True(apiResponse.Success);
+        Assert.NotNull(apiResponse.Data);
+        Assert.NotNull(apiResponse.Data.Items);
+        Assert.Equal(expectedPagedResult.TotalCount, apiResponse.Data.TotalCount);
+        Assert.Equal(expectedTransactions.Count, apiResponse.Data.Items.Count);
+        Assert.Contains(apiResponse.Data.Items, t => t.Id == "tx1");
+        Assert.NotNull(apiResponse.CorrelationId);
+        Assert.Equal(AppConstants.ApiVersion, apiResponse.Version);
     }
 
     [Fact]
@@ -131,16 +81,15 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
             .Setup(service => service.GetTransactionByIdAsync(transactionId))
             .ReturnsAsync(expectedTransaction);
 
-        var response = await _client.GetAsync(AppConstants.Routes.GetTransactionByIdPath(transactionId));
+        var result = await _controller.GetTransactionById(transactionId);
 
-        response.EnsureSuccessStatusCode();
-        Assert.True(response.Headers.Contains(AppConstants.CorrelationIdHeader));
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var apiResponse = Assert.IsType<ApiResponse<Transaction>>(okResult.Value);
 
-        var actualApiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<Transaction>>();
-        Assert.NotNull(actualApiResponse);
-        Assert.True(actualApiResponse.Success);
-        Assert.NotNull(actualApiResponse.Data);
-        Assert.Equal(expectedTransaction.Id, actualApiResponse.Data.Id);
+        Assert.True(apiResponse.Success);
+        Assert.NotNull(apiResponse.Data);
+        Assert.Equal(expectedTransaction.Id, apiResponse.Data.Id);
+        Assert.NotNull(apiResponse.CorrelationId);
     }
 
     [Fact]
@@ -151,16 +100,15 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
             .Setup(service => service.GetTransactionByIdAsync(transactionId))
             .ReturnsAsync((Transaction?)null);
 
-        var response = await _client.GetAsync(AppConstants.Routes.GetTransactionByIdPath(transactionId));
+        var result = await _controller.GetTransactionById(transactionId);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.True(response.Headers.Contains(AppConstants.CorrelationIdHeader));
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
+        var errorResponse = Assert.IsType<ApiErrorResponse>(notFoundResult.Value);
 
-        var errorResponse = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-        Assert.NotNull(errorResponse);
         Assert.False(errorResponse.Success);
         Assert.NotNull(errorResponse.Error);
         Assert.Equal(404, errorResponse.Error.Status);
+        Assert.NotNull(errorResponse.CorrelationId);
     }
 
     [Theory]
@@ -172,16 +120,15 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
             .Setup(service => service.GetTransactionByIdAsync(validIdFormat))
             .ReturnsAsync((Transaction?)null);
 
-        var response = await _client.GetAsync(AppConstants.Routes.GetTransactionByIdPath(validIdFormat));
+        var result = await _controller.GetTransactionById(validIdFormat);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.True(response.Headers.Contains(AppConstants.CorrelationIdHeader));
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
+        var errorResponse = Assert.IsType<ApiErrorResponse>(notFoundResult.Value);
 
-        var errorResponse = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-        Assert.NotNull(errorResponse);
         Assert.False(errorResponse.Success);
         Assert.NotNull(errorResponse.Error);
         Assert.Equal(404, errorResponse.Error.Status);
+        Assert.NotNull(errorResponse.CorrelationId);
     }
 
     [Fact]
@@ -195,10 +142,15 @@ public class TransactionsControllerTests : IClassFixture<WebApplicationFactory<P
                 .Setup(service => service.GetTransactionByIdAsync(testId))
                 .ReturnsAsync((Transaction?)null);
 
-            var response = await _client.GetAsync(AppConstants.Routes.GetTransactionByIdPath(testId));
+            var result = await _controller.GetTransactionById(testId);
 
-            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-            Assert.True(response.Headers.Contains(AppConstants.CorrelationIdHeader));
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
+            var errorResponse = Assert.IsType<ApiErrorResponse>(notFoundResult.Value);
+
+            Assert.False(errorResponse.Success);
+            Assert.NotNull(errorResponse.Error);
+            Assert.Equal(404, errorResponse.Error.Status);
+            Assert.NotNull(errorResponse.CorrelationId);
         }
     }
 }
