@@ -1,6 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 using FinancialMonitoring.Models;
 using Microsoft.Extensions.Options;
@@ -59,23 +58,44 @@ public class JwtTokenService : IJwtTokenService
 
     public string GenerateRefreshToken()
     {
-        var randomBytes = new byte[32];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomBytes);
-        var refreshToken = Convert.ToBase64String(randomBytes);
+        return GenerateRefreshToken(null);
+    }
+
+    public string GenerateRefreshToken(int? userId)
+    {
+        var refreshToken = Guid.NewGuid().ToString();
 
         _refreshTokens[refreshToken] = new RefreshTokenData
         {
             CreatedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryDays)
+            ExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryDays),
+            UserId = userId
         };
 
-        _logger.LogInformation("Generated refresh token");
+        _logger.LogInformation("Generated refresh token for user {UserId}", userId);
         return refreshToken;
+    }
+
+    public void StoreRefreshToken(string refreshToken, int userId)
+    {
+        _refreshTokens[refreshToken] = new RefreshTokenData
+        {
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryDays),
+            UserId = userId
+        };
+
+        _logger.LogInformation("Stored refresh token for user {UserId}", userId);
     }
 
     public int? ValidateRefreshToken(string refreshToken)
     {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            _logger.LogWarning("Null or empty refresh token provided");
+            return null;
+        }
+
         if (!_refreshTokens.TryGetValue(refreshToken, out var tokenData))
         {
             _logger.LogWarning("Invalid refresh token provided");
