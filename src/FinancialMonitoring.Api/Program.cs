@@ -7,7 +7,6 @@ using FinancialMonitoring.Api.Extensions;
 using FinancialMonitoring.Api.Middleware;
 using FinancialMonitoring.Api.HealthChecks;
 using FinancialMonitoring.Api.Services;
-using FinancialMonitoring.Api.Swagger;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Models.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -419,9 +418,6 @@ public partial class Program
                 c.IncludeXmlComments(xmlPath);
             }
 
-            c.DocumentFilter<RateLimitDocumentFilter>();
-
-            c.OperationFilter<CorrelationIdOperationFilter>();
         });
     }
 
