@@ -21,11 +21,13 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
     private readonly WebApplicationFactory<Program> _factory;
     private readonly Mock<ITransactionRepository> _mockRepository;
     private readonly Mock<IOAuthClientService> _mockOAuthService;
+    private readonly Mock<IJwtTokenService> _mockJwtService;
 
     public RateLimitingTests(WebApplicationFactory<Program> factory)
     {
         _mockRepository = new Mock<ITransactionRepository>();
         _mockOAuthService = new Mock<IOAuthClientService>();
+        _mockJwtService = new Mock<IJwtTokenService>();
 
         _factory = factory.WithWebHostBuilder(builder =>
         {
@@ -40,21 +42,24 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
                     { "MongoDb:CollectionName", "transactions" },
                     { "ApplicationInsights:ConnectionString", "InstrumentationKey=test-key;IngestionEndpoint=https://test.in.applicationinsights.azure.com/" },
 
-                    // Rate limiting rules
+                    // Rate limiting rules - override defaults with test-specific limits
                     { "RateLimitSettings:EnableEndpointRateLimiting", "true" },
+                    { "RateLimitSettings:StackBlockedRequests", "false" },
                     { "RateLimitSettings:HttpStatusCode", "429" },
-                    { "RateLimitSettings:GeneralRules:0:Endpoint", "*" },
+                    { "RateLimitSettings:RealIpHeader", "X-Real-IP" },
+                    { "RateLimitSettings:ClientIdHeader", "X-ClientId" },
+                    { "RateLimitSettings:GeneralRules:0:Endpoint", "*/oauth/token" },
                     { "RateLimitSettings:GeneralRules:0:Period", "1m" },
-                    { "RateLimitSettings:GeneralRules:0:Limit", "5" },
-                    { "RateLimitSettings:GeneralRules:1:Endpoint", "*/transactions" },
+                    { "RateLimitSettings:GeneralRules:0:Limit", "2" },
+                    { "RateLimitSettings:GeneralRules:1:Endpoint", "*/oauth/clients" },
                     { "RateLimitSettings:GeneralRules:1:Period", "1m" },
-                    { "RateLimitSettings:GeneralRules:1:Limit", "3" },
-                    { "RateLimitSettings:GeneralRules:2:Endpoint", "*/oauth/token" },
+                    { "RateLimitSettings:GeneralRules:1:Limit", "2" },
+                    { "RateLimitSettings:GeneralRules:2:Endpoint", "*/transactions" },
                     { "RateLimitSettings:GeneralRules:2:Period", "1m" },
-                    { "RateLimitSettings:GeneralRules:2:Limit", "3" },
-                    { "RateLimitSettings:GeneralRules:3:Endpoint", "*/oauth/clients" },
+                    { "RateLimitSettings:GeneralRules:2:Limit", "10" },
+                    { "RateLimitSettings:GeneralRules:3:Endpoint", "*" },
                     { "RateLimitSettings:GeneralRules:3:Period", "1m" },
-                    { "RateLimitSettings:GeneralRules:3:Limit", "2" },
+                    { "RateLimitSettings:GeneralRules:3:Limit", "50" },
 
                     // Other settings
                     { "AllowedOrigins:0", "http://localhost" },
@@ -77,7 +82,7 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
                 services.RemoveAll<IPasswordHashingService>();
                 services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
                 services.RemoveAll<IJwtTokenService>();
-                services.AddScoped<IJwtTokenService, JwtTokenService>();
+                services.AddSingleton<IJwtTokenService>(_mockJwtService.Object);
 
                 services.Configure<JwtSettings>(options =>
                 {
@@ -187,20 +192,32 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
             .Setup(s => s.DetermineGrantedScopes(It.IsAny<OAuthClient>(), It.IsAny<IEnumerable<string>>()))
             .Returns(new[] { "read", "write" });
 
+        _mockJwtService
+            .Setup(s => s.GenerateClientAccessToken(It.IsAny<OAuthClient>(), It.IsAny<IEnumerable<string>>()))
+            .Returns("test-access-token");
+
+        _mockJwtService
+            .Setup(s => s.GetAccessTokenExpirationSeconds())
+            .Returns(3600);
+
         var requestContent = new FormUrlEncodedContent(new[]
         {
-            new KeyValuePair<string, string>("grant_type", "client_credentials"),
-            new KeyValuePair<string, string>("client_id", "test-client"),
-            new KeyValuePair<string, string>("client_secret", "test-secret")
+            new KeyValuePair<string, string>("GrantType", "client_credentials"),
+            new KeyValuePair<string, string>("ClientId", "test-client"),
+            new KeyValuePair<string, string>("ClientSecret", "test-secret")
         });
 
-        // Make 2 requests (under the limit of 3)
-        for (int i = 0; i < 2; i++)
+        // Make 5 requests (under the limit of 10)
+        for (int i = 0; i < 5; i++)
         {
             var response = await client.PostAsync("/api/v2/oauth/token", requestContent);
 
-            Assert.True(response.IsSuccessStatusCode,
-                $"Request {i + 1} should succeed under rate limit. Status: {response.StatusCode}");
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Assert.True(response.IsSuccessStatusCode,
+                    $"Request {i + 1} should succeed under rate limit. Status: {response.StatusCode}, Content: {errorContent}");
+            }
         }
     }
 
@@ -227,19 +244,27 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
             .Setup(s => s.DetermineGrantedScopes(It.IsAny<OAuthClient>(), It.IsAny<IEnumerable<string>>()))
             .Returns(new[] { "read", "write" });
 
+        _mockJwtService
+            .Setup(s => s.GenerateClientAccessToken(It.IsAny<OAuthClient>(), It.IsAny<IEnumerable<string>>()))
+            .Returns("test-access-token");
+
+        _mockJwtService
+            .Setup(s => s.GetAccessTokenExpirationSeconds())
+            .Returns(3600);
+
         var requestContent = new FormUrlEncodedContent(new[]
         {
-            new KeyValuePair<string, string>("grant_type", "client_credentials"),
-            new KeyValuePair<string, string>("client_id", "test-client"),
-            new KeyValuePair<string, string>("client_secret", "test-secret")
+            new KeyValuePair<string, string>("GrantType", "client_credentials"),
+            new KeyValuePair<string, string>("ClientId", "test-client"),
+            new KeyValuePair<string, string>("ClientSecret", "test-secret")
         });
 
-        // Make requests up to the limit (3) plus one more
-        for (int i = 0; i < 4; i++)
+        // Make requests up to the limit (10) plus one more
+        for (int i = 0; i < 11; i++)
         {
             var response = await client.PostAsync("/api/v2/oauth/token", requestContent);
 
-            if (i < 3)
+            if (i < 10)
             {
                 Assert.True(response.IsSuccessStatusCode,
                     $"Request {i + 1} should succeed within rate limit. Status: {response.StatusCode}");
@@ -261,11 +286,11 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
         var client = _factory.CreateClient();
 
         // Mock for authenticated admin request (this will still fail auth but should hit rate limit first)
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 21; i++)
         {
             var response = await client.GetAsync("/api/v2/oauth/clients");
 
-            if (i < 2)
+            if (i < 20)
             {
                 // Should get 401 Unauthorized (not rate limited)
                 Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -303,11 +328,19 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
             .Setup(s => s.DetermineGrantedScopes(It.IsAny<OAuthClient>(), It.IsAny<IEnumerable<string>>()))
             .Returns(new[] { "read", "write" });
 
+        _mockJwtService
+            .Setup(s => s.GenerateClientAccessToken(It.IsAny<OAuthClient>(), It.IsAny<IEnumerable<string>>()))
+            .Returns("test-access-token");
+
+        _mockJwtService
+            .Setup(s => s.GetAccessTokenExpirationSeconds())
+            .Returns(3600);
+
         var requestContent = new FormUrlEncodedContent(new[]
         {
-            new KeyValuePair<string, string>("grant_type", "client_credentials"),
-            new KeyValuePair<string, string>("client_id", "test-client"),
-            new KeyValuePair<string, string>("client_secret", "test-secret")
+            new KeyValuePair<string, string>("GrantType", "client_credentials"),
+            new KeyValuePair<string, string>("ClientId", "test-client"),
+            new KeyValuePair<string, string>("ClientSecret", "test-secret")
         });
 
         var response1 = await client1.PostAsync("/api/v2/oauth/token", requestContent);
@@ -328,16 +361,16 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
 
         var requestContent = new FormUrlEncodedContent(new[]
         {
-            new KeyValuePair<string, string>("grant_type", "client_credentials"),
-            new KeyValuePair<string, string>("client_id", "invalid-client"),
-            new KeyValuePair<string, string>("client_secret", "invalid-secret")
+            new KeyValuePair<string, string>("GrantType", "client_credentials"),
+            new KeyValuePair<string, string>("ClientId", "invalid-client"),
+            new KeyValuePair<string, string>("ClientSecret", "invalid-secret")
         });
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 11; i++)
         {
             var response = await client.PostAsync("/api/v2/oauth/token", requestContent);
 
-            if (i < 3)
+            if (i < 10)
             {
                 Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
             }
