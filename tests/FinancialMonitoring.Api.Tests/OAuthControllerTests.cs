@@ -1,6 +1,5 @@
 using FinancialMonitoring.Abstractions;
 using FinancialMonitoring.Api.Controllers.V2;
-using FinancialMonitoring.Models;
 using FinancialMonitoring.Models.OAuth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,12 +20,12 @@ public class OAuthControllerTests
         _mockOAuthClientService = new Mock<IOAuthClientService>();
         _mockJwtTokenService = new Mock<IJwtTokenService>();
         _mockLogger = new Mock<ILogger<OAuthController>>();
-        
+
         _controller = new OAuthController(
             _mockOAuthClientService.Object,
             _mockJwtTokenService.Object,
             _mockLogger.Object);
-        
+
         var httpContext = new DefaultHttpContext();
         httpContext.TraceIdentifier = "test-correlation-id";
         _controller.ControllerContext = new ControllerContext
@@ -79,7 +78,7 @@ public class OAuthControllerTests
 
         var okResult = Assert.IsType<OkObjectResult>(result);
         var tokenResponse = Assert.IsType<TokenResponse>(okResult.Value);
-        
+
         Assert.Equal(accessToken, tokenResponse.AccessToken);
         Assert.Equal("Bearer", tokenResponse.TokenType);
         Assert.Equal(expiresInSeconds, tokenResponse.ExpiresIn);
@@ -102,7 +101,7 @@ public class OAuthControllerTests
 
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         var errorResponse = Assert.IsType<OAuthErrorResponse>(badRequestResult.Value);
-        
+
         Assert.Equal("unsupported_grant_type", errorResponse.Error);
         Assert.Contains("password", errorResponse.ErrorDescription);
     }
@@ -125,7 +124,7 @@ public class OAuthControllerTests
 
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
         var errorResponse = Assert.IsType<OAuthErrorResponse>(unauthorizedResult.Value);
-        
+
         Assert.Equal("invalid_client", errorResponse.Error);
     }
 
@@ -161,7 +160,7 @@ public class OAuthControllerTests
 
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         var errorResponse = Assert.IsType<OAuthErrorResponse>(badRequestResult.Value);
-        
+
         Assert.Equal("invalid_scope", errorResponse.Error);
     }
 
@@ -208,7 +207,7 @@ public class OAuthControllerTests
 
         var okResult = Assert.IsType<OkObjectResult>(result);
         var tokenResponse = Assert.IsType<TokenResponse>(okResult.Value);
-        
+
         Assert.Equal("read write analytics", tokenResponse.Scope);
     }
 
@@ -230,7 +229,7 @@ public class OAuthControllerTests
 
         var statusCodeResult = Assert.IsType<ObjectResult>(result);
         Assert.Equal(500, statusCodeResult.StatusCode);
-        
+
         var errorResponse = Assert.IsType<OAuthErrorResponse>(statusCodeResult.Value);
         Assert.Equal("invalid_request", errorResponse.Error);
     }
