@@ -3,7 +3,7 @@ using FinancialMonitoring.Api.Services;
 using FinancialMonitoring.Models;
 using Moq;
 
-namespace FinancialMonitoring.Api.Tests;
+namespace FinancialMonitoring.Api.Tests.Services;
 
 public class InMemoryUserRepositoryTests
 {

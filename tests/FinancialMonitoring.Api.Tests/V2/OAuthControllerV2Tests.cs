@@ -6,16 +6,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace FinancialMonitoring.Api.Tests;
+namespace FinancialMonitoring.Api.Tests.V2;
 
-public class OAuthControllerTests
+public class OAuthControllerV2Tests
 {
     private readonly OAuthController _controller;
     private readonly Mock<IOAuthClientService> _mockOAuthClientService;
     private readonly Mock<IJwtTokenService> _mockJwtTokenService;
     private readonly Mock<ILogger<OAuthController>> _mockLogger;
 
-    public OAuthControllerTests()
+    public OAuthControllerV2Tests()
     {
         _mockOAuthClientService = new Mock<IOAuthClientService>();
         _mockJwtTokenService = new Mock<IJwtTokenService>();

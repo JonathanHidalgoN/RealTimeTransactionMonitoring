@@ -5,16 +5,16 @@ using FinancialMonitoring.Models.OAuth;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace FinancialMonitoring.Api.Tests;
+namespace FinancialMonitoring.Api.Tests.V2;
 
-public class OAuthClientServiceTests
+public class OAuthClientServiceV2Tests
 {
     private readonly OAuthClientService _service;
     private readonly Mock<IOAuthClientRepository> _mockRepository;
     private readonly Mock<IPasswordHashingService> _mockPasswordService;
     private readonly Mock<ILogger<OAuthClientService>> _mockLogger;
 
-    public OAuthClientServiceTests()
+    public OAuthClientServiceV2Tests()
     {
         _mockRepository = new Mock<IOAuthClientRepository>();
         _mockPasswordService = new Mock<IPasswordHashingService>();

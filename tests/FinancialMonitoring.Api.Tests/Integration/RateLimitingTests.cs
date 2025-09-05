@@ -11,7 +11,7 @@ using FinancialMonitoring.Api.Authentication;
 using FinancialMonitoring.Api.Services;
 using FinancialMonitoring.Models.OAuth;
 
-namespace FinancialMonitoring.Api.Tests;
+namespace FinancialMonitoring.Api.Tests.Integration;
 
 /// <summary>
 /// Tests for rate limiting functionality including OAuth endpoints

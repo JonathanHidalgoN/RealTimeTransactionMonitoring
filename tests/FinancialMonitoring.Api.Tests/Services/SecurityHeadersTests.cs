@@ -10,7 +10,7 @@ using Microsoft.Extensions.Configuration;
 using FinancialMonitoring.Api.Authentication;
 using FinancialMonitoring.Api.Services;
 
-namespace FinancialMonitoring.Api.Tests;
+namespace FinancialMonitoring.Api.Tests.Services;
 
 /// <summary>
 /// Tests for security headers middleware functionality

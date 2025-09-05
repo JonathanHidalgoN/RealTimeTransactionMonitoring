@@ -7,15 +7,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Moq;
 
-namespace FinancialMonitoring.Api.Tests;
+namespace FinancialMonitoring.Api.Tests.V1;
 
-public class TransactionsControllerTests
+public class TransactionsControllerV1Tests
 {
     private readonly TransactionsController _controller;
     private readonly Mock<ITransactionRepository> _mockRepository;
     private readonly Mock<ILogger<TransactionsController>> _mockLogger;
 
-    public TransactionsControllerTests()
+    public TransactionsControllerV1Tests()
     {
         _mockRepository = new Mock<ITransactionRepository>();
         _mockLogger = new Mock<ILogger<TransactionsController>>();

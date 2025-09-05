@@ -5,9 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace FinancialMonitoring.Api.Tests;
+namespace FinancialMonitoring.Api.Tests.V2;
 
-public class AuthControllerTests
+public class AuthControllerV2Tests
 {
     private readonly AuthController _controller;
     private readonly Mock<ILogger<AuthController>> _mockLogger;
@@ -15,7 +15,7 @@ public class AuthControllerTests
     private readonly Mock<IJwtTokenService> _mockJwtService;
     private readonly Mock<IPasswordHashingService> _mockPasswordService;
 
-    public AuthControllerTests()
+    public AuthControllerV2Tests()
     {
         _mockLogger = new Mock<ILogger<AuthController>>();
         _mockUserRepository = new Mock<IUserRepository>();

@@ -2,7 +2,7 @@ using FinancialMonitoring.Api.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace FinancialMonitoring.Api.Tests;
+namespace FinancialMonitoring.Api.Tests.Services;
 
 public class PasswordHashingServiceTests
 {

@@ -1,7 +1,7 @@
 using FinancialMonitoring.Api.Validation;
 using FluentValidation.TestHelper;
 
-namespace FinancialMonitoring.Api.Tests;
+namespace FinancialMonitoring.Api.Tests.Services;
 
 /// <summary>
 /// Tests for input validation functionality

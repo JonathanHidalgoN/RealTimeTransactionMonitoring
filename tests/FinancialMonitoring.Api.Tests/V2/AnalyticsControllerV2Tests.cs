@@ -8,15 +8,15 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using System.Security.Claims;
 
-namespace FinancialMonitoring.Api.Tests;
+namespace FinancialMonitoring.Api.Tests.V2;
 
-public class AnalyticsControllerTests
+public class AnalyticsControllerV2Tests
 {
     private readonly AnalyticsController _controller;
     private readonly Mock<IAnalyticsRepository> _mockRepository;
     private readonly Mock<ILogger<AnalyticsController>> _mockLogger;
 
-    public AnalyticsControllerTests()
+    public AnalyticsControllerV2Tests()
     {
         _mockRepository = new Mock<IAnalyticsRepository>();
         _mockLogger = new Mock<ILogger<AnalyticsController>>();

@@ -11,7 +11,7 @@ using Microsoft.Extensions.Configuration;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Api.Services;
 
-namespace FinancialMonitoring.Api.Tests;
+namespace FinancialMonitoring.Api.Tests.Integration;
 
 /// <summary>
 /// Tests for health check functionality
