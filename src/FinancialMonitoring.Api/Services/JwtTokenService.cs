@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using FinancialMonitoring.Models;
+using FinancialMonitoring.Models.OAuth;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using FinancialMonitoring.Abstractions;
@@ -124,9 +125,50 @@ public class JwtTokenService : IJwtTokenService
         }
     }
 
+    public string GenerateClientAccessToken(OAuthClient client, IEnumerable<string> scopes)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(_jwtSettings.SecretKey);
+
+        var claims = new List<Claim>
+        {
+            new("client_id", client.ClientId),
+            new("sub", client.ClientId),
+            new("client_name", client.Name),
+            new("token_type", "client_credentials")
+        };
+
+        var scopeList = scopes.ToList();
+        if (scopeList.Any())
+        {
+            claims.Add(new("scope", string.Join(" ", scopeList)));
+        }
+
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(claims),
+            Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpiryMinutes),
+            Issuer = _jwtSettings.Issuer,
+            Audience = _jwtSettings.Audience,
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
+        };
+
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        var tokenString = tokenHandler.WriteToken(token);
+
+        _logger.LogInformation("Generated client access token for client {ClientId} with scopes: {Scopes}",
+            client.ClientId, string.Join(", ", scopeList));
+        return tokenString;
+    }
+
     public DateTime GetAccessTokenExpiration()
     {
         return DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpiryMinutes);
+    }
+
+    public int GetAccessTokenExpirationSeconds()
+    {
+        return _jwtSettings.AccessTokenExpiryMinutes * 60;
     }
 }
 
