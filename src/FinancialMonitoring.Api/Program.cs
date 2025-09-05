@@ -150,6 +150,9 @@ public partial class Program
         builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
         builder.Services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
 
+        builder.Services.AddSingleton<IOAuthClientRepository, InMemoryOAuthClientRepository>();
+        builder.Services.AddScoped<IOAuthClientService, OAuthClientService>();
+
         ConfigureSwagger(builder);
     }
 
