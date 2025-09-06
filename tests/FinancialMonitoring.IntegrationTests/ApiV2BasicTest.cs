@@ -424,4 +424,6 @@ public class ApiV2BasicTest : IAsyncLifetime
         _client?.Dispose();
         await Task.CompletedTask;
     }
+
+    #endregion
 }

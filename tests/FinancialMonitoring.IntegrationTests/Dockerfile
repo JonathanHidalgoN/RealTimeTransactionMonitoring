@@ -25,4 +25,4 @@ RUN dotnet build tests/FinancialMonitoring.IntegrationTests/FinancialMonitoring.
 # Test
 FROM build AS test
 WORKDIR /source
-ENTRYPOINT ["dotnet", "test", "tests/FinancialMonitoring.IntegrationTests/FinancialMonitoring.IntegrationTests.csproj", "--no-build", "-c", "Release", "--logger", "trx", "--results-directory", "/app/test-results", "--filter", "FullyQualifiedName~BasicConnectivityTests"]
+ENTRYPOINT ["dotnet", "test", "tests/FinancialMonitoring.IntegrationTests/FinancialMonitoring.IntegrationTests.csproj", "--no-build", "-c", "Release", "--logger", "trx", "--results-directory", "/app/test-results"]

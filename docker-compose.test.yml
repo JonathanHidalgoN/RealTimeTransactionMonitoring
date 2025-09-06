@@ -121,6 +121,10 @@ services:
       ApplicationInsights__ConnectionString: "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://test.in.ai.azure.com/"
       ASPNETCORE_URLS: "http://0.0.0.0:8080"
       ASPNETCORE_ENVIRONMENT: "Testing"
+      JwtSettings__SecretKey: "integration-test-super-secret-key-that-is-at-least-256-bits-long-for-hmac-sha256"
+      JwtSettings__Issuer: "FinancialMonitoring.IntegrationTests"
+      JwtSettings__Audience: "FinancialMonitoring.Api"
+      JwtSettings__ExpirationMinutes: "60"
     networks:
       - test_network
 
@@ -149,6 +153,8 @@ services:
       MongoDb__DatabaseName: "TestFinancialMonitoring"
       MongoDb__CollectionName: "transactions"
       ASPNETCORE_ENVIRONMENT: "Testing"
+      OAuth_ClientId: "test-client"
+      OAuth_ClientSecret: "test-secret"
     networks:
       - test_network
     volumes:
