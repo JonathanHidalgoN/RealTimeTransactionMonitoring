@@ -11,9 +11,16 @@ namespace FinancialMonitoring.IntegrationTests;
 /// </summary>
 public class BasicConnectivityTests : IAsyncLifetime
 {
+    private readonly TestConfiguration _config;
     private IProducer<Null, string>? _producer;
     private IMongoClient? _mongoClient;
     private IConnectionMultiplexer? _redis;
+
+    public BasicConnectivityTests()
+    {
+        _config = TestConfiguration.FromEnvironment();
+        _config.Validate();
+    }
 
     public async Task InitializeAsync()
     {
@@ -26,12 +33,9 @@ public class BasicConnectivityTests : IAsyncLifetime
     [Fact]
     public async Task Kafka_ShouldBeReachable()
     {
-        //Conect to kafka, this variable is inject in dockercompose file
-        var kafkaBootstrapServers = Environment.GetEnvironmentVariable("Kafka__BootstrapServers") ?? "kafka:29092";
-
         var config = new ProducerConfig
         {
-            BootstrapServers = kafkaBootstrapServers,
+            BootstrapServers = _config.Kafka.BootstrapServers,
             MessageTimeoutMs = 30000,
             RequestTimeoutMs = 30000,
             MetadataMaxAgeMs = 30000,
@@ -82,12 +86,9 @@ public class BasicConnectivityTests : IAsyncLifetime
     [Fact]
     public async Task Redis_ShouldBeReachable()
     {
-        //Conect to redis, this variable is inject in dockercompose file
-        var redisConnectionString = Environment.GetEnvironmentVariable("Redis__ConnectionString") ?? "redis:6379";
-
         try
         {
-            _redis = await ConnectionMultiplexer.ConnectAsync(redisConnectionString);
+            _redis = await ConnectionMultiplexer.ConnectAsync(_config.Redis.ConnectionString);
             var database = _redis.GetDatabase();
 
             var testKey = "test:connectivity";
@@ -113,13 +114,10 @@ public class BasicConnectivityTests : IAsyncLifetime
     [Fact]
     public async Task MongoDB_ShouldBeReachable()
     {
-        var mongoConnectionString = Environment.GetEnvironmentVariable("MongoDb__ConnectionString") ?? "mongodb://admin:password123@mongodb-test:27017";
-        var mongoDatabaseName = Environment.GetEnvironmentVariable("MongoDb__DatabaseName") ?? "TestFinancialMonitoring";
-
         try
         {
-            _mongoClient = new MongoClient(mongoConnectionString);
-            var database = _mongoClient.GetDatabase(mongoDatabaseName);
+            _mongoClient = new MongoClient(_config.MongoDb.ConnectionString);
+            var database = _mongoClient.GetDatabase(_config.MongoDb.DatabaseName);
 
             // Test connectivity by creating inserting a document
             var testCollection = database.GetCollection<BsonDocument>("connectivity_test");
@@ -152,8 +150,8 @@ public class BasicConnectivityTests : IAsyncLifetime
     [Fact]
     public void Environment_ShouldBeConfiguredForTesting()
     {
-        var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
-        Assert.Equal("Testing", environment);
+        Assert.Equal("Testing", _config.Environment.DotNetEnvironment);
+        Assert.True(_config.Environment.IsTestingEnvironment);
     }
 
     public async Task DisposeAsync()

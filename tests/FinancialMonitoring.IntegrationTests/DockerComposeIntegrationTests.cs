@@ -9,39 +9,38 @@ namespace FinancialMonitoring.IntegrationTests;
 
 public class DockerComposeIntegrationTests : IAsyncLifetime
 {
+    private readonly TestConfiguration _config;
     private HttpClient _client = null!;
     private IProducer<Null, string> _producer = null!;
     private IMongoClient _mongoClient = null!;
     private IMongoDatabase _database = null!;
     private IMongoCollection<Transaction> _collection = null!;
 
+    public DockerComposeIntegrationTests()
+    {
+        _config = TestConfiguration.FromEnvironment();
+        _config.Validate();
+    }
+
     public async Task InitializeAsync()
     {
-        // Use environment variables for Docker Compose setup
-        var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl") ?? "http://financialmonitoring-api-test:8080";
-        var kafkaBootstrapServers = Environment.GetEnvironmentVariable("Kafka__BootstrapServers") ?? "kafka:29092";
-        var mongoConnectionString = Environment.GetEnvironmentVariable("MongoDb__ConnectionString") ?? "mongodb://admin:password123@mongodb-test:27017";
-        var mongoDatabaseName = Environment.GetEnvironmentVariable("MongoDb__DatabaseName") ?? "TestFinancialMonitoring";
-        var mongoCollectionName = Environment.GetEnvironmentVariable("MongoDb__CollectionName") ?? "transactions";
-        var apiKey = Environment.GetEnvironmentVariable("ApiKey") ?? "integration-test-key";
-
         //Create http client to api with default key
-        _client = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
-        _client.DefaultRequestHeaders.Add("X-API-Key", apiKey);
+        _client = new HttpClient { BaseAddress = new Uri(_config.Api.BaseUrl) };
+        _client.DefaultRequestHeaders.Add("X-API-Key", _config.Api.ApiKey);
 
         //Connect to kafka
         var producerConfig = new ProducerConfig
         {
-            BootstrapServers = kafkaBootstrapServers
+            BootstrapServers = _config.Kafka.BootstrapServers
         };
         _producer = new ProducerBuilder<Null, string>(producerConfig).Build();
 
         //Connect to MongoDB
         try
         {
-            _mongoClient = new MongoClient(mongoConnectionString);
-            _database = _mongoClient.GetDatabase(mongoDatabaseName);
-            _collection = _database.GetCollection<Transaction>(mongoCollectionName);
+            _mongoClient = new MongoClient(_config.MongoDb.ConnectionString);
+            _database = _mongoClient.GetDatabase(_config.MongoDb.DatabaseName);
+            _collection = _database.GetCollection<Transaction>(_config.MongoDb.CollectionName);
             
             // Test the connection
             await _database.RunCommandAsync((Command<MongoDB.Bson.BsonDocument>)"{ping:1}");

@@ -7,14 +7,19 @@ namespace FinancialMonitoring.IntegrationTests;
 //Test that the api respond to request with new modernized structure
 public class ApiBasicTest : IAsyncLifetime
 {
+    private readonly TestConfiguration _config;
     private HttpClient _client = null!;
+
+    public ApiBasicTest()
+    {
+        _config = TestConfiguration.FromEnvironment();
+        _config.Validate();
+    }
 
     public async Task InitializeAsync()
     {
-        var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl") ?? "http://financialmonitoring-api-test:8080";
-        var apiKey = Environment.GetEnvironmentVariable("ApiKey") ?? "integration-test-key";
-        _client = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
-        _client.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
+        _client = new HttpClient { BaseAddress = new Uri(_config.Api.BaseUrl) };
+        _client.DefaultRequestHeaders.Add("X-Api-Key", _config.Api.ApiKey);
         await Task.Delay(5000);
     }
 
@@ -102,7 +107,7 @@ public class ApiBasicTest : IAsyncLifetime
         Assert.True(v1Response.IsSuccessStatusCode);
 
         using var versionedClient = new HttpClient { BaseAddress = _client.BaseAddress };
-        versionedClient.DefaultRequestHeaders.Add("X-Api-Key", Environment.GetEnvironmentVariable("ApiKey") ?? "integration-test-key");
+        versionedClient.DefaultRequestHeaders.Add("X-Api-Key", _config.Api.ApiKey);
         versionedClient.DefaultRequestHeaders.Add("X-Version", "1.0");
 
         var headerVersionResponse = await versionedClient.GetAsync("/api/transactions?pageSize=1");

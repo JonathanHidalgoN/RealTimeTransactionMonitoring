@@ -31,8 +31,9 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
 
     public EndToEndTransactionFlowTests()
     {
+        var config = TestConfiguration.FromEnvironment();
         // Check if we're running in Docker environment (integration tests container)
-        _useTestContainers = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") != "Testing";
+        _useTestContainers = config.Environment.UseTestContainers;
 
         if (_useTestContainers)
         {
@@ -73,10 +74,11 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
         else
         {
             //Take env vars injected in dockercompose
-            kafkaBootstrapServers = Environment.GetEnvironmentVariable("Kafka__BootstrapServers") ?? "kafka:29092";
-            cosmosEndpoint = Environment.GetEnvironmentVariable("CosmosDb__EndpointUri") ?? "https://cosmosdb-emulator:8081";
-            cosmosKey = Environment.GetEnvironmentVariable("CosmosDb__PrimaryKey") ?? "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
-            redisConnectionString = Environment.GetEnvironmentVariable("Redis__ConnectionString") ?? "redis:6379";
+            var config = TestConfiguration.FromEnvironment();
+            kafkaBootstrapServers = config.Kafka.BootstrapServers;
+            cosmosEndpoint = config.CosmosDb.EndpointUri;
+            cosmosKey = config.CosmosDb.PrimaryKey;
+            redisConnectionString = config.Redis.ConnectionString;
         }
 
         //Connect to api, kafka and cosmos

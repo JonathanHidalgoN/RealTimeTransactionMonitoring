@@ -12,14 +12,20 @@ namespace FinancialMonitoring.IntegrationTests;
 /// </summary>
 public class ApiV2BasicTest : IAsyncLifetime
 {
+    private readonly TestConfiguration _config;
     private HttpClient _client = null!;
     private string? _accessToken;
     private string? _adminAccessToken;
 
+    public ApiV2BasicTest()
+    {
+        _config = TestConfiguration.FromEnvironment();
+        _config.Validate();
+    }
+
     public async Task InitializeAsync()
     {
-        var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl") ?? "http://financialmonitoring-api-test:8080";
-        _client = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
+        _client = new HttpClient { BaseAddress = new Uri(_config.Api.BaseUrl) };
 
         await Task.Delay(5000);
 
@@ -42,14 +48,12 @@ public class ApiV2BasicTest : IAsyncLifetime
     [Fact]
     public async Task OAuth_ClientCredentialsFlow_ShouldReturnValidToken()
     {
-        var clientId = Environment.GetEnvironmentVariable("OAuth_ClientId") ?? "test-client";
-        var clientSecret = Environment.GetEnvironmentVariable("OAuth_ClientSecret") ?? "test-secret";
 
         var formData = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("GrantType", "client_credentials"),
-            new KeyValuePair<string, string>("ClientId", clientId),
-            new KeyValuePair<string, string>("ClientSecret", clientSecret),
+            new KeyValuePair<string, string>("ClientId", _config.OAuth2.ClientId),
+            new KeyValuePair<string, string>("ClientSecret", _config.OAuth2.ClientSecret),
             new KeyValuePair<string, string>("Scope", "read write")
         });
 
@@ -114,14 +118,11 @@ public class ApiV2BasicTest : IAsyncLifetime
     [Fact]
     public async Task OAuth_RawResponseFormat_ShouldComplyWithRFC6749()
     {
-        var clientId = Environment.GetEnvironmentVariable("OAuth_ClientId") ?? "test-client";
-        var clientSecret = Environment.GetEnvironmentVariable("OAuth_ClientSecret") ?? "test-secret";
-
         var formData = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("GrantType", "client_credentials"),
-            new KeyValuePair<string, string>("ClientId", clientId),
-            new KeyValuePair<string, string>("ClientSecret", clientSecret)
+            new KeyValuePair<string, string>("ClientId", _config.OAuth2.ClientId),
+            new KeyValuePair<string, string>("ClientSecret", _config.OAuth2.ClientSecret)
         });
 
         var response = await _client.PostAsync("/api/v2/oauth/token", formData);
@@ -351,14 +352,11 @@ public class ApiV2BasicTest : IAsyncLifetime
     /// </summary>
     private async Task<string?> GetOAuthTokenAsync(string scope = "read write")
     {
-        var clientId = Environment.GetEnvironmentVariable("OAuth_ClientId") ?? "test-client";
-        var clientSecret = Environment.GetEnvironmentVariable("OAuth_ClientSecret") ?? "test-secret";
-
         var formData = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("GrantType", "client_credentials"),
-            new KeyValuePair<string, string>("ClientId", clientId),
-            new KeyValuePair<string, string>("ClientSecret", clientSecret),
+            new KeyValuePair<string, string>("ClientId", _config.OAuth2.ClientId),
+            new KeyValuePair<string, string>("ClientSecret", _config.OAuth2.ClientSecret),
             new KeyValuePair<string, string>("Scope", scope)
         });
 
