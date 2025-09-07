@@ -6,9 +6,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
-using Testcontainers.Kafka;
-using Testcontainers.CosmosDb;
-using Testcontainers.Redis;
 using Confluent.Kafka;
 using Microsoft.Azure.Cosmos;
 using FinancialMonitoring.Models;
@@ -19,10 +16,7 @@ namespace FinancialMonitoring.IntegrationTests.Workflows;
 [Trait("Category", "E2E")]
 public class EndToEndTransactionFlowTests : IAsyncLifetime
 {
-    private readonly bool _useTestContainers;
-    private readonly KafkaContainer? _kafkaContainer;
-    private readonly CosmosDbContainer? _cosmosContainer;
-    private readonly RedisContainer? _redisContainer;
+    private readonly TestConfiguration _config;
     private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
     private IProducer<Null, string> _producer = null!;
@@ -32,64 +26,21 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
 
     public EndToEndTransactionFlowTests()
     {
-        var config = TestConfiguration.FromEnvironment();
-        // Check if we're running in Docker environment (integration tests container)
-        _useTestContainers = config.Environment.UseTestContainers;
-
-        if (_useTestContainers)
-        {
-            //Use testcontainer to setup the services if we are not in docker
-            _kafkaContainer = new KafkaBuilder()
-                .WithImage("confluentinc/cp-kafka:7.6.1")
-                .Build();
-
-            _cosmosContainer = new CosmosDbBuilder()
-                .WithImage("mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest")
-                .Build();
-
-            _redisContainer = new RedisBuilder()
-                .WithImage("redis:7-alpine")
-                .Build();
-        }
+        _config = TestConfiguration.FromEnvironment();
+        _config.Validate();
     }
 
     public async Task InitializeAsync()
     {
-        string kafkaBootstrapServers;
-        string cosmosEndpoint;
-        string cosmosKey;
-        string redisConnectionString;
-
-        if (_useTestContainers)
-        {
-            //Use TestContainers
-            await _kafkaContainer!.StartAsync();
-            await _cosmosContainer!.StartAsync();
-            await _redisContainer!.StartAsync();
-
-            kafkaBootstrapServers = _kafkaContainer.GetBootstrapAddress();
-            cosmosEndpoint = $"https://localhost:{_cosmosContainer.GetMappedPublicPort(8081)}/";
-            cosmosKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
-            redisConnectionString = _redisContainer.GetConnectionString();
-        }
-        else
-        {
-            //Take env vars injected in dockercompose
-            var config = TestConfiguration.FromEnvironment();
-            kafkaBootstrapServers = config.Kafka.BootstrapServers;
-            cosmosEndpoint = config.CosmosDb.EndpointUri;
-            cosmosKey = config.CosmosDb.PrimaryKey;
-            redisConnectionString = config.Redis.ConnectionString;
-        }
-
-        //Connect to api, kafka and cosmos
+        // Connect to Kafka
         var producerConfig = new ProducerConfig
         {
-            BootstrapServers = kafkaBootstrapServers
+            BootstrapServers = _config.Kafka.BootstrapServers
         };
         _producer = new ProducerBuilder<Null, string>(producerConfig).Build();
 
-        var connectionString = $"AccountEndpoint={cosmosEndpoint};AccountKey={cosmosKey}";
+        // Connect to CosmosDB
+        var connectionString = $"AccountEndpoint={_config.CosmosDb.EndpointUri};AccountKey={_config.CosmosDb.PrimaryKey}";
         _cosmosClient = new CosmosClient(connectionString, new CosmosClientOptions
         {
             HttpClientFactory = () => new HttpClient(new HttpClientHandler
@@ -100,6 +51,7 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
         _database = await _cosmosClient.CreateDatabaseIfNotExistsAsync("IntegrationTestDb");
         _container = await _database.CreateContainerIfNotExistsAsync("transactions", "/id");
 
+        // Setup API factory
         _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
@@ -108,13 +60,13 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
                     configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
                     {
                         { "ApiSettings:ApiKey", "integration-test-key" },
-                        { "CosmosDb:EndpointUri", cosmosEndpoint },
-                        { "CosmosDb:PrimaryKey", cosmosKey },
+                        { "CosmosDb:EndpointUri", _config.CosmosDb.EndpointUri },
+                        { "CosmosDb:PrimaryKey", _config.CosmosDb.PrimaryKey },
                         { "CosmosDb:DatabaseName", "IntegrationTestDb" },
                         { "CosmosDb:ContainerName", "transactions" },
                         { "CosmosDb:PartitionKeyPath", "/id" },
-                        { "Redis:ConnectionString", redisConnectionString },
-                        { "Kafka:BootstrapServers", kafkaBootstrapServers },
+                        { "Redis:ConnectionString", _config.Redis.ConnectionString },
+                        { "Kafka:BootstrapServers", _config.Kafka.BootstrapServers },
                         { "AnomalyDetection:MaxAmountThreshold", "1000" },
                         { "AnomalyDetection:FrequencyThresholdPerMinute", "10" },
                         { "ApplicationInsights:ConnectionString", "" }
@@ -132,7 +84,7 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
     }
 
     /// <summary>
-    /// This test verifies the complete end-to-end transaction processing from Kafka message to API retrieval using TestContainers
+    /// This test verifies the complete end-to-end transaction processing from Kafka message to API retrieval using Docker Compose environment
     /// </summary>
     [Fact]
     public async Task EndToEndTransactionFlow_ShouldProcessTransactionFromKafkaToApi()
@@ -243,12 +195,6 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
         _cosmosClient?.Dispose();
         _client?.Dispose();
         _factory?.Dispose();
-
-        if (_useTestContainers)
-        {
-            if (_kafkaContainer != null) await _kafkaContainer.DisposeAsync();
-            if (_cosmosContainer != null) await _cosmosContainer.DisposeAsync();
-            if (_redisContainer != null) await _redisContainer.DisposeAsync();
-        }
+        await Task.CompletedTask;
     }
 }

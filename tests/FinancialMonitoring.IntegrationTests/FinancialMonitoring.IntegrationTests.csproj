@@ -14,10 +14,6 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.5" />
-    <PackageReference Include="Testcontainers" Version="3.10.0" />
-    <PackageReference Include="Testcontainers.Kafka" Version="3.10.0" />
-    <PackageReference Include="Testcontainers.CosmosDb" Version="3.10.0" />
-    <PackageReference Include="Testcontainers.Redis" Version="3.10.0" />
     <PackageReference Include="Confluent.Kafka" Version="2.10.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.30.0" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.41" />

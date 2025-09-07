@@ -198,7 +198,7 @@ Professional-grade synthetic data generation for testing and development.
 - **Infrastructure**: Docker, Kubernetes, Terraform, GitHub Actions
 
 ### Development Tools
-- **Testing**: xUnit, TestContainers, NBomber load testing
+- **Testing**: xUnit, Docker Compose integration tests, NBomber load testing
 - **Security**: FluentValidation, rate limiting, CORS, security headers
 - **Monitoring**: Application Insights, structured logging, health checks
 

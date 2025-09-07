@@ -55,8 +55,7 @@ public class TestConfiguration
             Environment = new EnvironmentConfiguration
             {
                 DotNetEnvironment = GetEnvVar("DOTNET_ENVIRONMENT", "Development"),
-                IsTestingEnvironment = GetEnvVar("DOTNET_ENVIRONMENT", "Development") == "Testing",
-                UseTestContainers = GetEnvVar("DOTNET_ENVIRONMENT", "Development") != "Testing"
+                IsTestingEnvironment = GetEnvVar("DOTNET_ENVIRONMENT", "Development") == "Testing"
             }
         };
     }
@@ -208,5 +207,4 @@ public class EnvironmentConfiguration
 {
     public string DotNetEnvironment { get; set; } = string.Empty;
     public bool IsTestingEnvironment { get; set; }
-    public bool UseTestContainers { get; set; }
 }
