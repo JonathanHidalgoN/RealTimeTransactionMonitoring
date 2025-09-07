@@ -7,6 +7,7 @@ using FinancialMonitoring.Models;
 
 namespace FinancialMonitoring.IntegrationTests;
 
+[Trait("Category", "E2E")]
 public class DockerComposeIntegrationTests : IAsyncLifetime
 {
     private readonly TestConfiguration _config;

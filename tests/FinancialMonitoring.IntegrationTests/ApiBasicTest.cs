@@ -5,6 +5,7 @@ using FinancialMonitoring.Models;
 namespace FinancialMonitoring.IntegrationTests;
 
 //Test that the api respond to request with new modernized structure
+[Trait("Category", "API")]
 public class ApiBasicTest : IAsyncLifetime
 {
     private readonly TestConfiguration _config;
@@ -27,6 +28,7 @@ public class ApiBasicTest : IAsyncLifetime
     /// This test verifies that the API is reachable and returns a successful response with required headers
     /// </summary>
     [Fact]
+    [Trait("Category", "Smoke")]
     public async Task Api_ShouldBeReachable()
     {
         var response = await _client.GetAsync("/api/v1/transactions?pageSize=1");
@@ -76,6 +78,7 @@ public class ApiBasicTest : IAsyncLifetime
     /// This test verifies that health check endpoints are accessible and return appropriate status information
     /// </summary>
     [Fact]
+    [Trait("Category", "Smoke")]
     public async Task Api_HealthChecks_ShouldBeAccessible()
     {
         var healthzResponse = await _client.GetAsync("/healthz");

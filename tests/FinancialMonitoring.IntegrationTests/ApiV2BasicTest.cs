@@ -10,6 +10,7 @@ namespace FinancialMonitoring.IntegrationTests;
 /// <summary>
 /// Integration tests for V2 API endpoints that use JWT authentication and OAuth2 flows
 /// </summary>
+[Trait("Category", "API")]
 public class ApiV2BasicTest : IAsyncLifetime
 {
     private readonly TestConfiguration _config;
@@ -152,6 +153,7 @@ public class ApiV2BasicTest : IAsyncLifetime
     /// Test that V2 endpoints require JWT authentication
     /// </summary>
     [Fact]
+    [Trait("Category", "Smoke")]
     public async Task Api_V2Endpoints_ShouldRequireJWTAuthentication()
     {
         var response = await _client.GetAsync("/api/v2/transactions");

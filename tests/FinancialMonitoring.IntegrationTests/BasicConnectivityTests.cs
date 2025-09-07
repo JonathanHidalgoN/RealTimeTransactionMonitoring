@@ -9,6 +9,7 @@ namespace FinancialMonitoring.IntegrationTests;
 /// <summary>
 /// Basic connectivity tests that verify infrastructure services are running
 /// </summary>
+[Trait("Category", "Infrastructure")]
 public class BasicConnectivityTests : IAsyncLifetime
 {
     private readonly TestConfiguration _config;
@@ -148,6 +149,7 @@ public class BasicConnectivityTests : IAsyncLifetime
     /// This test verifies that the environment is properly configured with DOTNET_ENVIRONMENT set to Testing
     /// </summary>
     [Fact]
+    [Trait("Category", "Smoke")]
     public void Environment_ShouldBeConfiguredForTesting()
     {
         Assert.Equal("Testing", _config.Environment.DotNetEnvironment);

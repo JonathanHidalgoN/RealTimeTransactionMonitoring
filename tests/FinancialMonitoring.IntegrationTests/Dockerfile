@@ -25,4 +25,9 @@ RUN dotnet build tests/FinancialMonitoring.IntegrationTests/FinancialMonitoring.
 # Test
 FROM build AS test
 WORKDIR /source
-ENTRYPOINT ["dotnet", "test", "tests/FinancialMonitoring.IntegrationTests/FinancialMonitoring.IntegrationTests.csproj", "--no-build", "-c", "Release", "--logger", "trx", "--results-directory", "/app/test-results"]
+
+# Add container test runner script to support category filtering
+COPY tests/FinancialMonitoring.IntegrationTests/container-test-runner.sh /app/container-test-runner.sh
+RUN chmod +x /app/container-test-runner.sh
+
+ENTRYPOINT ["/app/container-test-runner.sh"]

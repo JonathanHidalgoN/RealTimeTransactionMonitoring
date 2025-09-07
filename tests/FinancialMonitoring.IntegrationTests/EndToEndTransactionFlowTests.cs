@@ -16,6 +16,7 @@ using FinancialMonitoring.Api.Authentication;
 
 namespace FinancialMonitoring.IntegrationTests;
 
+[Trait("Category", "E2E")]
 public class EndToEndTransactionFlowTests : IAsyncLifetime
 {
     private readonly bool _useTestContainers;
