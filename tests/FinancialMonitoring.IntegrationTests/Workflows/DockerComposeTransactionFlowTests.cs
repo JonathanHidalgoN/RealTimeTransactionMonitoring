@@ -5,10 +5,13 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 using FinancialMonitoring.Models;
 
-namespace FinancialMonitoring.IntegrationTests;
+namespace FinancialMonitoring.IntegrationTests.Workflows;
 
+/// <summary>
+/// End-to-end transaction workflow tests using Docker Compose environment
+/// </summary>
 [Trait("Category", "E2E")]
-public class DockerComposeIntegrationTests : IAsyncLifetime
+public class DockerComposeTransactionFlowTests : IAsyncLifetime
 {
     private readonly TestConfiguration _config;
     private HttpClient _client = null!;
@@ -17,7 +20,7 @@ public class DockerComposeIntegrationTests : IAsyncLifetime
     private IMongoDatabase _database = null!;
     private IMongoCollection<Transaction> _collection = null!;
 
-    public DockerComposeIntegrationTests()
+    public DockerComposeTransactionFlowTests()
     {
         _config = TestConfiguration.FromEnvironment();
         _config.Validate();
@@ -96,32 +99,6 @@ public class DockerComposeIntegrationTests : IAsyncLifetime
             Assert.True(allTransactionsResponse.IsSuccessStatusCode,
                 $"API is not responding. Status: {response.StatusCode}, All transactions status: {allTransactionsResponse.StatusCode}");
         }
-    }
-
-    /// <summary>
-    /// This test verifies that the API is responding and healthy within the Docker Compose environment
-    /// </summary>
-    [Fact]
-    public async Task HealthCheck_ApiShouldBeResponding()
-    {
-        var response = await _client.GetAsync("/api/transactions?pageSize=1");
-        Assert.True(response.IsSuccessStatusCode, $"API health check failed with status: {response.StatusCode}");
-    }
-
-    /// <summary>
-    /// This test verifies that the Kafka producer can successfully send messages and receive persistence confirmation
-    /// </summary>
-    [Fact]
-    public async Task KafkaProducer_ShouldSendMessage()
-    {
-        var testMessage = new { test = "message", timestamp = DateTimeOffset.UtcNow };
-        var result = await _producer.ProduceAsync("transactions", new Message<Null, string>
-        {
-            Value = JsonSerializer.Serialize(testMessage)
-        });
-
-        Assert.NotNull(result);
-        Assert.Equal(PersistenceStatus.Persisted, result.Status);
     }
 
     public async Task DisposeAsync()

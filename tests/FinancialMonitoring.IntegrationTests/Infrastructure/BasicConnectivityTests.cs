@@ -4,7 +4,7 @@ using MongoDB.Bson;
 using StackExchange.Redis;
 using System.Text.Json;
 
-namespace FinancialMonitoring.IntegrationTests;
+namespace FinancialMonitoring.IntegrationTests.Infrastructure;
 
 /// <summary>
 /// Basic connectivity tests that verify infrastructure services are running

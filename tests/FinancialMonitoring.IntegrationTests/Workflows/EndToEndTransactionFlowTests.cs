@@ -14,7 +14,7 @@ using Microsoft.Azure.Cosmos;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Api.Authentication;
 
-namespace FinancialMonitoring.IntegrationTests;
+namespace FinancialMonitoring.IntegrationTests.Workflows;
 
 [Trait("Category", "E2E")]
 public class EndToEndTransactionFlowTests : IAsyncLifetime

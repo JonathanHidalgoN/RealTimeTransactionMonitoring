@@ -155,6 +155,8 @@ services:
       ASPNETCORE_ENVIRONMENT: "Testing"
       OAuth_ClientId: "test-client"
       OAuth_ClientSecret: "test-secret"
+      TEST_CATEGORY: ""
+      TEST_VERBOSITY: "minimal"
     networks:
       - test_network
     volumes:

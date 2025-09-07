@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using FinancialMonitoring.Models;
 
-namespace FinancialMonitoring.IntegrationTests;
+namespace FinancialMonitoring.IntegrationTests.ApiContracts.V1;
 
 //Test that the api respond to request with new modernized structure
 [Trait("Category", "API")]
