@@ -7,12 +7,40 @@ using System.Text.Json;
 namespace FinancialMonitoring.IntegrationTests.Infrastructure;
 
 /// <summary>
+/// Configuration for BasicConnectivityTests with timeout and retry settings
+/// </summary>
+public class BasicConnectivityTestsConfig
+{
+    public int InitializationDelayMs { get; set; } = 15000;
+    
+    // Kafka configuration
+    public int KafkaMessageTimeoutMs { get; set; } = 30000;
+    public int KafkaRequestTimeoutMs { get; set; } = 30000;
+    public int KafkaMetadataMaxAgeMs { get; set; } = 30000;
+    public int KafkaSocketTimeoutMs { get; set; } = 30000;
+    public int KafkaMaxRetries { get; set; } = 3;
+    public int KafkaRetryDelayMs { get; set; } = 10000;
+    public string KafkaTopicName { get; set; } = "transactions";
+    
+    // Redis configuration
+    public string RedisTestKeyPrefix { get; set; } = "test:connectivity";
+    public string RedisTestValue { get; set; } = "integration-test";
+    
+    // MongoDB configuration
+    public string MongoDbTestCollectionName { get; set; } = "connectivity_test";
+    public string MongoDbTestFieldName { get; set; } = "test";
+    public string MongoDbTestFieldValue { get; set; } = "connectivity";
+    public string MongoDbTestSource { get; set; } = "integration-test";
+}
+
+/// <summary>
 /// Basic connectivity tests that verify infrastructure services are running
 /// </summary>
 [Trait("Category", "Infrastructure")]
 public class BasicConnectivityTests : IAsyncLifetime
 {
     private readonly TestConfiguration _config;
+    private readonly BasicConnectivityTestsConfig _testConfig;
     private IProducer<Null, string>? _producer;
     private IMongoClient? _mongoClient;
     private IConnectionMultiplexer? _redis;
@@ -21,11 +49,12 @@ public class BasicConnectivityTests : IAsyncLifetime
     {
         _config = TestConfiguration.FromEnvironment();
         _config.Validate();
+        _testConfig = new BasicConnectivityTestsConfig();
     }
 
     public async Task InitializeAsync()
     {
-        await Task.Delay(15000);
+        await Task.Delay(_testConfig.InitializationDelayMs);
     }
 
     /// <summary>
@@ -37,25 +66,23 @@ public class BasicConnectivityTests : IAsyncLifetime
         var config = new ProducerConfig
         {
             BootstrapServers = _config.Kafka.BootstrapServers,
-            MessageTimeoutMs = 30000,
-            RequestTimeoutMs = 30000,
-            MetadataMaxAgeMs = 30000,
-            SocketTimeoutMs = 30000
+            MessageTimeoutMs = _testConfig.KafkaMessageTimeoutMs,
+            RequestTimeoutMs = _testConfig.KafkaRequestTimeoutMs,
+            MetadataMaxAgeMs = _testConfig.KafkaMetadataMaxAgeMs,
+            SocketTimeoutMs = _testConfig.KafkaSocketTimeoutMs
         };
 
         Exception? lastException = null;
-        const int maxRetries = 3;
-        const int retryDelayMs = 10000;
 
-        //Try 3 times to write to kafka
-        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        //Try multiple times to write to kafka
+        for (int attempt = 1; attempt <= _testConfig.KafkaMaxRetries; attempt++)
         {
             try
             {
                 _producer = new ProducerBuilder<Null, string>(config).Build();
 
                 var testMessage = new { test = "connectivity", timestamp = DateTimeOffset.UtcNow, attempt };
-                var result = await _producer.ProduceAsync("transactions", new Message<Null, string>
+                var result = await _producer.ProduceAsync(_testConfig.KafkaTopicName, new Message<Null, string>
                 {
                     Value = JsonSerializer.Serialize(testMessage)
                 });
@@ -71,14 +98,14 @@ public class BasicConnectivityTests : IAsyncLifetime
                 _producer?.Dispose();
                 _producer = null;
 
-                if (attempt < maxRetries)
+                if (attempt < _testConfig.KafkaMaxRetries)
                 {
-                    await Task.Delay(retryDelayMs);
+                    await Task.Delay(_testConfig.KafkaRetryDelayMs);
                 }
             }
         }
 
-        Assert.Fail($"Kafka connectivity failed after {maxRetries} attempts. Last error: {lastException?.Message}");
+        Assert.Fail($"Kafka connectivity failed after {_testConfig.KafkaMaxRetries} attempts. Last error: {lastException?.Message}");
     }
 
     /// <summary>
@@ -92,16 +119,13 @@ public class BasicConnectivityTests : IAsyncLifetime
             _redis = await ConnectionMultiplexer.ConnectAsync(_config.Redis.ConnectionString);
             var database = _redis.GetDatabase();
 
-            var testKey = "test:connectivity";
-            var testValue = "integration-test";
+            await database.StringSetAsync(_testConfig.RedisTestKeyPrefix, _testConfig.RedisTestValue);
+            var retrievedValue = await database.StringGetAsync(_testConfig.RedisTestKeyPrefix);
 
-            await database.StringSetAsync(testKey, testValue);
-            var retrievedValue = await database.StringGetAsync(testKey);
-
-            Assert.Equal(testValue, retrievedValue);
+            Assert.Equal(_testConfig.RedisTestValue, retrievedValue);
 
             //Delete dummy value
-            await database.KeyDeleteAsync(testKey);
+            await database.KeyDeleteAsync(_testConfig.RedisTestKeyPrefix);
         }
         catch (Exception ex)
         {
@@ -121,21 +145,21 @@ public class BasicConnectivityTests : IAsyncLifetime
             var database = _mongoClient.GetDatabase(_config.MongoDb.DatabaseName);
 
             // Test connectivity by creating inserting a document
-            var testCollection = database.GetCollection<BsonDocument>("connectivity_test");
+            var testCollection = database.GetCollection<BsonDocument>(_testConfig.MongoDbTestCollectionName);
             var testDocument = new BsonDocument
             {
-                { "test", "connectivity" },
+                { _testConfig.MongoDbTestFieldName, _testConfig.MongoDbTestFieldValue },
                 { "timestamp", DateTime.UtcNow },
-                { "source", "integration-test" }
+                { "source", _testConfig.MongoDbTestSource }
             };
 
             await testCollection.InsertOneAsync(testDocument);
 
             // Verify we can read it
-            var filter = Builders<BsonDocument>.Filter.Eq("test", "connectivity");
+            var filter = Builders<BsonDocument>.Filter.Eq(_testConfig.MongoDbTestFieldName, _testConfig.MongoDbTestFieldValue);
             var retrievedDocument = await testCollection.Find(filter).FirstOrDefaultAsync();
             Assert.NotNull(retrievedDocument);
-            Assert.Equal("connectivity", retrievedDocument["test"].AsString);
+            Assert.Equal(_testConfig.MongoDbTestFieldValue, retrievedDocument[_testConfig.MongoDbTestFieldName].AsString);
 
             await testCollection.DeleteOneAsync(filter);
         }
