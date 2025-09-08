@@ -20,9 +20,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\FinancialMonitoring.Api\FinancialMonitoring.Api.csproj" />
-    <ProjectReference Include="..\..\src\FinancialMonitoring.Models\FinancialMonitoring.Models.csproj" />
-    <ProjectReference Include="..\..\src\FinancialMonitoring.Abstractions\FinancialMonitoring.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\src\FinancialMonitoring.Api\FinancialMonitoring.Api.csproj" />
+    <ProjectReference Include="..\..\..\src\FinancialMonitoring.Models\FinancialMonitoring.Models.csproj" />
+    <ProjectReference Include="..\..\..\src\FinancialMonitoring.Abstractions\FinancialMonitoring.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

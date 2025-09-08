@@ -7,10 +7,10 @@ COPY src/FinancialMonitoring.Models/FinancialMonitoring.Models.csproj ./src/Fina
 COPY src/FinancialMonitoring.Abstractions/FinancialMonitoring.Abstractions.csproj ./src/FinancialMonitoring.Abstractions/
 COPY src/TransactionProcessor/TransactionProcessor.csproj ./src/TransactionProcessor/
 COPY src/TransactionSimulator/TransactionSimulator.csproj ./src/TransactionSimulator/
-COPY tests/FinancialMonitoring.Api.Tests/FinancialMonitoring.Api.Tests.csproj ./tests/FinancialMonitoring.Api.Tests/
-COPY tests/FinancialMonitoring.Models.Tests/FinancialMonitoring.Models.Tests.csproj ./tests/FinancialMonitoring.Models.Tests/
-COPY tests/TransactionSimulator.Tests/TransactionSimulator.Tests.csproj ./tests/TransactionSimulator.Tests/
-COPY tests/TransactionProcessor.Tests/TransactionProcessor.Tests.csproj ./tests/TransactionProcessor.Tests/
+COPY tests/unit/FinancialMonitoring.Api.Tests/FinancialMonitoring.Api.Tests.csproj ./tests/unit/FinancialMonitoring.Api.Tests/
+COPY tests/unit/FinancialMonitoring.Models.Tests/FinancialMonitoring.Models.Tests.csproj ./tests/unit/FinancialMonitoring.Models.Tests/
+COPY tests/unit/TransactionSimulator.Tests/TransactionSimulator.Tests.csproj ./tests/unit/TransactionSimulator.Tests/
+COPY tests/unit/TransactionProcessor.Tests/TransactionProcessor.Tests.csproj ./tests/unit/TransactionProcessor.Tests/
 COPY src/FinancialMonitoring.WebApp/FinancialMonitoring.WebApp.csproj ./src/FinancialMonitoring.WebApp/
 
 RUN dotnet restore "FinancialMonitoringSolution.sln"

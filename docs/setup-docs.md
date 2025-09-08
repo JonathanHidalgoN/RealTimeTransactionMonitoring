@@ -73,9 +73,9 @@ Run the comprehensive test suite:
 ./scripts/generalUtils/run-tests.sh
 
 # Or run individual test types
-dotnet test tests/FinancialMonitoring.Api.Tests/
-dotnet test tests/FinancialMonitoring.IntegrationTests/
-dotnet test tests/FinancialMonitoring.LoadTests/
+dotnet test tests/unit/FinancialMonitoring.Api.Tests/
+dotnet test tests/integration/FinancialMonitoring.IntegrationTests/
+dotnet test tests/load/FinancialMonitoring.LoadTests/
 ```
 
 ---
