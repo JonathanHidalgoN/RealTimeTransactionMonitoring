@@ -15,7 +15,7 @@ public class InMemoryUserRepository : IUserRepository
     public InMemoryUserRepository(IPasswordHashingService passwordHashingService)
     {
         _passwordHashingService = passwordHashingService;
-        
+
         var adminSalt = _passwordHashingService.GenerateRandomSalt();
         var analystSalt = _passwordHashingService.GenerateRandomSalt();
         var viewerSalt = _passwordHashingService.GenerateRandomSalt();

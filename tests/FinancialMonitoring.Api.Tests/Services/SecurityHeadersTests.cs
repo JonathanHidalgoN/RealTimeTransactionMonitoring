@@ -46,13 +46,13 @@ public class SecurityHeadersTests : IClassFixture<WebApplicationFactory<Program>
             {
                 services.RemoveAll<ITransactionRepository>();
                 services.AddSingleton<ITransactionRepository>(_mockRepository.Object);
-                
+
                 // Add missing authentication services that InMemoryUserRepository needs
                 services.RemoveAll<IPasswordHashingService>();
                 services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
                 services.RemoveAll<IJwtTokenService>();
                 services.AddScoped<IJwtTokenService, JwtTokenService>();
-                
+
                 // Configure JWT options
                 services.Configure<JwtSettings>(options =>
                 {

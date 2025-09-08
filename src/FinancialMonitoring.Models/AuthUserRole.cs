@@ -9,12 +9,12 @@ public enum AuthUserRole
     /// Read-only access to dashboards and reports
     /// </summary>
     Viewer = 1,
-    
+
     /// <summary>
     /// Can create and modify analysis reports, access advanced features
     /// </summary>
     Analyst = 2,
-    
+
     /// <summary>
     /// Full system access including user management and system configuration
     /// </summary>

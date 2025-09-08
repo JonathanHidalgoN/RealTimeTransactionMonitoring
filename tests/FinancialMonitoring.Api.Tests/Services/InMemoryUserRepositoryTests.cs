@@ -196,7 +196,7 @@ public class InMemoryUserRepositoryTests
     public async Task Repository_HasCorrectNumberOfSeededUsers()
     {
         var admin = await _repository.GetByUsernameAsync("admin");
-        var analyst = await _repository.GetByUsernameAsync("analyst");  
+        var analyst = await _repository.GetByUsernameAsync("analyst");
         var viewer = await _repository.GetByUsernameAsync("viewer");
 
         Assert.NotNull(admin);

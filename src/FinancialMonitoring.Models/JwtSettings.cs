@@ -11,12 +11,12 @@ public class JwtSettings
     /// The issuer of the JWT tokens (typically the application name or URL)
     /// </summary>
     [Required] public string Issuer { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// The intended audience for the JWT tokens (typically the client application)
     /// </summary>
     [Required] public string Audience { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// The secret key used to sign and validate JWT tokens
     /// </summary>
@@ -39,27 +39,27 @@ public class JwtSettings
     /// </summary>
     [Range(1, 30)]
     public int ClockSkewMinutes { get; set; } = 5;
-    
+
     /// <summary>
     /// Whether to require HTTPS for token validation
     /// </summary>
     public bool RequireHttps { get; set; } = true;
-    
+
     /// <summary>
     /// Whether to validate token lifetime (expiration)
     /// </summary>
     public bool ValidateLifetime { get; set; } = true;
-    
+
     /// <summary>
     /// Whether to validate the token issuer
     /// </summary>
     public bool ValidateIssuer { get; set; } = true;
-    
+
     /// <summary>
     /// Whether to validate the token audience
     /// </summary>
     public bool ValidateAudience { get; set; } = true;
-    
+
     /// <summary>
     /// Whether to validate the issuer signing key
     /// </summary>

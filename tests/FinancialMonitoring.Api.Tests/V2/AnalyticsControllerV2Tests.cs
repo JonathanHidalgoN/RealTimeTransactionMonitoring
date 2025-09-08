@@ -20,12 +20,12 @@ public class AnalyticsControllerV2Tests
     {
         _mockRepository = new Mock<IAnalyticsRepository>();
         _mockLogger = new Mock<ILogger<AnalyticsController>>();
-        
+
         _controller = new AnalyticsController(_mockRepository.Object, _mockLogger.Object);
-        
+
         var httpContext = new DefaultHttpContext();
         httpContext.TraceIdentifier = "test-correlation-id";
-        
+
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, "123"),
@@ -34,7 +34,7 @@ public class AnalyticsControllerV2Tests
         var identity = new ClaimsIdentity(claims, "Test");
         var claimsPrincipal = new ClaimsPrincipal(identity);
         httpContext.User = claimsPrincipal;
-        
+
         _controller.ControllerContext = new ControllerContext
         {
             HttpContext = httpContext
@@ -61,7 +61,7 @@ public class AnalyticsControllerV2Tests
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var apiResponse = Assert.IsType<ApiResponse<TransactionAnalytics>>(okResult.Value);
-        
+
         Assert.True(apiResponse.Success);
         Assert.NotNull(apiResponse.Data);
         Assert.Equal(expectedAnalytics.TotalTransactions, apiResponse.Data.TotalTransactions);
@@ -81,7 +81,7 @@ public class AnalyticsControllerV2Tests
 
         var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(500, statusCodeResult.StatusCode);
-        
+
         var errorResponse = Assert.IsType<ApiErrorResponse>(statusCodeResult.Value);
         Assert.False(errorResponse.Success);
         Assert.NotNull(errorResponse.Error);
@@ -106,7 +106,7 @@ public class AnalyticsControllerV2Tests
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var apiResponse = Assert.IsType<ApiResponse<List<TimeSeriesDataPoint>>>(okResult.Value);
-        
+
         Assert.True(apiResponse.Success);
         Assert.NotNull(apiResponse.Data);
         Assert.Equal(expectedTimeSeries.Count, apiResponse.Data.Count);
@@ -131,7 +131,7 @@ public class AnalyticsControllerV2Tests
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var apiResponse = Assert.IsType<ApiResponse<List<TimeSeriesDataPoint>>>(okResult.Value);
-        
+
         Assert.True(apiResponse.Success);
         Assert.NotNull(apiResponse.Data);
         Assert.Equal(expectedTimeSeries.Count, apiResponse.Data.Count);
@@ -149,7 +149,7 @@ public class AnalyticsControllerV2Tests
 
         var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(500, statusCodeResult.StatusCode);
-        
+
         var errorResponse = Assert.IsType<ApiErrorResponse>(statusCodeResult.Value);
         Assert.False(errorResponse.Success);
         Assert.NotNull(errorResponse.Error);
@@ -174,7 +174,7 @@ public class AnalyticsControllerV2Tests
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var apiResponse = Assert.IsType<ApiResponse<List<TimeSeriesDataPoint>>>(okResult.Value);
-        
+
         Assert.True(apiResponse.Success);
         Assert.NotNull(apiResponse.Data);
         Assert.Equal(expectedTimeSeries.Count, apiResponse.Data.Count);
@@ -199,7 +199,7 @@ public class AnalyticsControllerV2Tests
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var apiResponse = Assert.IsType<ApiResponse<List<TimeSeriesDataPoint>>>(okResult.Value);
-        
+
         Assert.True(apiResponse.Success);
         Assert.NotNull(apiResponse.Data);
         Assert.Equal(expectedTimeSeries.Count, apiResponse.Data.Count);
@@ -217,7 +217,7 @@ public class AnalyticsControllerV2Tests
 
         var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(500, statusCodeResult.StatusCode);
-        
+
         var errorResponse = Assert.IsType<ApiErrorResponse>(statusCodeResult.Value);
         Assert.False(errorResponse.Success);
         Assert.NotNull(errorResponse.Error);
@@ -242,7 +242,7 @@ public class AnalyticsControllerV2Tests
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var apiResponse = Assert.IsType<ApiResponse<List<MerchantAnalytics>>>(okResult.Value);
-        
+
         Assert.True(apiResponse.Success);
         Assert.NotNull(apiResponse.Data);
         Assert.Equal(expectedMerchants.Count, apiResponse.Data.Count);
@@ -267,7 +267,7 @@ public class AnalyticsControllerV2Tests
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var apiResponse = Assert.IsType<ApiResponse<List<MerchantAnalytics>>>(okResult.Value);
-        
+
         Assert.True(apiResponse.Success);
         Assert.NotNull(apiResponse.Data);
         Assert.Equal(expectedMerchants.Count, apiResponse.Data.Count);
@@ -285,7 +285,7 @@ public class AnalyticsControllerV2Tests
 
         var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(500, statusCodeResult.StatusCode);
-        
+
         var errorResponse = Assert.IsType<ApiErrorResponse>(statusCodeResult.Value);
         Assert.False(errorResponse.Success);
         Assert.NotNull(errorResponse.Error);
@@ -311,7 +311,7 @@ public class AnalyticsControllerV2Tests
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var apiResponse = Assert.IsType<ApiResponse<List<MerchantAnalytics>>>(okResult.Value);
-        
+
         Assert.True(apiResponse.Success);
         Assert.NotNull(apiResponse.Data);
         Assert.Equal(expectedCategoryAnalytics.Count, apiResponse.Data.Count);
@@ -330,7 +330,7 @@ public class AnalyticsControllerV2Tests
 
         var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(500, statusCodeResult.StatusCode);
-        
+
         var errorResponse = Assert.IsType<ApiErrorResponse>(statusCodeResult.Value);
         Assert.False(errorResponse.Success);
         Assert.NotNull(errorResponse.Error);

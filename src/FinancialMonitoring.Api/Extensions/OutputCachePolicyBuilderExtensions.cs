@@ -17,7 +17,7 @@ public static class OutputCachePolicyBuilderExtensions
     /// <param name="configurePolicy">Optional additional configuration (vary-by rules, etc.)</param>
     /// <returns>The policy builder for method chaining</returns>
     public static OutputCachePolicyBuilder ConditionalExpire(
-        this OutputCachePolicyBuilder builder, 
+        this OutputCachePolicyBuilder builder,
         int seconds,
         Action<OutputCachePolicyBuilder>? configurePolicy = null)
     {

@@ -19,7 +19,7 @@ public class OAuthClientServiceV2Tests
         _mockRepository = new Mock<IOAuthClientRepository>();
         _mockPasswordService = new Mock<IPasswordHashingService>();
         _mockLogger = new Mock<ILogger<OAuthClientService>>();
-        
+
         _service = new OAuthClientService(
             _mockRepository.Object,
             _mockPasswordService.Object,
@@ -32,7 +32,7 @@ public class OAuthClientServiceV2Tests
         var clientId = "test-client";
         var clientSecret = "test-secret";
         var hashedSecret = "hashed-secret";
-        
+
         var testClient = new OAuthClient
         {
             Id = 1,
@@ -77,7 +77,7 @@ public class OAuthClientServiceV2Tests
     {
         var clientId = "test-client";
         var clientSecret = "test-secret";
-        
+
         var inactiveClient = new OAuthClient
         {
             Id = 1,
@@ -102,7 +102,7 @@ public class OAuthClientServiceV2Tests
         var clientId = "test-client";
         var clientSecret = "invalid-secret";
         var hashedSecret = "hashed-secret";
-        
+
         var testClient = new OAuthClient
         {
             Id = 1,

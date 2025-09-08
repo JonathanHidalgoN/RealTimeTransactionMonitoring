@@ -26,7 +26,7 @@ public class TransactionsControllerV2Tests
         // Setup HTTP context with JWT claims (V2 uses JWT authentication)
         var httpContext = new DefaultHttpContext();
         httpContext.TraceIdentifier = "test-correlation-id-v2";
-        
+
         // Add claims that V2 controller expects
         var claims = new List<Claim>
         {
@@ -38,7 +38,7 @@ public class TransactionsControllerV2Tests
         var identity = new ClaimsIdentity(claims, "jwt");
         var principal = new ClaimsPrincipal(identity);
         httpContext.User = principal;
-        
+
         _controller.ControllerContext = new ControllerContext
         {
             HttpContext = httpContext
@@ -239,7 +239,7 @@ public class TransactionsControllerV2Tests
         Assert.True(apiResponse.Success);
         Assert.NotNull(apiResponse.Data);
         Assert.Single(apiResponse.Data.Items);
-        
+
         // Verify that user context from JWT claims is available
         Assert.Equal("user-123", _controller.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
         Assert.Equal("Admin", _controller.User.FindFirst(ClaimTypes.Role)?.Value);

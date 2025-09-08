@@ -20,7 +20,7 @@ public static class RunTimeEnvironmentExtensions
         if (string.IsNullOrWhiteSpace(value))
             throw new ArgumentException("Environment string cannot be null or empty", nameof(value));
 
-        if (Enum.TryParse<RunTimeEnvironment>(value, ignoreCase: true, out var result) && 
+        if (Enum.TryParse<RunTimeEnvironment>(value, ignoreCase: true, out var result) &&
             Enum.IsDefined(typeof(RunTimeEnvironment), result))
         {
             return result;
