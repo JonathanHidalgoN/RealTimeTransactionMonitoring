@@ -7,7 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using Confluent.Kafka;
-using Microsoft.Azure.Cosmos;
+using MongoDB.Driver;
+using MongoDB.Bson;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Api.Authentication;
 
@@ -20,9 +21,9 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
     private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
     private IProducer<Null, string> _producer = null!;
-    private CosmosClient _cosmosClient = null!;
-    private Database _database = null!;
-    private Container _container = null!;
+    private IMongoClient _mongoClient = null!;
+    private IMongoDatabase _database = null!;
+    private IMongoCollection<Transaction> _collection = null!;
 
     public EndToEndTransactionFlowTests()
     {
@@ -32,26 +33,26 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        // Connect to Kafka
         var producerConfig = new ProducerConfig
         {
             BootstrapServers = _config.Kafka.BootstrapServers
         };
         _producer = new ProducerBuilder<Null, string>(producerConfig).Build();
 
-        // Connect to CosmosDB
-        var connectionString = $"AccountEndpoint={_config.CosmosDb.EndpointUri};AccountKey={_config.CosmosDb.PrimaryKey}";
-        _cosmosClient = new CosmosClient(connectionString, new CosmosClientOptions
+        try
         {
-            HttpClientFactory = () => new HttpClient(new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (_, _, _, _) => true
-            })
-        });
-        _database = await _cosmosClient.CreateDatabaseIfNotExistsAsync("IntegrationTestDb");
-        _container = await _database.CreateContainerIfNotExistsAsync("transactions", "/id");
+            _mongoClient = new MongoClient(_config.MongoDb.ConnectionString);
+            _database = _mongoClient.GetDatabase(_config.MongoDb.DatabaseName);
+            _collection = _database.GetCollection<Transaction>(_config.MongoDb.CollectionName);
 
-        // Setup API factory
+            // Test the connection
+            await _database.RunCommandAsync((Command<MongoDB.Bson.BsonDocument>)"{ping:1}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to initialize MongoDB: {ex.Message}");
+        }
+
         _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
@@ -60,11 +61,9 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
                     configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
                     {
                         { "ApiSettings:ApiKey", "integration-test-key" },
-                        { "CosmosDb:EndpointUri", _config.CosmosDb.EndpointUri },
-                        { "CosmosDb:PrimaryKey", _config.CosmosDb.PrimaryKey },
-                        { "CosmosDb:DatabaseName", "IntegrationTestDb" },
-                        { "CosmosDb:ContainerName", "transactions" },
-                        { "CosmosDb:PartitionKeyPath", "/id" },
+                        { "MongoDb:ConnectionString", _config.MongoDb.ConnectionString },
+                        { "MongoDb:DatabaseName", _config.MongoDb.DatabaseName },
+                        { "MongoDb:CollectionName", _config.MongoDb.CollectionName },
                         { "Redis:ConnectionString", _config.Redis.ConnectionString },
                         { "Kafka:BootstrapServers", _config.Kafka.BootstrapServers },
                         { "AnomalyDetection:MaxAmountThreshold", "1000" },
@@ -80,7 +79,7 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
             });
 
         _client = _factory.CreateClient();
-        _client.DefaultRequestHeaders.Add(ApiKeyAuthenticationDefaults.ApiKeyHeaderName, "integration-test-key");
+        _client.DefaultRequestHeaders.Add(AppConstants.ApiKeyHeader, "integration-test-key");
     }
 
     /// <summary>
@@ -92,7 +91,7 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
         var transaction = new Transaction(
             id: Guid.NewGuid().ToString(),
             amount: 250.00,
-            timestamp: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            timestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             sourceAccount: new Account("ACC-FROM-001"),
             destinationAccount: new Account("ACC-TO-001"),
             type: TransactionType.Purchase,
@@ -106,16 +105,22 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
             Value = JsonSerializer.Serialize(transaction)
         });
 
-        await Task.Delay(5000);
+        await Task.Delay(15000);
 
-        var response = await _client.GetAsync($"/api/transactions/{transaction.Id}");
+        var response = await _client.GetAsync($"/api/v1/transactions/{transaction.Id}");
 
-        Assert.True(response.IsSuccessStatusCode, $"Expected success status code, but got {response.StatusCode}");
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Assert.True(response.IsSuccessStatusCode, $"Expected success status code, but got {response.StatusCode}. Error: {errorContent}");
+        }
 
-        var retrievedTransaction = await response.Content.ReadFromJsonAsync<Transaction>();
-        Assert.NotNull(retrievedTransaction);
-        Assert.Equal(transaction.Id, retrievedTransaction.Id);
-        Assert.Equal(transaction.Amount, retrievedTransaction.Amount);
+        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<Transaction>>();
+        Assert.NotNull(apiResponse);
+        Assert.True(apiResponse.Success);
+        Assert.NotNull(apiResponse.Data);
+        Assert.Equal(transaction.Id, apiResponse.Data.Id);
+        Assert.Equal(transaction.Amount, apiResponse.Data.Amount);
     }
 
     /// <summary>
@@ -127,7 +132,7 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
         var anomalousTransaction = new Transaction(
             id: Guid.NewGuid().ToString(),
             amount: 5000.00,
-            timestamp: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            timestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             sourceAccount: new Account("ACC-ANOMALY-001"),
             destinationAccount: new Account("ACC-ANOMALY-002"),
             type: TransactionType.Purchase,
@@ -141,15 +146,17 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
             Value = JsonSerializer.Serialize(anomalousTransaction)
         });
 
-        await Task.Delay(5000);
+        await Task.Delay(15000);
 
-        var response = await _client.GetAsync($"/api/transactions/{anomalousTransaction.Id}");
+        var response = await _client.GetAsync($"/api/v1/transactions/{anomalousTransaction.Id}");
         Assert.True(response.IsSuccessStatusCode);
 
-        var retrievedTransaction = await response.Content.ReadFromJsonAsync<Transaction>();
-        Assert.NotNull(retrievedTransaction);
-        Assert.Equal(anomalousTransaction.Id, retrievedTransaction.Id);
-        Assert.NotNull(retrievedTransaction.AnomalyFlag);
+        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<Transaction>>();
+        Assert.NotNull(apiResponse);
+        Assert.True(apiResponse.Success);
+        Assert.NotNull(apiResponse.Data);
+        Assert.Equal(anomalousTransaction.Id, apiResponse.Data.Id);
+        Assert.NotNull(apiResponse.Data.AnomalyFlag);
     }
 
     /// <summary>
@@ -161,7 +168,7 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
         var transactions = Enumerable.Range(1, 10).Select(i => new Transaction(
             id: Guid.NewGuid().ToString(),
             amount: 100.00 + i,
-            timestamp: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            timestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             sourceAccount: new Account($"ACC-FROM-{i:D3}"),
             destinationAccount: new Account($"ACC-TO-{i:D3}"),
             type: TransactionType.Purchase,
@@ -179,20 +186,22 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
         });
 
         await Task.WhenAll(tasks);
-        await Task.Delay(8000);
+        await Task.Delay(20000);
 
-        var response = await _client.GetAsync("/api/transactions?pageSize=20");
+        var response = await _client.GetAsync("/api/v1/transactions?pageSize=20");
         Assert.True(response.IsSuccessStatusCode);
 
-        var pagedResult = await response.Content.ReadFromJsonAsync<PagedResult<Transaction>>();
-        Assert.NotNull(pagedResult);
-        Assert.True(pagedResult.TotalCount >= 10, $"Expected at least 10 transactions, but got {pagedResult.TotalCount}");
+        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<Transaction>>>();
+        Assert.NotNull(apiResponse);
+        Assert.True(apiResponse.Success);
+        Assert.NotNull(apiResponse.Data);
+        Assert.True(apiResponse.Data.TotalCount >= 10, $"Expected at least 10 transactions, but got {apiResponse.Data.TotalCount}");
     }
 
     public async Task DisposeAsync()
     {
         _producer?.Dispose();
-        _cosmosClient?.Dispose();
+        _mongoClient = null; // MongoDB client doesn't need explicit disposal
         _client?.Dispose();
         _factory?.Dispose();
         await Task.CompletedTask;

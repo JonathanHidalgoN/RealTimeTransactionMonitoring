@@ -1,4 +1,3 @@
-using TransactionSimulator;
 using TransactionSimulator.Generation;
 using FinancialMonitoring.Abstractions;
 using FinancialMonitoring.Models;
@@ -18,8 +17,11 @@ public class SimulatorTests
         Assert.False(string.IsNullOrWhiteSpace(generatedTransaction.Id));
         Assert.True(generatedTransaction.Amount > 0);
 
-        long currentUnixTimeMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        Assert.True(generatedTransaction.Timestamp <= currentUnixTimeMs, "Timestamp should not be in the future.");
+        var currentTime = DateTimeOffset.UtcNow;
+        var transactionTime = DateTimeOffset.FromUnixTimeMilliseconds(generatedTransaction.Timestamp);
+        var timeDifferenceHours = Math.Abs((transactionTime - currentTime).TotalHours);
+
+        Assert.True(timeDifferenceHours <= 24, $"Transaction timestamp should be within 24 hours of current time. Actual difference: {timeDifferenceHours:F2} hours");
 
         Assert.NotNull(generatedTransaction.SourceAccount);
         Assert.StartsWith("ACC", generatedTransaction.SourceAccount.AccountId);

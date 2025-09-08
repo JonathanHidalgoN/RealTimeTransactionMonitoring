@@ -28,25 +28,21 @@ public class DockerComposeTransactionFlowTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        //Create http client to api with default key
         _client = new HttpClient { BaseAddress = new Uri(_config.Api.BaseUrl) };
         _client.DefaultRequestHeaders.Add("X-API-Key", _config.Api.ApiKey);
 
-        //Connect to kafka
         var producerConfig = new ProducerConfig
         {
             BootstrapServers = _config.Kafka.BootstrapServers
         };
         _producer = new ProducerBuilder<Null, string>(producerConfig).Build();
 
-        //Connect to MongoDB
         try
         {
             _mongoClient = new MongoClient(_config.MongoDb.ConnectionString);
             _database = _mongoClient.GetDatabase(_config.MongoDb.DatabaseName);
             _collection = _database.GetCollection<Transaction>(_config.MongoDb.CollectionName);
-            
-            // Test the connection
+
             await _database.RunCommandAsync((Command<MongoDB.Bson.BsonDocument>)"{ping:1}");
         }
         catch (Exception ex)
@@ -64,7 +60,7 @@ public class DockerComposeTransactionFlowTests : IAsyncLifetime
         var transaction = new Transaction(
             id: Guid.NewGuid().ToString(),
             amount: 250.00,
-            timestamp: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            timestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             sourceAccount: new Account("ACC-FROM-001"),
             destinationAccount: new Account("ACC-TO-001"),
             type: TransactionType.Purchase,
@@ -73,29 +69,27 @@ public class DockerComposeTransactionFlowTests : IAsyncLifetime
             location: new Location("NYC", "NY", "US")
         );
 
-        // Send transaction to Kafka
         await _producer.ProduceAsync("transactions", new Message<Null, string>
         {
             Value = JsonSerializer.Serialize(transaction)
         });
 
-        // Wait for processing
         await Task.Delay(10000);
 
-        // Check if transaction was processed via API
-        var response = await _client.GetAsync($"/api/transactions/{transaction.Id}");
+        var response = await _client.GetAsync($"/api/v1/transactions/{transaction.Id}");
 
         if (response.IsSuccessStatusCode)
         {
-            var retrievedTransaction = await response.Content.ReadFromJsonAsync<Transaction>();
-            Assert.NotNull(retrievedTransaction);
-            Assert.Equal(transaction.Id, retrievedTransaction.Id);
-            Assert.Equal(transaction.Amount, retrievedTransaction.Amount);
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<Transaction>>();
+            Assert.NotNull(apiResponse);
+            Assert.True(apiResponse.Success);
+            Assert.NotNull(apiResponse.Data);
+            Assert.Equal(transaction.Id, apiResponse.Data.Id);
+            Assert.Equal(transaction.Amount, apiResponse.Data.Amount);
         }
         else
         {
-            // Transaction might not be processed yet or API might not be ready
-            var allTransactionsResponse = await _client.GetAsync("/api/transactions?pageSize=10");
+            var allTransactionsResponse = await _client.GetAsync("/api/v1/transactions?pageSize=10");
             Assert.True(allTransactionsResponse.IsSuccessStatusCode,
                 $"API is not responding. Status: {response.StatusCode}, All transactions status: {allTransactionsResponse.StatusCode}");
         }

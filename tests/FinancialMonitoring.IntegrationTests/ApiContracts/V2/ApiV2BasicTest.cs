@@ -33,6 +33,10 @@ public class ApiV2BasicTest : IAsyncLifetime
         try
         {
             _accessToken = await GetOAuthTokenAsync();
+            
+            // Add delay to avoid hitting OAuth rate limits (10 requests per minute)
+            await Task.Delay(TimeSpan.FromSeconds(7));
+            
             _adminAccessToken = await GetOAuthTokenAsync("admin");
         }
         catch (Exception ex)
@@ -40,8 +44,6 @@ public class ApiV2BasicTest : IAsyncLifetime
             Console.WriteLine($"Warning: Could not acquire OAuth tokens during initialization: {ex.Message}");
         }
     }
-
-    #region OAuth2 Flow Tests
 
     /// <summary>
     /// Test that OAuth2 Client Credentials flow returns a valid token
@@ -145,9 +147,7 @@ public class ApiV2BasicTest : IAsyncLifetime
         Assert.True(tokenResponse.TryGetProperty("token_type", out _));
     }
 
-    #endregion
 
-    #region JWT Authentication Tests
 
     /// <summary>
     /// Test that V2 endpoints require JWT authentication
@@ -198,10 +198,6 @@ public class ApiV2BasicTest : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
-    #endregion
-
-    #region Role-Based Authorization Tests
-
     /// <summary>
     /// Test that admin endpoints require admin role
     /// </summary>
@@ -244,9 +240,7 @@ public class ApiV2BasicTest : IAsyncLifetime
             $"User should be able to access transactions. Status: {transactionsResponse.StatusCode}");
     }
 
-    #endregion
 
-    #region V2 Response Format Tests
 
     /// <summary>
     /// Test that V2 API responses follow the standardized ApiResponse format
@@ -309,9 +303,6 @@ public class ApiV2BasicTest : IAsyncLifetime
         Assert.True(root.TryGetProperty("timestamp", out _));
     }
 
-    #endregion
-
-    #region V2-Specific Feature Tests
 
     /// <summary>
     /// Test that V2 analytics return enhanced data compared to V1
@@ -368,7 +359,27 @@ public class ApiV2BasicTest : IAsyncLifetime
 
             if (!response.IsSuccessStatusCode)
             {
-                return null;
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"OAuth token request failed. Status: {response.StatusCode}, Content: {errorContent}");
+                
+                // If rate limited, wait and retry once
+                if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                {
+                    Console.WriteLine("Rate limited - waiting 30 seconds before retry...");
+                    await Task.Delay(TimeSpan.FromSeconds(30));
+                    
+                    response = await _client.PostAsync("/api/v2/oauth/token", formData);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var retryErrorContent = await response.Content.ReadAsStringAsync();
+                        Console.WriteLine($"OAuth token retry failed. Status: {response.StatusCode}, Content: {retryErrorContent}");
+                        return null;
+                    }
+                }
+                else
+                {
+                    return null;
+                }
             }
 
             var content = await response.Content.ReadAsStringAsync();
@@ -425,5 +436,4 @@ public class ApiV2BasicTest : IAsyncLifetime
         await Task.CompletedTask;
     }
 
-    #endregion
 }
