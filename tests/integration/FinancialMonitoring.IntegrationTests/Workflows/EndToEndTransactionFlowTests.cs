@@ -2,22 +2,18 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Hosting;
 using Confluent.Kafka;
 using MongoDB.Driver;
-using MongoDB.Bson;
 using FinancialMonitoring.Models;
-using FinancialMonitoring.Api.Authentication;
 
 namespace FinancialMonitoring.IntegrationTests.Workflows;
 
 [Trait("Category", "E2E")]
 public class EndToEndTransactionFlowTests : IAsyncLifetime
 {
-    private readonly TestConfiguration _config;
+    private readonly IntegrationTestConfiguration _config;
     private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
     private IProducer<Null, string> _producer = null!;
@@ -27,7 +23,7 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
 
     public EndToEndTransactionFlowTests()
     {
-        _config = TestConfiguration.FromEnvironment();
+        _config = IntegrationTestConfiguration.FromEnvironment();
         _config.Validate();
     }
 

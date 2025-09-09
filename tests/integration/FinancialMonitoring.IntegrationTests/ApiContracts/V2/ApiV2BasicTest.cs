@@ -13,14 +13,14 @@ namespace FinancialMonitoring.IntegrationTests.ApiContracts.V2;
 [Trait("Category", "API")]
 public class ApiV2BasicTest : IAsyncLifetime
 {
-    private readonly TestConfiguration _config;
+    private readonly IntegrationTestConfiguration _config;
     private HttpClient _client = null!;
     private string? _accessToken;
     private string? _adminAccessToken;
 
     public ApiV2BasicTest()
     {
-        _config = TestConfiguration.FromEnvironment();
+        _config = IntegrationTestConfiguration.FromEnvironment();
         _config.Validate();
     }
 

@@ -1,6 +1,4 @@
-using System.Net.Http.Json;
 using System.Text.Json;
-using FinancialMonitoring.Models;
 
 namespace FinancialMonitoring.IntegrationTests.ApiContracts.V1;
 
@@ -8,12 +6,12 @@ namespace FinancialMonitoring.IntegrationTests.ApiContracts.V1;
 [Trait("Category", "API")]
 public class ApiBasicTest : IAsyncLifetime
 {
-    private readonly TestConfiguration _config;
+    private readonly IntegrationTestConfiguration _config;
     private HttpClient _client = null!;
 
     public ApiBasicTest()
     {
-        _config = TestConfiguration.FromEnvironment();
+        _config = IntegrationTestConfiguration.FromEnvironment();
         _config.Validate();
     }
 

@@ -2,7 +2,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Confluent.Kafka;
 using MongoDB.Driver;
-using MongoDB.Bson;
 using FinancialMonitoring.Models;
 
 namespace FinancialMonitoring.IntegrationTests.Workflows;
@@ -13,7 +12,7 @@ namespace FinancialMonitoring.IntegrationTests.Workflows;
 [Trait("Category", "E2E")]
 public class DockerComposeTransactionFlowTests : IAsyncLifetime
 {
-    private readonly TestConfiguration _config;
+    private readonly IntegrationTestConfiguration _config;
     private HttpClient _client = null!;
     private IProducer<Null, string> _producer = null!;
     private IMongoClient _mongoClient = null!;
@@ -22,7 +21,7 @@ public class DockerComposeTransactionFlowTests : IAsyncLifetime
 
     public DockerComposeTransactionFlowTests()
     {
-        _config = TestConfiguration.FromEnvironment();
+        _config = IntegrationTestConfiguration.FromEnvironment();
         _config.Validate();
     }
 

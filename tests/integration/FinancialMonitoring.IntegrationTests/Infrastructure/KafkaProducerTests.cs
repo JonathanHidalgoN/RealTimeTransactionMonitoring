@@ -9,12 +9,12 @@ namespace FinancialMonitoring.IntegrationTests.Infrastructure;
 [Trait("Category", "Infrastructure")]
 public class KafkaProducerTests : IAsyncLifetime
 {
-    private readonly TestConfiguration _config;
+    private readonly IntegrationTestConfiguration _config;
     private IProducer<Null, string> _producer = null!;
 
     public KafkaProducerTests()
     {
-        _config = TestConfiguration.FromEnvironment();
+        _config = IntegrationTestConfiguration.FromEnvironment();
         _config.Validate();
     }
 

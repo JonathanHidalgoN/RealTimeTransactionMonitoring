@@ -6,7 +6,7 @@ namespace FinancialMonitoring.IntegrationTests;
 /// Centralized configuration management for integration tests
 /// Eliminates scattered Environment.GetEnvironmentVariable calls and provides validation
 /// </summary>
-public class TestConfiguration
+public class IntegrationTestConfiguration
 {
     public ApiConfiguration Api { get; set; } = new();
     public KafkaConfiguration Kafka { get; set; } = new();
@@ -15,13 +15,14 @@ public class TestConfiguration
     public CosmosDbConfiguration CosmosDb { get; set; } = new();
     public OAuth2Configuration OAuth2 { get; set; } = new();
     public EnvironmentConfiguration Environment { get; set; } = new();
+    public ConnectivityTestConfiguration ConnectivityTest { get; set; } = new();
 
     /// <summary>
-    /// Creates a TestConfiguration from environment variables with fallback defaults
+    /// Creates an IntegrationTestConfiguration from environment variables with fallback defaults
     /// </summary>
-    public static TestConfiguration FromEnvironment()
+    public static IntegrationTestConfiguration FromEnvironment()
     {
-        return new TestConfiguration
+        return new IntegrationTestConfiguration
         {
             Api = new ApiConfiguration
             {
@@ -56,32 +57,33 @@ public class TestConfiguration
             {
                 DotNetEnvironment = GetEnvVar("DOTNET_ENVIRONMENT", "Development"),
                 IsTestingEnvironment = GetEnvVar("DOTNET_ENVIRONMENT", "Development") == "Testing"
-            }
+            },
+            ConnectivityTest = new ConnectivityTestConfiguration()
         };
     }
 
     /// <summary>
     /// Fluent configuration builder for test customization
     /// </summary>
-    public TestConfiguration WithApiUrl(string baseUrl)
+    public IntegrationTestConfiguration WithApiUrl(string baseUrl)
     {
         Api.BaseUrl = baseUrl;
         return this;
     }
 
-    public TestConfiguration WithApiKey(string apiKey)
+    public IntegrationTestConfiguration WithApiKey(string apiKey)
     {
         Api.ApiKey = apiKey;
         return this;
     }
 
-    public TestConfiguration WithKafka(string bootstrapServers)
+    public IntegrationTestConfiguration WithKafka(string bootstrapServers)
     {
         Kafka.BootstrapServers = bootstrapServers;
         return this;
     }
 
-    public TestConfiguration WithMongo(string connectionString, string? databaseName = null, string? collectionName = null)
+    public IntegrationTestConfiguration WithMongo(string connectionString, string? databaseName = null, string? collectionName = null)
     {
         MongoDb.ConnectionString = connectionString;
         if (databaseName != null) MongoDb.DatabaseName = databaseName;
@@ -89,23 +91,33 @@ public class TestConfiguration
         return this;
     }
 
-    public TestConfiguration WithRedis(string connectionString)
+    public IntegrationTestConfiguration WithRedis(string connectionString)
     {
         Redis.ConnectionString = connectionString;
         return this;
     }
 
-    public TestConfiguration WithCosmosDb(string endpointUri, string primaryKey)
+    public IntegrationTestConfiguration WithCosmosDb(string endpointUri, string primaryKey)
     {
         CosmosDb.EndpointUri = endpointUri;
         CosmosDb.PrimaryKey = primaryKey;
         return this;
     }
 
-    public TestConfiguration WithOAuth2(string clientId, string clientSecret)
+    public IntegrationTestConfiguration WithOAuth2(string clientId, string clientSecret)
     {
         OAuth2.ClientId = clientId;
         OAuth2.ClientSecret = clientSecret;
+        return this;
+    }
+
+    public IntegrationTestConfiguration WithConnectivityTestSettings(int initDelayMs = 15000, int kafkaTimeoutMs = 30000)
+    {
+        ConnectivityTest.InitializationDelayMs = initDelayMs;
+        ConnectivityTest.KafkaMessageTimeoutMs = kafkaTimeoutMs;
+        ConnectivityTest.KafkaRequestTimeoutMs = kafkaTimeoutMs;
+        ConnectivityTest.KafkaMetadataMaxAgeMs = kafkaTimeoutMs;
+        ConnectivityTest.KafkaSocketTimeoutMs = kafkaTimeoutMs;
         return this;
     }
 
@@ -207,4 +219,28 @@ public class EnvironmentConfiguration
 {
     public string DotNetEnvironment { get; set; } = string.Empty;
     public bool IsTestingEnvironment { get; set; }
+}
+
+public class ConnectivityTestConfiguration
+{
+    public int InitializationDelayMs { get; set; } = 15000;
+    
+    // Kafka configuration
+    public int KafkaMessageTimeoutMs { get; set; } = 30000;
+    public int KafkaRequestTimeoutMs { get; set; } = 30000;
+    public int KafkaMetadataMaxAgeMs { get; set; } = 30000;
+    public int KafkaSocketTimeoutMs { get; set; } = 30000;
+    public int KafkaMaxRetries { get; set; } = 3;
+    public int KafkaRetryDelayMs { get; set; } = 10000;
+    public string KafkaTopicName { get; set; } = "transactions";
+    
+    // Redis configuration
+    public string RedisTestKeyPrefix { get; set; } = "test:connectivity";
+    public string RedisTestValue { get; set; } = "integration-test";
+    
+    // MongoDB configuration
+    public string MongoDbTestCollectionName { get; set; } = "connectivity_test";
+    public string MongoDbTestFieldName { get; set; } = "test";
+    public string MongoDbTestFieldValue { get; set; } = "connectivity";
+    public string MongoDbTestSource { get; set; } = "integration-test";
 }
