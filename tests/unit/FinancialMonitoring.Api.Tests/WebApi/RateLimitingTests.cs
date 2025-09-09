@@ -11,7 +11,7 @@ using FinancialMonitoring.Api.Authentication;
 using FinancialMonitoring.Api.Services;
 using FinancialMonitoring.Models.OAuth;
 
-namespace FinancialMonitoring.Api.Tests.Integration;
+namespace FinancialMonitoring.Api.Tests.WebApi;
 
 /// <summary>
 /// Tests for rate limiting functionality including OAuth endpoints
@@ -33,42 +33,13 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
         {
             builder.ConfigureAppConfiguration((context, configBuilder) =>
             {
+                var testConfigPath = Path.Combine(AppContext.BaseDirectory, "appsettings.Test.json");
+                configBuilder.AddJsonFile(testConfigPath, optional: false);
+
                 configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    // General settings
-                    { "ApiSettings:ApiKey", "test-api-key-123" },
-                    { "MongoDb:ConnectionString", "mongodb://localhost:27017" },
-                    { "MongoDb:DatabaseName", "TestFinancialMonitoring" },
-                    { "MongoDb:CollectionName", "transactions" },
-                    { "ApplicationInsights:ConnectionString", "InstrumentationKey=test-key;IngestionEndpoint=https://test.in.applicationinsights.azure.com/" },
-
-                    // Rate limiting rules - override defaults with test-specific limits
-                    { "RateLimitSettings:EnableEndpointRateLimiting", "true" },
-                    { "RateLimitSettings:StackBlockedRequests", "false" },
-                    { "RateLimitSettings:HttpStatusCode", "429" },
-                    { "RateLimitSettings:RealIpHeader", "X-Real-IP" },
-                    { "RateLimitSettings:ClientIdHeader", "X-ClientId" },
-                    { "RateLimitSettings:GeneralRules:0:Endpoint", "*/oauth/token" },
-                    { "RateLimitSettings:GeneralRules:0:Period", "1m" },
                     { "RateLimitSettings:GeneralRules:0:Limit", "2" },
-                    { "RateLimitSettings:GeneralRules:1:Endpoint", "*/oauth/clients" },
-                    { "RateLimitSettings:GeneralRules:1:Period", "1m" },
-                    { "RateLimitSettings:GeneralRules:1:Limit", "2" },
-                    { "RateLimitSettings:GeneralRules:2:Endpoint", "*/transactions" },
-                    { "RateLimitSettings:GeneralRules:2:Period", "1m" },
-                    { "RateLimitSettings:GeneralRules:2:Limit", "10" },
-                    { "RateLimitSettings:GeneralRules:3:Endpoint", "*" },
-                    { "RateLimitSettings:GeneralRules:3:Period", "1m" },
-                    { "RateLimitSettings:GeneralRules:3:Limit", "50" },
-
-                    // Other settings
-                    { "AllowedOrigins:0", "http://localhost" },
-                    { "AllowedOrigins:1", "https://localhost" },
-                    { "JwtSettings:SecretKey", "test-secret-key-that-is-very-long-for-hmac-sha256" },
-                    { "JwtSettings:Issuer", "TestIssuer" },
-                    { "JwtSettings:Audience", "TestAudience" },
-                    { "JwtSettings:AccessTokenExpiryMinutes", "15" },
-                    { "JwtSettings:RefreshTokenExpiryDays", "7" }
+                    { "RateLimitSettings:GeneralRules:1:Limit", "2" }
                 });
             });
 
@@ -78,20 +49,12 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
                 services.AddSingleton<ITransactionRepository>(_mockRepository.Object);
                 services.RemoveAll<IOAuthClientService>();
                 services.AddSingleton<IOAuthClientService>(_mockOAuthService.Object);
-
-                services.RemoveAll<IPasswordHashingService>();
-                services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
                 services.RemoveAll<IJwtTokenService>();
                 services.AddSingleton<IJwtTokenService>(_mockJwtService.Object);
 
-                services.Configure<JwtSettings>(options =>
-                {
-                    options.SecretKey = "test-secret-key-that-is-very-long-for-hmac-sha256";
-                    options.Issuer = "TestIssuer";
-                    options.Audience = "TestAudience";
-                    options.AccessTokenExpiryMinutes = 15;
-                    options.RefreshTokenExpiryDays = 7;
-                });
+                // Keep password hashing service for authentication
+                services.RemoveAll<IPasswordHashingService>();
+                services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
             });
         });
     }

@@ -11,7 +11,7 @@ using Microsoft.Extensions.Configuration;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Api.Services;
 
-namespace FinancialMonitoring.Api.Tests.Integration;
+namespace FinancialMonitoring.Api.Tests.WebApi;
 
 /// <summary>
 /// Tests for health check functionality
@@ -28,19 +28,8 @@ public class HealthCheckTests : IClassFixture<WebApplicationFactory<Program>>
         {
             builder.ConfigureAppConfiguration((context, configBuilder) =>
             {
-                configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    { "ApiSettings:ApiKey", "test-api-key-123" },
-                    { "MongoDb:ConnectionString", "mongodb://localhost:27017" },
-                    { "MongoDb:DatabaseName", "TestFinancialMonitoring" },
-                    { "MongoDb:CollectionName", "transactions" },
-                    { "ApplicationInsights:ConnectionString", "InstrumentationKey=test-key;IngestionEndpoint=https://test.in.applicationinsights.azure.com/" },
-                    { "JwtSettings:SecretKey", "test-secret-key-that-is-very-long-for-hmac-sha256" },
-                    { "JwtSettings:Issuer", "TestIssuer" },
-                    { "JwtSettings:Audience", "TestAudience" },
-                    { "JwtSettings:ExpiresInMinutes", "15" },
-                    { "JwtSettings:RefreshTokenExpiryInDays", "7" }
-                });
+                var testConfigPath = Path.Combine(AppContext.BaseDirectory, "appsettings.Test.json");
+                configBuilder.AddJsonFile(testConfigPath, optional: false);
             });
 
             builder.ConfigureServices(services =>
@@ -48,21 +37,10 @@ public class HealthCheckTests : IClassFixture<WebApplicationFactory<Program>>
                 services.RemoveAll<ITransactionRepository>();
                 services.AddSingleton<ITransactionRepository>(_mockRepository.Object);
 
-                // Add missing authentication services that InMemoryUserRepository needs
                 services.RemoveAll<IPasswordHashingService>();
                 services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
                 services.RemoveAll<IJwtTokenService>();
                 services.AddScoped<IJwtTokenService, JwtTokenService>();
-
-                // Configure JWT options
-                services.Configure<JwtSettings>(options =>
-                {
-                    options.SecretKey = "test-secret-key-that-is-very-long-for-hmac-sha256";
-                    options.Issuer = "TestIssuer";
-                    options.Audience = "TestAudience";
-                    options.AccessTokenExpiryMinutes = 15;
-                    options.RefreshTokenExpiryDays = 7;
-                });
             });
         });
     }

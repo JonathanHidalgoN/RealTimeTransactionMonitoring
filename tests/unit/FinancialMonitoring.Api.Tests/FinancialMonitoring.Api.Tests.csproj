@@ -32,4 +32,8 @@
     <ProjectReference Include="..\..\..\src\FinancialMonitoring.Abstractions\FinancialMonitoring.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="appsettings.Test.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
