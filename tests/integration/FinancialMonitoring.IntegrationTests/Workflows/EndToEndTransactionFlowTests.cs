@@ -1,9 +1,5 @@
 using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Confluent.Kafka;
 using MongoDB.Driver;
 using FinancialMonitoring.Models;
@@ -14,7 +10,6 @@ namespace FinancialMonitoring.IntegrationTests.Workflows;
 public class EndToEndTransactionFlowTests : IAsyncLifetime
 {
     private readonly IntegrationTestConfiguration _config;
-    private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
     private IProducer<Null, string> _producer = null!;
     private IMongoClient _mongoClient = null!;
@@ -29,6 +24,9 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
+        _client = new HttpClient { BaseAddress = new Uri(_config.Api.BaseUrl) };
+        _client.DefaultRequestHeaders.Add("X-Api-Key", _config.Api.ApiKey);
+
         var producerConfig = new ProducerConfig
         {
             BootstrapServers = _config.Kafka.BootstrapServers
@@ -48,34 +46,6 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
         {
             Console.WriteLine($"Failed to initialize MongoDB: {ex.Message}");
         }
-
-        _factory = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureAppConfiguration((context, configBuilder) =>
-                {
-                    configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
-                    {
-                        { "ApiSettings:ApiKey", "integration-test-key" },
-                        { "MongoDb:ConnectionString", _config.MongoDb.ConnectionString },
-                        { "MongoDb:DatabaseName", _config.MongoDb.DatabaseName },
-                        { "MongoDb:CollectionName", _config.MongoDb.CollectionName },
-                        { "Redis:ConnectionString", _config.Redis.ConnectionString },
-                        { "Kafka:BootstrapServers", _config.Kafka.BootstrapServers },
-                        { "AnomalyDetection:MaxAmountThreshold", "1000" },
-                        { "AnomalyDetection:FrequencyThresholdPerMinute", "10" },
-                        { "ApplicationInsights:ConnectionString", "" }
-                    });
-                });
-
-                builder.ConfigureServices(services =>
-                {
-                    services.Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Warning);
-                });
-            });
-
-        _client = _factory.CreateClient();
-        _client.DefaultRequestHeaders.Add(AppConstants.ApiKeyHeader, "integration-test-key");
     }
 
     /// <summary>
@@ -199,7 +169,6 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
         _producer?.Dispose();
         _mongoClient = null; // MongoDB client doesn't need explicit disposal
         _client?.Dispose();
-        _factory?.Dispose();
         await Task.CompletedTask;
     }
 }

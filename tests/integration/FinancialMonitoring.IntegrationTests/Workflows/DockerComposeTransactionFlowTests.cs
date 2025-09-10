@@ -28,7 +28,7 @@ public class DockerComposeTransactionFlowTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         _client = new HttpClient { BaseAddress = new Uri(_config.Api.BaseUrl) };
-        _client.DefaultRequestHeaders.Add("X-API-Key", _config.Api.ApiKey);
+        _client.DefaultRequestHeaders.Add("X-Api-Key", _config.Api.ApiKey);
 
         var producerConfig = new ProducerConfig
         {

@@ -105,14 +105,14 @@ fi
 
 echo ""
 echo -e "${YELLOW}--- Discovering Tests ---${NC}"
-dotnet test tests/FinancialMonitoring.IntegrationTests/FinancialMonitoring.IntegrationTests.csproj --list-tests --no-build -c Release
+dotnet test tests/integration/FinancialMonitoring.IntegrationTests/FinancialMonitoring.IntegrationTests.csproj --list-tests --no-build -c Release
 
 echo ""
 echo -e "${YELLOW}--- Executing Tests ---${NC}"
-echo -e "${CYAN}Command: dotnet test tests/FinancialMonitoring.IntegrationTests/FinancialMonitoring.IntegrationTests.csproj --no-build -c Release --logger trx --results-directory /app/test-results --verbosity $TEST_VERBOSITY $FILTER_ARG${NC}"
+echo -e "${CYAN}Command: dotnet test tests/integration/FinancialMonitoring.IntegrationTests/FinancialMonitoring.IntegrationTests.csproj --no-build -c Release --logger trx --results-directory /app/test-results --verbosity $TEST_VERBOSITY $FILTER_ARG${NC}"
 echo ""
 
-dotnet test tests/FinancialMonitoring.IntegrationTests/FinancialMonitoring.IntegrationTests.csproj \
+dotnet test tests/integration/FinancialMonitoring.IntegrationTests/FinancialMonitoring.IntegrationTests.csproj \
     --no-build \
     -c Release \
     --logger trx \

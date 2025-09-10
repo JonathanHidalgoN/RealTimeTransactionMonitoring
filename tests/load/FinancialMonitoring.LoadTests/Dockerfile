@@ -4,17 +4,17 @@ WORKDIR /source
 COPY FinancialMonitoringSolution.sln .
 
 COPY src/FinancialMonitoring.Models/*.csproj src/FinancialMonitoring.Models/
-COPY tests/FinancialMonitoring.LoadTests/*.csproj tests/FinancialMonitoring.LoadTests/
+COPY tests/load/FinancialMonitoring.LoadTests/*.csproj tests/load/FinancialMonitoring.LoadTests/
 
-RUN dotnet restore tests/FinancialMonitoring.LoadTests/FinancialMonitoring.LoadTests.csproj
+RUN dotnet restore tests/load/FinancialMonitoring.LoadTests/FinancialMonitoring.LoadTests.csproj
 
 COPY src/FinancialMonitoring.Models/ src/FinancialMonitoring.Models/
-COPY tests/FinancialMonitoring.LoadTests/ tests/FinancialMonitoring.LoadTests/
+COPY tests/load/FinancialMonitoring.LoadTests/ tests/load/FinancialMonitoring.LoadTests/
 
-RUN dotnet build tests/FinancialMonitoring.LoadTests/FinancialMonitoring.LoadTests.csproj -c Release --no-restore
+RUN dotnet build tests/load/FinancialMonitoring.LoadTests/FinancialMonitoring.LoadTests.csproj -c Release --no-restore
 
 FROM mcr.microsoft.com/dotnet/runtime:8.0 AS runtime
 WORKDIR /app
-COPY --from=build /source/tests/FinancialMonitoring.LoadTests/bin/Release/net8.0/ .
+COPY --from=build /source/tests/load/FinancialMonitoring.LoadTests/bin/Release/net8.0/ .
 
 ENTRYPOINT ["dotnet", "FinancialMonitoring.LoadTests.dll"]
