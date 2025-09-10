@@ -8,13 +8,16 @@ echo "Building test environment..."
 docker compose -f docker-compose.test.yml build
 
 echo "Running Unit Tests..."
-dotnet test --configuration Release --logger "console;verbosity=minimal"
+dotnet test tests/unit/FinancialMonitoring.Models.Tests/FinancialMonitoring.Models.Tests.csproj --configuration Release --logger "console;verbosity=minimal"
+dotnet test tests/unit/FinancialMonitoring.Api.Tests/FinancialMonitoring.Api.Tests.csproj --configuration Release --logger "console;verbosity=minimal"
+dotnet test tests/unit/TransactionProcessor.Tests/TransactionProcessor.Tests.csproj --configuration Release --logger "console;verbosity=minimal"
+dotnet test tests/unit/TransactionSimulator.Tests/TransactionSimulator.Tests.csproj --configuration Release --logger "console;verbosity=minimal"
 
 echo "Starting integration test environment..."
 docker compose -f docker-compose.test.yml up -d
 
 echo "Waiting for services to be ready..."
-sleep 60
+sleep 120
 
 echo "Running Integration Tests..."
 docker compose -f docker-compose.test.yml run --rm integration-tests
