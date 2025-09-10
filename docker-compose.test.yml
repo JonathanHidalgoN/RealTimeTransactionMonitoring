@@ -132,7 +132,7 @@ services:
     container_name: integration_tests
     build:
       context: .
-      dockerfile: ./tests/FinancialMonitoring.IntegrationTests/Dockerfile
+      dockerfile: ./tests/integration/FinancialMonitoring.IntegrationTests/Dockerfile
     depends_on:
       financialmonitoring-api-test:
         condition: service_started
@@ -166,7 +166,7 @@ services:
     container_name: load_tests
     build:
       context: .
-      dockerfile: ./tests/FinancialMonitoring.LoadTests/Dockerfile
+      dockerfile: ./tests/load/FinancialMonitoring.LoadTests/Dockerfile
     depends_on:
       financialmonitoring-api-test:
         condition: service_started
