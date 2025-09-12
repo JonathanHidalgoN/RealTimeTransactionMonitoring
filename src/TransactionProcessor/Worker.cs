@@ -1,9 +1,5 @@
 using FinancialMonitoring.Abstractions.Messaging;
 using FinancialMonitoring.Abstractions.Services;
-using FinancialMonitoring.Models;
-using System.Text.Json;
-using Confluent.Kafka;
-using FinancialMonitoring.Abstractions.Persistence;
 
 namespace TransactionProcessor;
 
@@ -17,19 +13,19 @@ namespace TransactionProcessor;
 public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IMessageConsumer<Null, string> _messageConsumer;
+    private readonly ITransactionProcessor _transactionProcessor;
+    private readonly IMessageConsumer<object?, string> _messageConsumer;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Worker"/> class.
     /// </summary>
     /// <param name="logger">The logger for recording operational information.</param>
-    /// <param name="serviceProvider">The service provider to create dependency scopes.</param>
+    /// <param name="transactionProcessor">The transaction processor for handling messages.</param>
     /// <param name="messageConsumer">The message consumer to receive transactions from.</param>
-    public Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IMessageConsumer<Null, string> messageConsumer)
+    public Worker(ILogger<Worker> logger, ITransactionProcessor transactionProcessor, IMessageConsumer<object?, string> messageConsumer)
     {
         _logger = logger;
-        _serviceProvider = serviceProvider;
+        _transactionProcessor = transactionProcessor;
         _messageConsumer = messageConsumer;
     }
 
@@ -40,47 +36,10 @@ public class Worker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Worker starting consumption loop.");
-        await _messageConsumer.ConsumeAsync(ProcessMessageAsync, stoppingToken);
+        await _messageConsumer.ConsumeAsync(_transactionProcessor.ProcessMessageAsync, stoppingToken);
         _logger.LogInformation("Worker consumption loop finished.");
     }
 
-    /// <summary>
-    /// Processes a single message received from the message broker.
-    /// </summary>
-    /// <param name="message">The received message containing the transaction data.</param>
-    private async Task ProcessMessageAsync(ReceivedMessage<Null, string> message)
-    {
-        _logger.LogInformation("Received message: {MessageValue}", message.Value);
-
-        // Create a new dependency scope to resolve scoped services like the anomaly detector.
-        using var scope = _serviceProvider.CreateScope();
-        var anomalyDetector = scope.ServiceProvider.GetRequiredService<ITransactionAnomalyDetector>();
-        var transactionRepository = scope.ServiceProvider.GetRequiredService<ITransactionRepository>();
-
-        try
-        {
-            // Deserialize the message content into a Transaction object.
-            Transaction? kafkaTransaction = JsonSerializer.Deserialize<Transaction>(message.Value);
-            if (kafkaTransaction is not null)
-            {
-                // Detect anomalies and enrich the transaction with the result.
-                string? anomalyFlag = await anomalyDetector.DetectAsync(kafkaTransaction);
-                var processedTransaction = kafkaTransaction with { AnomalyFlag = anomalyFlag };
-
-                // Store the processed transaction in the database.
-                await transactionRepository.AddTransactionAsync(processedTransaction);
-                _logger.LogInformation("Successfully processed and stored transaction {TransactionId}", processedTransaction.Id);
-            }
-        }
-        catch (JsonException ex)
-        {
-            _logger.LogError(ex, "Error deserializing message: {MessageValue}", message.Value);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An unexpected error occurred while processing message.");
-        }
-    }
 
     /// <summary>
     /// Gracefully stops the worker by disposing the message consumer.
