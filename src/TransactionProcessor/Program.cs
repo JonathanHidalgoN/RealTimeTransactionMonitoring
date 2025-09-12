@@ -20,6 +20,7 @@ public class Program
         // Add common services
         builder.Services.AddHostedService<DatabaseInitializerHostedService>();
         builder.Services.AddHostedService<Worker>();
+        builder.Services.AddScoped<ITransactionProcessor, TransactionProcessor.Services.TransactionProcessor>();
 
         if (runTimeEnv == RunTimeEnvironment.Production)
         {
@@ -99,7 +100,7 @@ public class Program
         // Configure repository (CosmosDB)
         Console.WriteLine("Configuring Cosmos DB repository for production");
         builder.Services.AddSingleton<ICosmosDbService, CosmosDbService>();
-        builder.Services.AddSingleton<ITransactionRepository, CosmosTransactionRepository>();
+        builder.Services.AddScoped<ITransactionRepository, CosmosTransactionRepository>();
 
         // Configure anomaly event publisher (EventHubs)
         Console.WriteLine("Using Azure Event Hubs anomaly event publisher for production");
@@ -129,7 +130,7 @@ public class Program
 
         // Configure repository (MongoDB)
         Console.WriteLine("Configuring MongoDB repository for local development/testing");
-        builder.Services.AddSingleton<ITransactionRepository, MongoTransactionRepository>();
+        builder.Services.AddScoped<ITransactionRepository, MongoTransactionRepository>();
 
         // Configure anomaly event publisher (NoOp for local)
         Console.WriteLine("Using NoOp anomaly event publisher for local development");
