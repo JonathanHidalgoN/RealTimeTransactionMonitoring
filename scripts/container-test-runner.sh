@@ -1,12 +1,10 @@
 #!/bin/bash
 
-# Colors for output
 YELLOW='\033[1;33m'
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Available test categories
 AVAILABLE_CATEGORIES=("Infrastructure" "API" "E2E" "Smoke")
 
 show_help() {
@@ -79,7 +77,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Fallback to environment variable
 if [[ -z "$TEST_CATEGORY" ]]; then
     TEST_CATEGORY=${TEST_CATEGORY:-""}
 fi
@@ -119,4 +116,3 @@ dotnet test tests/integration/FinancialMonitoring.IntegrationTests/FinancialMoni
     --results-directory /app/test-results \
     --verbosity $TEST_VERBOSITY \
     $FILTER_ARG
-

@@ -27,7 +27,7 @@ FROM build AS test
 WORKDIR /source
 
 # Add container test runner script to support category filtering
-COPY tests/integration/FinancialMonitoring.IntegrationTests/container-test-runner.sh /app/container-test-runner.sh
+COPY scripts/container-test-runner.sh /app/container-test-runner.sh
 RUN chmod +x /app/container-test-runner.sh
 
 ENTRYPOINT ["/app/container-test-runner.sh"]
