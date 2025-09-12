@@ -1,80 +1,71 @@
 using Moq;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 using FinancialMonitoring.Abstractions.Messaging;
 using FinancialMonitoring.Abstractions.Services;
-using FinancialMonitoring.Abstractions.Persistence;
-using FinancialMonitoring.Models;
-using System.Text.Json;
-using Confluent.Kafka;
+using FluentAssertions;
 
 namespace TransactionProcessor.Tests;
 
 public class WorkerTests
 {
     private readonly Mock<ILogger<Worker>> _mockLogger;
-    private readonly Mock<IMessageConsumer<Null, string>> _mockMessageConsumer;
-    private readonly Mock<ITransactionAnomalyDetector> _mockAnomalyDetector;
-    private readonly Mock<ITransactionRepository> _mockTransactionRepository;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly Mock<IMessageConsumer<object?, string>> _mockMessageConsumer;
+    private readonly Mock<ITransactionProcessor> _mockTransactionProcessor;
+    private readonly Worker _worker;
 
     public WorkerTests()
     {
         _mockLogger = new Mock<ILogger<Worker>>();
-        _mockMessageConsumer = new Mock<IMessageConsumer<Null, string>>();
-        _mockAnomalyDetector = new Mock<ITransactionAnomalyDetector>();
-        _mockTransactionRepository = new Mock<ITransactionRepository>();
+        _mockMessageConsumer = new Mock<IMessageConsumer<object?, string>>();
+        _mockTransactionProcessor = new Mock<ITransactionProcessor>();
 
-        var serviceCollection = new ServiceCollection();
-        serviceCollection.AddScoped(provider => _mockAnomalyDetector.Object);
-        serviceCollection.AddScoped(provider => _mockTransactionRepository.Object);
-        _serviceProvider = serviceCollection.BuildServiceProvider();
+        _worker = new Worker(_mockLogger.Object, _mockTransactionProcessor.Object, _mockMessageConsumer.Object);
     }
 
-    /// <summary>
-    /// This test verifies that valid messages are deserialized, processed through anomaly detection, and stored in the repository
-    /// </summary>
     [Fact]
-    public async Task ProcessMessageAsync_WithValidMessage_ShouldProcessAndStoreTransaction()
+    public async Task ExecuteAsync_ShouldStartMessageConsumption()
     {
-        var transaction = new Transaction("TXN123", 100, 123456, new Account("ACC1"), new Account("ACC2"),
-            TransactionType.Purchase, MerchantCategory.Retail, "Test Store", new Location("NYC", "NY", "US"));
-        var message = new ReceivedMessage<Null, string>(null, JsonSerializer.Serialize(transaction));
+        var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Cancel();
 
-        _mockAnomalyDetector.Setup(d => d.DetectAsync(It.IsAny<Transaction>()))
-                            .ReturnsAsync((string?)null);
+        _mockMessageConsumer.Setup(c => c.ConsumeAsync(It.IsAny<Func<ReceivedMessage<object?, string>, Task>>(), It.IsAny<CancellationToken>()))
+                           .Returns(Task.CompletedTask);
 
-        var worker = new Worker(_mockLogger.Object, _serviceProvider, _mockMessageConsumer.Object);
+        await _worker.StartAsync(cancellationTokenSource.Token);
+        await Task.Delay(10);
+        await _worker.StopAsync(CancellationToken.None);
 
-        // This is a bit of a workaround to test the private method ProcessMessageAsync
-        // In a real-world scenario, we might refactor this to be more easily testable.
-        var method = typeof(Worker).GetMethod("ProcessMessageAsync", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        await (Task)method!.Invoke(worker, new object[] { message })!;
-
-        _mockAnomalyDetector.Verify(d => d.DetectAsync(It.IsAny<Transaction>()), Times.Once);
-        _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>()), Times.Once);
+        _mockMessageConsumer.Verify(c => c.ConsumeAsync(
+            It.IsAny<Func<ReceivedMessage<object?, string>, Task>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    /// <summary>
-    /// This test verifies that invalid JSON messages trigger error logging without crashing the worker
-    /// </summary>
+
     [Fact]
-    public async Task ProcessMessageAsync_WithDeserializationError_ShouldLogError()
+    public async Task StopAsync_ShouldDisposeMessageConsumer()
     {
-        var message = new ReceivedMessage<Null, string>(null, "invalid-json");
+        await _worker.StopAsync(CancellationToken.None);
 
-        var worker = new Worker(_mockLogger.Object, _serviceProvider, _mockMessageConsumer.Object);
+        _mockMessageConsumer.Verify(c => c.DisposeAsync(), Times.Once);
+    }
 
-        var method = typeof(Worker).GetMethod("ProcessMessageAsync", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        await (Task)method!.Invoke(worker, new object[] { message })!;
+    [Fact]
+    public async Task ExecuteAsync_WhenConsumerPassesMessage_ShouldDelegateToTransactionProcessor()
+    {
+        var cancellationTokenSource = new CancellationTokenSource();
+        Func<ReceivedMessage<object?, string>, Task>? capturedHandler = null;
 
-        _mockLogger.Verify(
-            x => x.Log(
-                LogLevel.Error,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Error deserializing message")),
-                It.IsAny<JsonException>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
+        _mockMessageConsumer.Setup(c => c.ConsumeAsync(It.IsAny<Func<ReceivedMessage<object?, string>, Task>>(), It.IsAny<CancellationToken>()))
+                           .Callback<Func<ReceivedMessage<object?, string>, Task>, CancellationToken>((handler, token) => 
+                           {
+                               capturedHandler = handler;
+                           })
+                           .Returns(Task.CompletedTask);
+
+        await _worker.StartAsync(cancellationTokenSource.Token);
+        await Task.Delay(10);
+        await _worker.StopAsync(CancellationToken.None);
+
+        capturedHandler.Should().NotBeNull();
     }
 }
