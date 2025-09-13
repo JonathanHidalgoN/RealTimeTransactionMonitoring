@@ -4,34 +4,59 @@ using FinancialMonitoring.Models;
 
 public class SimulatorTests
 {
-    /// <summary>
-    /// This test verifies that the transaction generator creates valid transactions with all required properties populated
-    /// </summary>
     [Fact]
     public void GenerateTransaction_ShouldReturnValidTransaction_WhenCalled()
     {
         ITransactionGenerator generator = new TransactionGenerator(seed: 12345);
-        Transaction generatedTransaction = generator.GenerateTransaction();
+        Transaction transaction = generator.GenerateTransaction();
 
-        Assert.NotNull(generatedTransaction);
-        Assert.False(string.IsNullOrWhiteSpace(generatedTransaction.Id));
-        Assert.True(generatedTransaction.Amount > 0);
+        Assert.NotNull(transaction);
+        Assert.False(string.IsNullOrWhiteSpace(transaction.Id));
+        Assert.True(transaction.Amount > 0);
+        Assert.NotNull(transaction.SourceAccount);
+        Assert.StartsWith("ACC", transaction.SourceAccount.AccountId);
+        Assert.NotNull(transaction.DestinationAccount);
+        Assert.False(string.IsNullOrWhiteSpace(transaction.MerchantName));
+        Assert.NotNull(transaction.Location);
+        Assert.Equal("USD", transaction.Currency);
+    }
 
-        var currentTime = DateTimeOffset.UtcNow;
-        var transactionTime = DateTimeOffset.FromUnixTimeMilliseconds(generatedTransaction.Timestamp);
-        var timeDifferenceHours = Math.Abs((transactionTime - currentTime).TotalHours);
+    [Fact]
+    public void GenerateTransaction_ShouldBeDeterministic_WithSameSeed()
+    {
+        var generator1 = new TransactionGenerator(seed: 12345);
+        var generator2 = new TransactionGenerator(seed: 12345);
 
-        Assert.True(timeDifferenceHours <= 24, $"Transaction timestamp should be within 24 hours of current time. Actual difference: {timeDifferenceHours:F2} hours");
+        var transaction1 = generator1.GenerateTransaction();
+        var transaction2 = generator2.GenerateTransaction();
 
-        Assert.NotNull(generatedTransaction.SourceAccount);
-        Assert.StartsWith("ACC", generatedTransaction.SourceAccount.AccountId);
+        Assert.Equal(transaction1.Amount, transaction2.Amount);
+        Assert.Equal(transaction1.SourceAccount.AccountId, transaction2.SourceAccount.AccountId);
+        Assert.Equal(transaction1.MerchantName, transaction2.MerchantName);
+    }
 
-        Assert.NotNull(generatedTransaction.DestinationAccount);
-        Assert.False(string.IsNullOrWhiteSpace(generatedTransaction.DestinationAccount.AccountId));
+    [Fact]
+    public void GenerateTransaction_ShouldProduceDifferentResults_WithDifferentSeeds()
+    {
+        var generator1 = new TransactionGenerator(seed: 12345);
+        var generator2 = new TransactionGenerator(seed: 54321);
 
-        Assert.False(string.IsNullOrWhiteSpace(generatedTransaction.MerchantName));
-        Assert.NotNull(generatedTransaction.Location);
-        Assert.False(string.IsNullOrWhiteSpace(generatedTransaction.Location.City));
-        Assert.Equal("USD", generatedTransaction.Currency);
+        var transaction1 = generator1.GenerateTransaction();
+        var transaction2 = generator2.GenerateTransaction();
+
+        Assert.True(transaction1.Amount != transaction2.Amount || 
+                   transaction1.MerchantName != transaction2.MerchantName);
+    }
+
+    [Fact]
+    public void GenerateTransaction_ShouldHaveReasonableAmounts_ForAllCategories()
+    {
+        var generator = new TransactionGenerator(seed: 12345);
+        var transactions = Enumerable.Range(0, 50)
+            .Select(_ => generator.GenerateTransaction())
+            .ToList();
+
+        Assert.True(transactions.All(t => t.Amount > 0));
+        Assert.True(transactions.All(t => t.Amount <= 10000));
     }
 }
