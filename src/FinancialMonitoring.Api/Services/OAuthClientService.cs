@@ -97,6 +97,15 @@ public class OAuthClientService : IOAuthClientService
 
     public async Task<OAuthClient> CreateClientAsync(string name, string description, IEnumerable<string> allowedScopes)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Name cannot be null or empty", nameof(name));
+
+        if (string.IsNullOrWhiteSpace(description))
+            throw new ArgumentException("Description cannot be null or empty", nameof(description));
+
+        if (allowedScopes?.Any() != true)
+            throw new ArgumentException("At least one scope must be provided", nameof(allowedScopes));
+
         var clientId = GenerateClientId();
         var clientSecret = GenerateClientSecret();
 
