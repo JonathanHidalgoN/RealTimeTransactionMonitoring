@@ -9,33 +9,6 @@ using System.Security.Claims;
 
 namespace FinancialMonitoring.Api.Controllers.V2;
 
-/// OAuth2 endpoints for token management and client credentials flow
-/// 
-/// RESPONSE PATTERN DOCUMENTATION:
-/// This controller intentionally uses different response patterns for different endpoint types:
-/// 
-/// 1. OAuth2 Token Endpoints (e.g., /token):
-///    - Returns RAW OAuth2 responses (TokenResponse, OAuthErrorResponse)
-///    - Does NOT wrap in ApiResponse<T> to maintain RFC 6749 compliance
-///    - Reason: External OAuth2 clients expect standard responses like:
-///      Success: {"access_token": "...", "token_type": "Bearer", "expires_in": 3600}
-///      Error:   {"error": "invalid_client", "error_description": "..."}
-///    - This ensures interoperability with standard OAuth2 libraries
-/// 
-/// 2. Admin/Management Endpoints (e.g., /clients):
-///    - Uses standard ApiResponse&lt;T&gt; wrapper for consistency with internal API
-///    - Reason: These are internal management endpoints for admins, not OAuth2 clients
-///    - Provides consistent error handling, correlation IDs, and response structure
-/// 
-/// RATE LIMITING:
-/// OAuth endpoints have specific rate limiting rules to prevent abuse:
-/// - /oauth/token: 10 requests per minute (protects against credential brute force)
-/// - /oauth/clients: 20 requests per minute (admin operations, less restrictive)
-/// - Rate limits are per IP address and reset every minute
-/// - Returns HTTP 429 (Too Many Requests) when exceeded
-/// 
-/// This dual approach balances OAuth2 standard compliance with internal API consistency.
-
 [ApiController]
 [ApiVersion("2.0")]
 [Route("api/v{version:apiVersion}/oauth")]
