@@ -1,69 +1,21 @@
 using System.Net;
-using Microsoft.AspNetCore.Mvc.Testing;
 using FinancialMonitoring.Models;
-using FinancialMonitoring.Abstractions.Persistence;
-using FinancialMonitoring.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Moq;
-using Microsoft.Extensions.Configuration;
 using FinancialMonitoring.Api.Authentication;
-using FinancialMonitoring.Api.Services;
+using FinancialMonitoring.Api.Tests.Infrastructure;
+using Moq;
 
 namespace FinancialMonitoring.Api.Tests.Services;
 
 /// <summary>
 /// Tests for security headers middleware functionality
 /// </summary>
-public class SecurityHeadersTests : IClassFixture<WebApplicationFactory<Program>>
+public class SecurityHeadersTests : IClassFixture<SharedWebApplicationFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private readonly Mock<ITransactionRepository> _mockRepository;
+    private readonly SharedWebApplicationFactory _factory;
 
-    public SecurityHeadersTests(WebApplicationFactory<Program> factory)
+    public SecurityHeadersTests(SharedWebApplicationFactory factory)
     {
-        _mockRepository = new Mock<ITransactionRepository>();
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureAppConfiguration((context, configBuilder) =>
-            {
-                configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    { "ApiSettings:ApiKey", "test-api-key-123" },
-                    { "MongoDb:ConnectionString", "mongodb://localhost:27017" },
-                    { "MongoDb:DatabaseName", "TestFinancialMonitoring" },
-                    { "MongoDb:CollectionName", "transactions" },
-                    { "ApplicationInsights:ConnectionString", "InstrumentationKey=test-key;IngestionEndpoint=https://test.in.applicationinsights.azure.com/" },
-                    { "JwtSettings:SecretKey", "test-secret-key-that-is-very-long-for-hmac-sha256" },
-                    { "JwtSettings:Issuer", "TestIssuer" },
-                    { "JwtSettings:Audience", "TestAudience" },
-                    { "JwtSettings:ExpiresInMinutes", "15" },
-                    { "JwtSettings:RefreshTokenExpiryInDays", "7" }
-                });
-            });
-
-            builder.ConfigureServices(services =>
-            {
-                services.RemoveAll<ITransactionRepository>();
-                services.AddSingleton<ITransactionRepository>(_mockRepository.Object);
-
-                // Add missing authentication services that InMemoryUserRepository needs
-                services.RemoveAll<IPasswordHashingService>();
-                services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
-                services.RemoveAll<IJwtTokenService>();
-                services.AddScoped<IJwtTokenService, JwtTokenService>();
-
-                // Configure JWT options
-                services.Configure<JwtSettings>(options =>
-                {
-                    options.SecretKey = "test-secret-key-that-is-very-long-for-hmac-sha256";
-                    options.Issuer = "TestIssuer";
-                    options.Audience = "TestAudience";
-                    options.AccessTokenExpiryMinutes = 15;
-                    options.RefreshTokenExpiryDays = 7;
-                });
-            });
-        });
+        _factory = factory;
     }
 
     /// <summary>
@@ -73,7 +25,7 @@ public class SecurityHeadersTests : IClassFixture<WebApplicationFactory<Program>
     public async Task SecurityHeaders_ShouldBePresent_OnApiResponses()
     {
         var client = _factory.CreateClient();
-        client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, "test-api-key-123");
+        client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, SharedWebApplicationFactory.TestApiKey);
 
         var expectedPagedResult = new PagedResult<Transaction>
         {
@@ -83,7 +35,7 @@ public class SecurityHeadersTests : IClassFixture<WebApplicationFactory<Program>
             PageSize = 20
         };
 
-        _mockRepository
+        _factory.MockRepository
             .Setup(service => service.GetAllTransactionsAsync(1, 20))
             .ReturnsAsync(expectedPagedResult);
 
