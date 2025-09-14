@@ -224,7 +224,67 @@ public class OAuthClientServiceV2Tests
         Assert.Equal("read,write", result.AllowedScopes);
         Assert.True(result.IsActive);
         Assert.NotEmpty(result.ClientId);
-        Assert.NotEmpty(result.ClientSecret); // This should be the plain-text secret for the response
+        Assert.NotEmpty(result.ClientSecret);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public async Task CreateClientAsync_WithInvalidName_ThrowsArgumentException(string name)
+    {
+        var description = "Valid description";
+        var allowedScopes = new[] { "read" };
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => _service.CreateClientAsync(name, description, allowedScopes));
+
+        Assert.Equal("name", exception.ParamName);
+        Assert.Contains("Name cannot be null or empty", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public async Task CreateClientAsync_WithInvalidDescription_ThrowsArgumentException(string description)
+    {
+        var name = "Valid name";
+        var allowedScopes = new[] { "read" };
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => _service.CreateClientAsync(name, description, allowedScopes));
+
+        Assert.Equal("description", exception.ParamName);
+        Assert.Contains("Description cannot be null or empty", exception.Message);
+    }
+
+    [Fact]
+    public async Task CreateClientAsync_WithNullScopes_ThrowsArgumentException()
+    {
+        var name = "Valid name";
+        var description = "Valid description";
+        IEnumerable<string> allowedScopes = null!;
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => _service.CreateClientAsync(name, description, allowedScopes));
+
+        Assert.Equal("allowedScopes", exception.ParamName);
+        Assert.Contains("At least one scope must be provided", exception.Message);
+    }
+
+    [Fact]
+    public async Task CreateClientAsync_WithEmptyScopes_ThrowsArgumentException()
+    {
+        var name = "Valid name";
+        var description = "Valid description";
+        var allowedScopes = new string[0];
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => _service.CreateClientAsync(name, description, allowedScopes));
+
+        Assert.Equal("allowedScopes", exception.ParamName);
+        Assert.Contains("At least one scope must be provided", exception.Message);
     }
 
     [Fact]
@@ -254,5 +314,98 @@ public class OAuthClientServiceV2Tests
 
         Assert.Equal(2, result.Count());
         _mockRepository.Verify(r => r.GetAllAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task ValidateClientCredentialsAsync_WhenRepositoryThrows_ReturnsNull()
+    {
+        var clientId = "test-client";
+        var clientSecret = "test-secret";
+
+        _mockRepository
+            .Setup(r => r.GetByClientIdAsync(clientId))
+            .ThrowsAsync(new InvalidOperationException("Database error"));
+
+        var result = await _service.ValidateClientCredentialsAsync(clientId, clientSecret);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task ValidateClientCredentialsAsync_WhenPasswordServiceThrows_ReturnsNull()
+    {
+        var clientId = "test-client";
+        var clientSecret = "test-secret";
+        var hashedSecret = "hashed-secret";
+
+        var testClient = new OAuthClient
+        {
+            Id = 1,
+            ClientId = clientId,
+            ClientSecret = hashedSecret,
+            Name = "Test Client",
+            IsActive = true
+        };
+
+        _mockRepository
+            .Setup(r => r.GetByClientIdAsync(clientId))
+            .ReturnsAsync(testClient);
+
+        _mockPasswordService
+            .Setup(p => p.VerifyPassword(clientSecret, hashedSecret, "oauth_clients"))
+            .Throws(new InvalidOperationException("Hashing error"));
+
+        var result = await _service.ValidateClientCredentialsAsync(clientId, clientSecret);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task CreateClientAsync_WhenRepositoryThrows_PropagatesException()
+    {
+        var name = "Test Client";
+        var description = "Test Description";
+        var allowedScopes = new[] { "read", "write" };
+        var hashedSecret = "hashed-secret";
+
+        _mockPasswordService
+            .Setup(p => p.HashPassword(It.IsAny<string>(), "oauth_clients"))
+            .Returns(hashedSecret);
+
+        _mockRepository
+            .Setup(r => r.CreateAsync(It.IsAny<OAuthClient>()))
+            .ThrowsAsync(new InvalidOperationException("Database error"));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _service.CreateClientAsync(name, description, allowedScopes));
+    }
+
+    [Fact]
+    public async Task CreateClientAsync_WhenPasswordServiceThrows_PropagatesException()
+    {
+        var name = "Test Client";
+        var description = "Test Description";
+        var allowedScopes = new[] { "read", "write" };
+
+        _mockPasswordService
+            .Setup(p => p.HashPassword(It.IsAny<string>(), "oauth_clients"))
+            .Throws(new InvalidOperationException("Hashing error"));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _service.CreateClientAsync(name, description, allowedScopes));
+    }
+
+    [Fact]
+    public async Task UpdateLastUsedAsync_WhenRepositoryThrows_DoesNotThrow()
+    {
+        var clientId = "test-client";
+
+        _mockRepository
+            .Setup(r => r.UpdateLastUsedAsync(clientId))
+            .ThrowsAsync(new InvalidOperationException("Database error"));
+
+        var exception = await Record.ExceptionAsync(() => _service.UpdateLastUsedAsync(clientId));
+
+        Assert.Null(exception);
     }
 }
