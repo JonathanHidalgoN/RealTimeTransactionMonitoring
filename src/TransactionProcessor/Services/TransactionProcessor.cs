@@ -23,7 +23,7 @@ public class TransactionProcessor : ITransactionProcessor
 
         _logger.LogInformation("Received message: {MessageValue}", message.Value);
 
-        using var scope = _serviceScopeFactory.CreateScope();
+        await using var scope = _serviceScopeFactory.CreateAsyncScope();
         var anomalyDetector = scope.ServiceProvider.GetRequiredService<ITransactionAnomalyDetector>();
         var transactionRepository = scope.ServiceProvider.GetRequiredService<ITransactionRepository>();
 
@@ -46,7 +46,12 @@ public class TransactionProcessor : ITransactionProcessor
         catch (JsonException ex)
         {
             _logger.LogError(ex, "Error deserializing message: {MessageValue}", message.Value);
-            throw;
+            // Don't crash the service for invalid JSON - just skip this message
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogError(ex, "Invalid transaction data in message: {MessageValue}", message.Value);
+            // Don't crash the service for invalid transaction data - just skip this message
         }
         catch (Exception ex)
         {

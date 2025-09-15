@@ -11,11 +11,11 @@ using Confluent.Kafka;
 
 namespace TransactionProcessor.Messaging;
 
-public class EventHubsConsumer : IMessageConsumer<Null, string>
+public class EventHubsConsumer : IMessageConsumer<object?, string>
 {
     private readonly ILogger<EventHubsConsumer> _logger;
     private readonly EventProcessorClient _processorClient;
-    private Func<ReceivedMessage<Null, string>, Task> _messageHandler = _ => Task.CompletedTask;
+    private Func<ReceivedMessage<object?, string>, Task> _messageHandler = _ => Task.CompletedTask;
 
     public EventHubsConsumer(IOptions<EventHubsSettings> settings, ILogger<EventHubsConsumer> logger)
     {
@@ -36,7 +36,7 @@ public class EventHubsConsumer : IMessageConsumer<Null, string>
         _processorClient.ProcessErrorAsync += ProcessErrorHandler;
     }
 
-    public async Task ConsumeAsync(Func<ReceivedMessage<Null, string>, Task> messageHandler, CancellationToken cancellationToken)
+    public async Task ConsumeAsync(Func<ReceivedMessage<object?, string>, Task> messageHandler, CancellationToken cancellationToken)
     {
         _messageHandler = messageHandler;
         _logger.LogInformation("EventHubsConsumer starting message processing...");
@@ -51,7 +51,7 @@ public class EventHubsConsumer : IMessageConsumer<Null, string>
         try
         {
             var messageValue = Encoding.UTF8.GetString(eventArgs.Data.Body.ToArray());
-            var receivedMessage = new ReceivedMessage<Null, string>(null, messageValue);
+            var receivedMessage = new ReceivedMessage<object?, string>(null, messageValue);
             await _messageHandler(receivedMessage);
             await eventArgs.UpdateCheckpointAsync(eventArgs.CancellationToken);
         }

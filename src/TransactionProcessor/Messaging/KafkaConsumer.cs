@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace TransactionProcessor.Messaging;
 
-public class KafkaConsumer : IMessageConsumer<Null, string>
+public class KafkaConsumer : IMessageConsumer<object?, string>
 {
     private readonly ILogger<KafkaConsumer> _logger;
     private readonly IConsumer<Ignore, string> _consumer;
@@ -23,7 +23,7 @@ public class KafkaConsumer : IMessageConsumer<Null, string>
         _consumer = new ConsumerBuilder<Ignore, string>(config).Build();
     }
 
-    public async Task ConsumeAsync(Func<ReceivedMessage<Null, string>, Task> messageHandler, CancellationToken cancellationToken)
+    public async Task ConsumeAsync(Func<ReceivedMessage<object?, string>, Task> messageHandler, CancellationToken cancellationToken)
     {
         _consumer.Subscribe(AppConstants.TransactionsTopicName);
         _logger.LogInformation("KafkaConsumer subscribed to topic: {Topic}", AppConstants.TransactionsTopicName);
@@ -35,7 +35,7 @@ public class KafkaConsumer : IMessageConsumer<Null, string>
                 var consumeResult = _consumer.Consume(cancellationToken);
                 if (consumeResult?.Message != null)
                 {
-                    var receivedMessage = new ReceivedMessage<Null, string>(null, consumeResult.Message.Value);
+                    var receivedMessage = new ReceivedMessage<object?, string>(null, consumeResult.Message.Value);
                     await messageHandler(receivedMessage);
                     _consumer.Commit(consumeResult);
                 }

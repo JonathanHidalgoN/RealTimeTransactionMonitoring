@@ -13,19 +13,19 @@ namespace TransactionProcessor;
 public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
-    private readonly ITransactionProcessor _transactionProcessor;
+    private readonly IServiceProvider _serviceProvider;
     private readonly IMessageConsumer<object?, string> _messageConsumer;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Worker"/> class.
     /// </summary>
     /// <param name="logger">The logger for recording operational information.</param>
-    /// <param name="transactionProcessor">The transaction processor for handling messages.</param>
+    /// <param name="serviceProvider">The service provider for creating scoped services.</param>
     /// <param name="messageConsumer">The message consumer to receive transactions from.</param>
-    public Worker(ILogger<Worker> logger, ITransactionProcessor transactionProcessor, IMessageConsumer<object?, string> messageConsumer)
+    public Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IMessageConsumer<object?, string> messageConsumer)
     {
         _logger = logger;
-        _transactionProcessor = transactionProcessor;
+        _serviceProvider = serviceProvider;
         _messageConsumer = messageConsumer;
     }
 
@@ -36,7 +36,14 @@ public class Worker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Worker starting consumption loop.");
-        await _messageConsumer.ConsumeAsync(_transactionProcessor.ProcessMessageAsync, stoppingToken);
+
+        await _messageConsumer.ConsumeAsync(async message =>
+        {
+            await using var scope = _serviceProvider.CreateAsyncScope();
+            var transactionProcessor = scope.ServiceProvider.GetRequiredService<ITransactionProcessor>();
+            await transactionProcessor.ProcessMessageAsync(message);
+        }, stoppingToken);
+
         _logger.LogInformation("Worker consumption loop finished.");
     }
 

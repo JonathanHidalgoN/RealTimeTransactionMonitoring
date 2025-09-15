@@ -95,7 +95,7 @@ public class Program
             .Bind(builder.Configuration.GetSection(AppConstants.EventHubsConfigPrefix))
             .ValidateDataAnnotations()
             .ValidateOnStart();
-        builder.Services.AddSingleton<IMessageConsumer<Null, string>, EventHubsConsumer>();
+        builder.Services.AddSingleton<IMessageConsumer<object?, string>, EventHubsConsumer>();
 
         // Configure repository (CosmosDB)
         Console.WriteLine("Configuring Cosmos DB repository for production");
@@ -126,7 +126,7 @@ public class Program
             .Bind(builder.Configuration.GetSection(AppConstants.KafkaConfigPrefix))
             .ValidateDataAnnotations()
             .ValidateOnStart();
-        builder.Services.AddSingleton<IMessageConsumer<Null, string>, KafkaConsumer>();
+        builder.Services.AddSingleton<IMessageConsumer<object?, string>, KafkaConsumer>();
 
         // Configure repository (MongoDB)
         Console.WriteLine("Configuring MongoDB repository for local development/testing");
@@ -174,14 +174,14 @@ public class Program
 /// </summary>
 public class DatabaseInitializerHostedService : IHostedService
 {
-    private readonly ITransactionRepository _transactionRepository;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<DatabaseInitializerHostedService> _logger;
 
     public DatabaseInitializerHostedService(
-        ITransactionRepository transactionRepository,
+        IServiceProvider serviceProvider,
         ILogger<DatabaseInitializerHostedService> logger)
     {
-        _transactionRepository = transactionRepository;
+        _serviceProvider = serviceProvider;
         _logger = logger;
     }
 
@@ -191,7 +191,11 @@ public class DatabaseInitializerHostedService : IHostedService
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Database Initializer Hosted Service starting initialization.");
-        await _transactionRepository.InitializeAsync();
+
+        await using var scope = _serviceProvider.CreateAsyncScope();
+        var transactionRepository = scope.ServiceProvider.GetRequiredService<ITransactionRepository>();
+        await transactionRepository.InitializeAsync();
+
         _logger.LogInformation("Database Initializer Hosted Service has completed startup tasks.");
     }
 
