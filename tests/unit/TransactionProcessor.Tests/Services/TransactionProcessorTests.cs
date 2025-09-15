@@ -74,11 +74,12 @@ public class TransactionProcessorTests
     }
 
     [Fact]
-    public async Task ProcessMessageAsync_WithInvalidJson_ShouldThrowJsonException()
+    public async Task ProcessMessageAsync_WithInvalidJson_ShouldHandleGracefullyAndNotProcess()
     {
         var message = new ReceivedMessage<object?, string>(null, "invalid-json");
 
-        await Assert.ThrowsAsync<JsonException>(() => _processor.ProcessMessageAsync(message));
+        // Should not throw - should handle gracefully
+        await _processor.ProcessMessageAsync(message);
 
         _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>()), Times.Never);
     }
@@ -136,11 +137,12 @@ public class TransactionProcessorTests
     [InlineData("")]
     [InlineData("   ")]
     [InlineData("[1,2,3]")]
-    public async Task ProcessMessageAsync_WithInvalidJsonFormats_ShouldLogErrorAndThrow(string invalidJson)
+    public async Task ProcessMessageAsync_WithInvalidJsonFormats_ShouldHandleGracefullyAndNotProcess(string invalidJson)
     {
         var message = new ReceivedMessage<object?, string>(null, invalidJson);
 
-        await Assert.ThrowsAsync<JsonException>(() => _processor.ProcessMessageAsync(message));
+        // Should not throw - should handle gracefully
+        await _processor.ProcessMessageAsync(message);
 
         _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>()), Times.Never);
     }
@@ -148,11 +150,12 @@ public class TransactionProcessorTests
     [Theory]
     [InlineData("{}")]
     [InlineData("{\"invalid\": \"structure\"}")]
-    public async Task ProcessMessageAsync_WithValidJsonButInvalidTransaction_ShouldLogErrorAndThrow(string invalidTransaction)
+    public async Task ProcessMessageAsync_WithValidJsonButInvalidTransaction_ShouldHandleGracefullyAndNotProcess(string invalidTransaction)
     {
         var message = new ReceivedMessage<object?, string>(null, invalidTransaction);
 
-        await Assert.ThrowsAsync<ArgumentException>(() => _processor.ProcessMessageAsync(message));
+        // Should not throw - should handle gracefully
+        await _processor.ProcessMessageAsync(message);
 
         _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>()), Times.Never);
     }

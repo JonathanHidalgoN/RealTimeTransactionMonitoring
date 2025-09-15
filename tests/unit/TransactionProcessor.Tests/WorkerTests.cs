@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using FinancialMonitoring.Abstractions.Messaging;
 using FinancialMonitoring.Abstractions.Services;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TransactionProcessor.Tests;
 
@@ -11,6 +12,7 @@ public class WorkerTests
     private readonly Mock<ILogger<Worker>> _mockLogger;
     private readonly Mock<IMessageConsumer<object?, string>> _mockMessageConsumer;
     private readonly Mock<ITransactionProcessor> _mockTransactionProcessor;
+    private readonly IServiceProvider _serviceProvider;
     private readonly Worker _worker;
 
     public WorkerTests()
@@ -19,7 +21,12 @@ public class WorkerTests
         _mockMessageConsumer = new Mock<IMessageConsumer<object?, string>>();
         _mockTransactionProcessor = new Mock<ITransactionProcessor>();
 
-        _worker = new Worker(_mockLogger.Object, _mockTransactionProcessor.Object, _mockMessageConsumer.Object);
+        // Create a real service collection with the mocked transaction processor
+        var services = new ServiceCollection();
+        services.AddSingleton(_mockTransactionProcessor.Object);
+        _serviceProvider = services.BuildServiceProvider();
+
+        _worker = new Worker(_mockLogger.Object, _serviceProvider, _mockMessageConsumer.Object);
     }
 
     [Fact]
