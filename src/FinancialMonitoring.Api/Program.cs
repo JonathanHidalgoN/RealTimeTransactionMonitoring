@@ -23,18 +23,21 @@ public partial class Program
 {
     public static void Main(string[] args)
     {
-        var builder = WebApplication.CreateBuilder(args);
-        RunTimeEnvironment runTimeEnv = DetectAndConfigureEnvironment(builder);
+        using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+        var logger = loggerFactory.CreateLogger<Program>();
 
-        ConfigureCommonServices(builder);
+        var builder = WebApplication.CreateBuilder(args);
+        RunTimeEnvironment runTimeEnv = DetectAndConfigureEnvironment(builder, logger);
+
+        ConfigureCommonServices(builder, logger);
 
         if (runTimeEnv == RunTimeEnvironment.Production)
         {
-            ConfigureProductionServices(builder);
+            ConfigureProductionServices(builder, logger);
         }
         else
         {
-            ConfigureDevelopmentServices(builder);
+            ConfigureDevelopmentServices(builder, logger);
         }
 
         var app = builder.Build();
@@ -46,12 +49,12 @@ public partial class Program
     /// <summary>
     /// Detects the runtime environment and configures Azure Key Vault for Production
     /// </summary>
-    private static RunTimeEnvironment DetectAndConfigureEnvironment(WebApplicationBuilder builder)
+    private static RunTimeEnvironment DetectAndConfigureEnvironment(WebApplicationBuilder builder, ILogger logger)
     {
         var environmentString = builder.Configuration[AppConstants.runTimeEnvVarName] ?? "Development";
         var runTimeEnv = RunTimeEnvironmentExtensions.FromString(environmentString);
 
-        Console.WriteLine($"Running API program in environment: {runTimeEnv}");
+        logger.LogInformation("Running API program in environment: {Environment}", runTimeEnv);
 
         if (runTimeEnv == RunTimeEnvironment.Production)
         {
@@ -59,15 +62,15 @@ public partial class Program
 
             if (!string.IsNullOrEmpty(keyVaultUri) && Uri.TryCreate(keyVaultUri, UriKind.Absolute, out var vaultUri))
             {
-                Console.WriteLine($"Attempting to load configuration from Azure Key Vault: {vaultUri}");
+                logger.LogInformation("Attempting to load configuration from Azure Key Vault: {KeyVaultUri}", vaultUri);
                 try
                 {
                     builder.Configuration.AddAzureKeyVault(vaultUri, new DefaultAzureCredential());
-                    Console.WriteLine("Successfully configured to load secrets from Azure Key Vault.");
+                    logger.LogInformation("Successfully configured to load secrets from Azure Key Vault");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error connecting to Azure Key Vault: {ex.Message}");
+                    logger.LogError(ex, "Error connecting to Azure Key Vault: {KeyVaultUri}", vaultUri);
                     throw;
                 }
             }
@@ -83,7 +86,7 @@ public partial class Program
     /// <summary>
     /// Configures common services used by all environments
     /// </summary>
-    private static void ConfigureCommonServices(WebApplicationBuilder builder)
+    private static void ConfigureCommonServices(WebApplicationBuilder builder, ILogger logger)
     {
         var portSettings = builder.Configuration.BuildPortSettings();
 
@@ -95,19 +98,19 @@ public partial class Program
             options.MongoDb = portSettings.MongoDb;
         });
 
-        Console.WriteLine($"Port Configuration:");
-        Console.WriteLine($"  API Port: {portSettings.Api} (from {(builder.Configuration["API_PORT"] != null ? "environment" : "default")})");
-        Console.WriteLine($"  Blazor HTTP Port: {portSettings.BlazorHttp} (from {(builder.Configuration["BLAZOR_HTTP_PORT"] != null ? "environment" : "default")})");
-        Console.WriteLine($"  Blazor HTTPS Port: {portSettings.BlazorHttps} (from {(builder.Configuration["BLAZOR_HTTPS_PORT"] != null ? "environment" : "default")})");
-        Console.WriteLine($"  MongoDB Port: {portSettings.MongoDb} (from {(builder.Configuration["MONGODB_PORT"] != null ? "environment" : "default")})");
+        logger.LogInformation("Port Configuration: API={ApiPort} (from {ApiPortSource}), Blazor HTTP={BlazorHttpPort} (from {BlazorHttpSource}), Blazor HTTPS={BlazorHttpsPort} (from {BlazorHttpsSource}), MongoDB={MongoDbPort} (from {MongoDbSource})",
+            portSettings.Api, builder.Configuration["API_PORT"] != null ? "environment" : "default",
+            portSettings.BlazorHttp, builder.Configuration["BLAZOR_HTTP_PORT"] != null ? "environment" : "default",
+            portSettings.BlazorHttps, builder.Configuration["BLAZOR_HTTPS_PORT"] != null ? "environment" : "default",
+            portSettings.MongoDb, builder.Configuration["MONGODB_PORT"] != null ? "environment" : "default");
 
-        ConfigureCors(builder, portSettings);
+        ConfigureCors(builder, portSettings, logger);
 
-        ConfigureCaching(builder);
+        ConfigureCaching(builder, logger);
 
-        ConfigureRateLimiting(builder);
+        ConfigureRateLimiting(builder, logger);
 
-        ConfigureApiServices(builder);
+        ConfigureApiServices(builder, logger);
         builder.Services.AddHealthChecks()
             .AddCheck<ApiHealthCheck>(AppConstants.ApiHealthCheckName)
             .AddCheck<DatabaseHealthCheck>(AppConstants.DatabaseHealthCheckName);
@@ -158,7 +161,7 @@ public partial class Program
     /// <summary>
     /// Configures CORS settings
     /// </summary>
-    private static void ConfigureCors(WebApplicationBuilder builder, PortSettings portSettings)
+    private static void ConfigureCors(WebApplicationBuilder builder, PortSettings portSettings, ILogger logger)
     {
         builder.Services.Configure<CorsSettings>(builder.Configuration.GetSection(AppConstants.CorsConfigPrefix));
 
@@ -169,7 +172,7 @@ public partial class Program
             ? corsSettings.AllowedOrigins
             : CorsSettings.BuildDefaultOrigins(portSettings);
 
-        Console.WriteLine($"CORS Policy: Allowing origins: {string.Join(", ", allowedOrigins)}");
+        logger.LogInformation("CORS Policy: Allowing origins: {AllowedOrigins}", string.Join(", ", allowedOrigins));
 
         builder.Services.AddCors(options =>
         {
@@ -191,7 +194,7 @@ public partial class Program
     /// <summary>
     /// Configures caching and performance settings
     /// </summary>
-    private static void ConfigureCaching(WebApplicationBuilder builder)
+    private static void ConfigureCaching(WebApplicationBuilder builder, ILogger logger)
     {
         var cacheSettings = builder.Configuration.GetSection(AppConstants.CacheSettingsConfigPrefix).Get<CacheSettings>() ?? new CacheSettings();
         var responseCacheSettings = builder.Configuration.GetSection(AppConstants.ResponseCacheSettingsConfigPrefix).Get<ResponseCacheSettings>() ?? new ResponseCacheSettings();
@@ -227,19 +230,19 @@ public partial class Program
                     b => b.SetVaryByQuery("hours", "intervalMinutes")));
         });
 
-        Console.WriteLine($"Cache Configuration:");
-        Console.WriteLine($"  Response Cache: {responseCacheSettings.MaximumBodySizeMB}MB max body, {responseCacheSettings.SizeLimitMB}MB total");
-        Console.WriteLine($"  Transaction Cache: {(cacheSettings.TransactionCacheSeconds > 0 ? $"{cacheSettings.TransactionCacheSeconds}s" : "disabled")}");
-        Console.WriteLine($"  Transaction By ID Cache: {(cacheSettings.TransactionByIdCacheSeconds > 0 ? $"{cacheSettings.TransactionByIdCacheSeconds}s" : "disabled")}");
-        Console.WriteLine($"  Anomalous Transaction Cache: {(cacheSettings.AnomalousTransactionCacheSeconds > 0 ? $"{cacheSettings.AnomalousTransactionCacheSeconds}s" : "disabled")}");
-        Console.WriteLine($"  Analytics Cache: {(cacheSettings.AnalyticsCacheSeconds > 0 ? $"{cacheSettings.AnalyticsCacheSeconds}s" : "disabled")}");
-        Console.WriteLine($"  Time Series Cache: {(cacheSettings.TimeSeriesCacheSeconds > 0 ? $"{cacheSettings.TimeSeriesCacheSeconds}s" : "disabled")}");
+        logger.LogInformation("Cache Configuration: Response Cache={ResponseCacheMaxMB}MB max body, {ResponseCacheTotalMB}MB total, Transaction Cache={TransactionCache}, Transaction By ID Cache={TransactionByIdCache}, Anomalous Transaction Cache={AnomalousCache}, Analytics Cache={AnalyticsCache}, Time Series Cache={TimeSeriesCache}",
+            responseCacheSettings.MaximumBodySizeMB, responseCacheSettings.SizeLimitMB,
+            cacheSettings.TransactionCacheSeconds > 0 ? $"{cacheSettings.TransactionCacheSeconds}s" : "disabled",
+            cacheSettings.TransactionByIdCacheSeconds > 0 ? $"{cacheSettings.TransactionByIdCacheSeconds}s" : "disabled",
+            cacheSettings.AnomalousTransactionCacheSeconds > 0 ? $"{cacheSettings.AnomalousTransactionCacheSeconds}s" : "disabled",
+            cacheSettings.AnalyticsCacheSeconds > 0 ? $"{cacheSettings.AnalyticsCacheSeconds}s" : "disabled",
+            cacheSettings.TimeSeriesCacheSeconds > 0 ? $"{cacheSettings.TimeSeriesCacheSeconds}s" : "disabled");
     }
 
     /// <summary>
     /// Configures rate limiting with configurable settings
     /// </summary>
-    private static void ConfigureRateLimiting(WebApplicationBuilder builder)
+    private static void ConfigureRateLimiting(WebApplicationBuilder builder, ILogger logger)
     {
         var rateLimitSettings = builder.Configuration.GetSection(AppConstants.RateLimitSettingsConfigPrefix).Get<RateLimitSettings>() ?? new RateLimitSettings();
 
@@ -263,21 +266,23 @@ public partial class Program
         });
         builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 
-        Console.WriteLine($"Rate Limiting Configuration:");
-        Console.WriteLine($"  Endpoint Rate Limiting: {(rateLimitSettings.EnableEndpointRateLimiting ? "enabled" : "disabled")}");
-        Console.WriteLine($"  Stack Blocked Requests: {rateLimitSettings.StackBlockedRequests}");
-        Console.WriteLine($"  HTTP Status Code: {rateLimitSettings.HttpStatusCode}");
-        Console.WriteLine($"  Rules: {rateLimitSettings.GeneralRules.Count} configured");
+        logger.LogInformation("Rate Limiting Configuration: Endpoint Rate Limiting={EndpointRateLimiting}, Stack Blocked Requests={StackBlockedRequests}, HTTP Status Code={HttpStatusCode}, Rules={RuleCount}",
+            rateLimitSettings.EnableEndpointRateLimiting ? "enabled" : "disabled",
+            rateLimitSettings.StackBlockedRequests,
+            rateLimitSettings.HttpStatusCode,
+            rateLimitSettings.GeneralRules.Count);
+
         foreach (var rule in rateLimitSettings.GeneralRules)
         {
-            Console.WriteLine($"    {rule.Endpoint}: {rule.Limit} requests per {rule.Period}");
+            logger.LogDebug("Rate Limit Rule: {Endpoint} - {Limit} requests per {Period}",
+                rule.Endpoint, rule.Limit, rule.Period);
         }
     }
 
     /// <summary>
     /// Configures API versioning and authentication
     /// </summary>
-    private static void ConfigureApiServices(WebApplicationBuilder builder)
+    private static void ConfigureApiServices(WebApplicationBuilder builder, ILogger logger)
     {
         builder.Services.AddApiVersioning(opt =>
         {
@@ -313,12 +318,12 @@ public partial class Program
                 {
                     OnAuthenticationFailed = context =>
                     {
-                        Console.WriteLine($"JWT Authentication failed: {context.Exception.Message}");
+                        logger.LogWarning("JWT Authentication failed: {ErrorMessage}", context.Exception.Message);
                         return Task.CompletedTask;
                     },
                     OnTokenValidated = context =>
                     {
-                        Console.WriteLine($"JWT Token validated for user: {context.Principal?.Identity?.Name}");
+                        logger.LogDebug("JWT Token validated for user: {UserName}", context.Principal?.Identity?.Name);
                         return Task.CompletedTask;
                     }
                 };
@@ -424,7 +429,7 @@ public partial class Program
     /// <summary>
     /// Configures services for Production environment (Azure CosmosDB + Application Insights)
     /// </summary>
-    private static void ConfigureProductionServices(WebApplicationBuilder builder)
+    private static void ConfigureProductionServices(WebApplicationBuilder builder, ILogger logger)
     {
         builder.Services.AddOptions<ApplicationInsightsSettings>()
             .Bind(builder.Configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix))
@@ -437,7 +442,7 @@ public partial class Program
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        Console.WriteLine("Configuring Cosmos DB repository for production");
+        logger.LogInformation("Configuring Cosmos DB repository for production");
         builder.Services.AddSingleton<ICosmosDbService, CosmosDbService>();
         builder.Services.AddSingleton<ITransactionQueryService, CosmosDbTransactionQueryService>();
         builder.Services.AddSingleton<ITransactionRepository, CosmosTransactionRepository>();
@@ -447,7 +452,7 @@ public partial class Program
     /// <summary>
     /// Configures services for Development/Testing environment (MongoDB)
     /// </summary>
-    private static void ConfigureDevelopmentServices(WebApplicationBuilder builder)
+    private static void ConfigureDevelopmentServices(WebApplicationBuilder builder, ILogger logger)
     {
         if (builder.Environment.EnvironmentName != "Testing")
         {
@@ -463,7 +468,7 @@ public partial class Program
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        Console.WriteLine("Configuring MongoDB repository for local development/testing");
+        logger.LogInformation("Configuring MongoDB repository for local development/testing");
         builder.Services.AddSingleton<ITransactionRepository, MongoTransactionRepository>();
         builder.Services.AddSingleton<IAnalyticsRepository, MongoAnalyticsRepository>();
     }
