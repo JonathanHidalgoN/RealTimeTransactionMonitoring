@@ -44,7 +44,7 @@ public class SimulatorTests
         var transaction1 = generator1.GenerateTransaction();
         var transaction2 = generator2.GenerateTransaction();
 
-        Assert.True(transaction1.Amount != transaction2.Amount || 
+        Assert.True(transaction1.Amount != transaction2.Amount ||
                    transaction1.MerchantName != transaction2.MerchantName);
     }
 

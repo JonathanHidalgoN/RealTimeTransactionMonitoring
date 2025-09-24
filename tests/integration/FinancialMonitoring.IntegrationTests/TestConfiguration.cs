@@ -224,7 +224,7 @@ public class EnvironmentConfiguration
 public class ConnectivityTestConfiguration
 {
     public int InitializationDelayMs { get; set; } = 15000;
-    
+
     // Kafka configuration
     public int KafkaMessageTimeoutMs { get; set; } = 30000;
     public int KafkaRequestTimeoutMs { get; set; } = 30000;
@@ -233,11 +233,11 @@ public class ConnectivityTestConfiguration
     public int KafkaMaxRetries { get; set; } = 3;
     public int KafkaRetryDelayMs { get; set; } = 10000;
     public string KafkaTopicName { get; set; } = "transactions";
-    
+
     // Redis configuration
     public string RedisTestKeyPrefix { get; set; } = "test:connectivity";
     public string RedisTestValue { get; set; } = "integration-test";
-    
+
     // MongoDB configuration
     public string MongoDbTestCollectionName { get; set; } = "connectivity_test";
     public string MongoDbTestFieldName { get; set; } = "test";

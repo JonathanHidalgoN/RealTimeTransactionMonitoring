@@ -33,10 +33,10 @@ public class ApiV2BasicTest : IAsyncLifetime
         try
         {
             _accessToken = await GetOAuthTokenAsync();
-            
+
             // Add delay to avoid hitting OAuth rate limits (10 requests per minute)
             await Task.Delay(TimeSpan.FromSeconds(7));
-            
+
             _adminAccessToken = await GetOAuthTokenAsync("admin");
         }
         catch (Exception ex)
@@ -361,13 +361,13 @@ public class ApiV2BasicTest : IAsyncLifetime
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"OAuth token request failed. Status: {response.StatusCode}, Content: {errorContent}");
-                
+
                 // If rate limited, wait and retry once
                 if (response.StatusCode == HttpStatusCode.TooManyRequests)
                 {
                     Console.WriteLine("Rate limited - waiting 30 seconds before retry...");
                     await Task.Delay(TimeSpan.FromSeconds(30));
-                    
+
                     response = await _client.PostAsync("/api/v2/oauth/token", formData);
                     if (!response.IsSuccessStatusCode)
                     {

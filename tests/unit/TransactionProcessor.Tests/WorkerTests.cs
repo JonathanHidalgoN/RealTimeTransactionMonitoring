@@ -63,7 +63,7 @@ public class WorkerTests
         Func<ReceivedMessage<object?, string>, Task>? capturedHandler = null;
 
         _mockMessageConsumer.Setup(c => c.ConsumeAsync(It.IsAny<Func<ReceivedMessage<object?, string>, Task>>(), It.IsAny<CancellationToken>()))
-                           .Callback<Func<ReceivedMessage<object?, string>, Task>, CancellationToken>((handler, token) => 
+                           .Callback<Func<ReceivedMessage<object?, string>, Task>, CancellationToken>((handler, token) =>
                            {
                                capturedHandler = handler;
                            })
