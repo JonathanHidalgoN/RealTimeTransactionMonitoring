@@ -101,21 +101,46 @@ echo -e "${GREEN}✓ Resource Group ready.${NC}"
 
 # --- Step 3: Ensure Required Resource Providers are Registered ---
 echo -e "\n${YELLOW}--- Step 3: Ensuring Required Resource Providers are Registered ---${NC}"
-echo "Checking Microsoft.Storage provider registration..."
-STORAGE_PROVIDER_STATE=$(az provider show --namespace Microsoft.Storage --query "registrationState" -o tsv)
-if [ "$STORAGE_PROVIDER_STATE" != "Registered" ]; then
-    echo "Registering Microsoft.Storage provider..."
-    az provider register --namespace Microsoft.Storage --output none --only-show-errors
-    echo "Waiting for provider registration to complete..."
-    while [ "$(az provider show --namespace Microsoft.Storage --query "registrationState" -o tsv)" != "Registered" ]; do
-        echo "  Still registering..."
-        sleep 10
+
+# List of required providers based on infrastructure
+REQUIRED_PROVIDERS=(
+    "Microsoft.Storage"
+    "Microsoft.ContainerRegistry"
+    "Microsoft.ContainerService"
+    "Microsoft.EventHub"
+    "Microsoft.DocumentDB"
+    "Microsoft.KeyVault"
+    "Microsoft.Cache"
+    "Microsoft.Logic"
+    "Microsoft.Web"
+    "Microsoft.Insights"
+    "Microsoft.OperationalInsights"
+    "Microsoft.ManagedIdentity"
+    "Microsoft.Authorization"
+    "Microsoft.App"
+)
+
+for provider in "${REQUIRED_PROVIDERS[@]}"; do
+    echo "Checking $provider provider registration..."
+    PROVIDER_STATE=$(az provider show --namespace "$provider" --query "registrationState" -o tsv 2>/dev/null || echo "NotRegistered")
+
+    if [ "$PROVIDER_STATE" != "Registered" ]; then
+        echo "Registering $provider provider..."
+        az provider register --namespace "$provider" --output none --only-show-errors
+    else
+        echo "$provider provider already registered."
+    fi
+done
+
+echo "Waiting for all provider registrations to complete..."
+for provider in "${REQUIRED_PROVIDERS[@]}"; do
+    while [ "$(az provider show --namespace "$provider" --query "registrationState" -o tsv 2>/dev/null)" != "Registered" ]; do
+        echo "  Still registering $provider..."
+        sleep 5
     done
-    echo "Microsoft.Storage provider registered successfully."
-else
-    echo "Microsoft.Storage provider already registered."
-fi
-echo -e "${GREEN}✓ Resource providers ready.${NC}"
+done
+
+echo -e "${GREEN}✓ All required resource providers registered successfully.${NC}"
 
 # --- Step 4: Create Storage Account and Container for Terraform State ---
 echo -e "\n${YELLOW}--- Step 4: Ensuring Storage Account for Terraform State ---${NC}"
