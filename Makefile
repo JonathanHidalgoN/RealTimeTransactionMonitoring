@@ -42,6 +42,8 @@ terraform:
 		echo "Error: .terraform.env not found. Run 'make bootstrap' first."; \
 		exit 1; \
 	fi
+	@echo "Checking for existing Terraform state..."
+	@./scripts/generalUtils/clean-terraform.sh
 	@echo "Initializing Terraform..."
 	@bash -c "source .terraform.env && cd infra && terraform init -upgrade"
 	@echo "Importing existing resource group..."
