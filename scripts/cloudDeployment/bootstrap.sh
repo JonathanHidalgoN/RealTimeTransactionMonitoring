@@ -138,12 +138,26 @@ else
 fi
 
 echo "Ensuring Blob Container '${TF_STATE_CONTAINER_NAME}' exists..."
-az storage container create \
-    --name "${TF_STATE_CONTAINER_NAME}" \ --account-name "$TF_STATE_STORAGE_ACCOUNT_NAME" \
-    --auth-mode login \
-    --public-access off \
-    --output none \
-    --only-show-errors || echo -e "${YELLOW}Warning: Container '${TF_STATE_CONTAINER_NAME}' might already exist. Proceeding.${NC}"
+if az storage container show --name "${TF_STATE_CONTAINER_NAME}" --account-name "$TF_STATE_STORAGE_ACCOUNT_NAME" --auth-mode login &>/dev/null; then
+    echo "Container '${TF_STATE_CONTAINER_NAME}' already exists."
+else
+    echo "Creating container '${TF_STATE_CONTAINER_NAME}'..."
+    az storage container create \
+        --name "${TF_STATE_CONTAINER_NAME}" \
+        --account-name "$TF_STATE_STORAGE_ACCOUNT_NAME" \
+        --auth-mode login \
+        --public-access off \
+        --output none \
+        --only-show-errors
+
+    # Verify container was created
+    if az storage container show --name "${TF_STATE_CONTAINER_NAME}" --account-name "$TF_STATE_STORAGE_ACCOUNT_NAME" --auth-mode login &>/dev/null; then
+        echo "Container '${TF_STATE_CONTAINER_NAME}' created successfully."
+    else
+        echo -e "${RED}ERROR: Failed to create container '${TF_STATE_CONTAINER_NAME}'. Terraform backend will not work.${NC}" >&2
+        exit 1
+    fi
+fi
 TF_STATE_STORAGE_ACCOUNT_ID=$(az storage account show --name "$TF_STATE_STORAGE_ACCOUNT_NAME" --resource-group "$RESOURCE_GROUP_NAME" --query "id" -o tsv)
 echo -e "${GREEN}✓ Storage for Terraform state ready.${NC}"
 
