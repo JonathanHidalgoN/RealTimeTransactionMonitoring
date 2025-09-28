@@ -44,23 +44,21 @@ frontend:
 
 bootstrap:
 	@echo "Setting up Azure infrastructure foundation..."
-	./scripts/bootstrap.sh
-
-#terraform:
-#	@echo "Deploying Azure resources with Terraform..."
-#	@if [ ! -f .terraform.env ]; then \
-#		echo "Error: .terraform.env not found. Run 'make bootstrap' first."; \
-#		exit 1; \
-#	fi
-#	@echo "Initializing Terraform..."
-#	@bash -c "source .terraform.env && cd infra && terraform init -upgrade"
-#	@echo "Importing existing resource group..."
-#	@bash -c "source .terraform.env && source .env && export RESOURCE_GROUP_NAME && cd infra && terraform import azurerm_resource_group.rg \"/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RESOURCE_GROUP_NAME-rg\"" || echo "Resource group already imported or doesn't exist"
-#	@echo "Applying Terraform configuration..."
-#	@bash -c "source .terraform.env && cd infra && terraform plan -out=tfplan && terraform apply tfplan"
+	./scripts/cloudDeployment/bootstrap.sh
 
 terraform:
-	# This target is intentionally left blank.
+	@echo "Deploying Azure resources with Terraform..."
+	@if [ ! -f .terraform.env ]; then \
+		echo "Error: .terraform.env not found. Run 'make bootstrap' first."; \
+		exit 1; \
+	fi
+	@echo "Initializing Terraform..."
+	@bash -c "source .terraform.env && cd infra && terraform init -upgrade"
+	@echo "Importing existing resource group..."
+	@bash -c "source .terraform.env && source .env && export RESOURCE_GROUP_NAME && cd infra && terraform import azurerm_resource_group.rg \"/subscriptions/$$(az account show --query id -o tsv)/resourceGroups/$$RESOURCE_GROUP_NAME\"" || echo "Resource group already imported or doesn't exist"
+	@echo "Applying Terraform configuration..."
+	@bash -c "source .terraform.env && cd infra && terraform plan -out=tfplan && terraform apply tfplan"
+
 
 terraform-continue:
 	@echo "Continuing infrastructure deployment..."
@@ -70,11 +68,11 @@ terraform-continue:
 
 app-config:
 	@echo "Setting up application configuration..."
-	@bash -c "source .terraform.env && ./scripts/setup_app_config.sh"
+	@bash -c "source .terraform.env && ./scripts/cloudDeployment/setup_app_config.sh"
 
 update-manifests:
 	@echo "Updating Kubernetes manifests with ACR name and client ID..."
-	@bash -c "source .terraform.env && ./scripts/update-k8s-manifests.sh"
+	@bash -c "source .terraform.env && ./scripts/generalUtils/update-k8s-manifests.sh"
 
 k8s-setup:
 	@echo "Setting up Kubernetes infrastructure..."
@@ -83,7 +81,7 @@ k8s-setup:
 	AKS_NAME=$$(cd infra && terraform output -raw aks_cluster_name) && \
 	az aks get-credentials --resource-group "$$RESOURCE_GROUP_NAME" --name "$$AKS_NAME" --overwrite-existing
 	@echo "Installing NGINX Ingress Controller..."
-	./scripts/setup-ingress-controller.sh
+	./scripts/cloudDeployment/setup-ingress-controller.sh
 	@echo ""
 	@echo "MANUAL STEP REQUIRED:"
 	@echo "Update your DNS A record:"
@@ -95,7 +93,7 @@ k8s-setup:
 
 k8s-continue:
 	@echo "Installing cert-manager for SSL..."
-	./scripts/install-cert-manager.sh
+	./scripts/cloudDeployment/install-cert-manager.sh
 
 apps-continue:
 	@echo "Continuing application deployment..."
@@ -105,7 +103,7 @@ apps-continue:
 
 build-push:
 	@echo "Building and pushing container images..."
-	@bash -c "source .terraform.env && ./scripts/build-and-push-acr.sh"
+	@bash -c "source .terraform.env && ./scripts/cloudDeployment/build-and-push-acr.sh"
 
 k8s-deploy:
 	@echo "Updating Kubernetes manifests with correct ACR name..."
@@ -113,7 +111,7 @@ k8s-deploy:
 	@echo "Deploying applications to Kubernetes..."
 	kubectl apply -k k8s-manifest/
 	@echo "Updating ConfigMap with live infrastructure values..."
-	@bash -c "source .terraform.env && ./scripts/update-configmap.sh"
+	@bash -c "source .terraform.env && ./scripts/generalUtils/update-configmap.sh"
 	@echo "Ensuring Azure Workload Identity is functioning..."
 	@$(MAKE) restart-workload-identity
 	@echo "Waiting for pods to be ready..."
@@ -123,31 +121,31 @@ k8s-deploy:
 
 deploy-blazor:
 	@echo "Deploying Blazor frontend to Static Web Apps..."
-	@bash -c "source .terraform.env && ./scripts/deploy-blazor-static-app.sh"
+	@bash -c "source .terraform.env && ./scripts/cloudDeployment/deploy-blazor-static-app.sh"
 
 update-cors:
 	@echo "Updating CORS configuration..."
-	@bash -c "source .terraform.env && ./scripts/update-cors.sh"
+	@bash -c "source .terraform.env && ./scripts/generalUtils/update-cors.sh"
 
 restart-workload-identity:
 	@echo "Restarting Azure Workload Identity webhook..."
-	./scripts/restart-workload-identity.sh
+	./scripts/generalUtils/restart-workload-identity.sh
 
 dev:
 	@echo "Starting development environment..."
-	./scripts/cost-management.sh work
+	./scripts/generalUtils/cost-management.sh work
 
 clean:
 	@echo "Stopping AKS cluster to save costs..."
-	./scripts/cost-management.sh stop
+	./scripts/generalUtils/cost-management.sh stop
 
 start:
 	@echo "Starting AKS cluster..."
-	./scripts/cost-management.sh start
+	./scripts/generalUtils/cost-management.sh start
 
 demo:
 	@echo "Scaling for demo (2 nodes)..."
-	./scripts/cost-management.sh demo
+	./scripts/generalUtils/cost-management.sh demo
 
 status:
 	@echo "Deployment Status:"
@@ -182,7 +180,7 @@ test:
 
 test-suite:
 	@echo "Running test suite..."
-	./scripts/run-tests.sh
+	./scripts/generalUtils/run-tests.sh
 
 help:
 	@echo "Real-Time Financial Monitoring - Deployment Commands"
