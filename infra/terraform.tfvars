@@ -1,1 +1,0 @@
-anomaly_detection_mode = "stateless"
