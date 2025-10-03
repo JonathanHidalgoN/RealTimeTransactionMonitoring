@@ -1,0 +1,4 @@
+resource_prefix = "finmon"
+location        = "mexicocentral"
+
+admin_user_object_id = ""
