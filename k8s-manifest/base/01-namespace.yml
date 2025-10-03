@@ -1,7 +1,0 @@
-# Creates the dedicated namespace for the application, providing logical separation and resource isolation within the Kubernetes cluster.
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: finmon-app
-  labels:
-    project: financial-monitoring
