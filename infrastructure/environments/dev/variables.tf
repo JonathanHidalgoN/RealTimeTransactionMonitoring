@@ -7,7 +7,7 @@ variable "resource_prefix" {
 variable "location" {
   description = "Azure region for resources"
   type        = string
-  default     = "mexicocentral"
+  default     = "centralus"
 }
 
 variable "admin_user_object_id" {
