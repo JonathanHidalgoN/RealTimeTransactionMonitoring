@@ -6,7 +6,6 @@
 using FinancialMonitoring.Abstractions.Persistence;
 using FinancialMonitoring.Models;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Extensions.Options;
 using System.Net;
 
