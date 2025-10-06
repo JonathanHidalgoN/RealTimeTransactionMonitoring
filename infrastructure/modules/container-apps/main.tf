@@ -14,7 +14,8 @@ resource "azurerm_container_app" "api" {
   revision_mode                = "Single"
 
   identity {
-    type = "SystemAssigned"
+    type         = "UserAssigned"
+    identity_ids = [var.managed_identity_id]
   }
 
   template {
@@ -28,7 +29,7 @@ resource "azurerm_container_app" "api" {
       memory = "0.5Gi"
 
       env {
-        name  = "ASPNETCORE_ENVIRONMENT"
+        name  = "DOTNET_ENVIRONMENT"
         value = "Production"
       }
 
@@ -38,18 +39,28 @@ resource "azurerm_container_app" "api" {
       }
 
       env {
-        name  = "MongoDb__ConnectionString"
-        value = var.cosmos_connection_string
+        name  = "CosmosDb__EndpointUri"
+        value = var.cosmos_endpoint
       }
 
       env {
-        name  = "MongoDb__DatabaseName"
-        value = "FinancialMonitoring"
+        name  = "CosmosDb__PrimaryKey"
+        value = var.cosmos_primary_key
       }
 
       env {
-        name  = "MongoDb__CollectionName"
-        value = "Transactions"
+        name  = "CosmosDb__DatabaseName"
+        value = var.cosmos_database_name
+      }
+
+      env {
+        name  = "CosmosDb__ContainerName"
+        value = var.cosmos_container_name
+      }
+
+      env {
+        name  = "CosmosDb__PartitionKeyPath"
+        value = var.cosmos_partition_key_path
       }
 
       env {
@@ -65,6 +76,21 @@ resource "azurerm_container_app" "api" {
       env {
         name  = "ApplicationInsights__ConnectionString"
         value = var.app_insights_connection_string
+      }
+
+      env {
+        name  = "ApiSettings__ApiKey"
+        value = "demo-api-key-12345"
+      }
+
+      env {
+        name  = "KEY_VAULT_URI"
+        value = var.key_vault_uri
+      }
+
+      env {
+        name  = "AZURE_CLIENT_ID"
+        value = var.managed_identity_client_id
       }
     }
   }
@@ -100,7 +126,8 @@ resource "azurerm_container_app" "processor" {
   revision_mode                = "Single"
 
   identity {
-    type = "SystemAssigned"
+    type         = "UserAssigned"
+    identity_ids = [var.managed_identity_id]
   }
 
   template {
@@ -119,17 +146,17 @@ resource "azurerm_container_app" "processor" {
       }
 
       env {
-        name  = "MongoDb__ConnectionString"
+        name  = "CosmosDb__ConnectionString"
         value = var.cosmos_connection_string
       }
 
       env {
-        name  = "MongoDb__DatabaseName"
+        name  = "CosmosDb__DatabaseName"
         value = "FinancialMonitoring"
       }
 
       env {
-        name  = "MongoDb__CollectionName"
+        name  = "CosmosDb__CollectionName"
         value = "Transactions"
       }
 
@@ -167,6 +194,11 @@ resource "azurerm_container_app" "processor" {
         name  = "AzureWebJobsStorage"
         value = var.storage_connection_string
       }
+
+      env {
+        name  = "AZURE_CLIENT_ID"
+        value = var.managed_identity_client_id
+      }
     }
   }
 
@@ -191,7 +223,8 @@ resource "azurerm_container_app" "simulator" {
   revision_mode                = "Single"
 
   identity {
-    type = "SystemAssigned"
+    type         = "UserAssigned"
+    identity_ids = [var.managed_identity_id]
   }
 
   template {
@@ -227,6 +260,11 @@ resource "azurerm_container_app" "simulator" {
       env {
         name  = "ApplicationInsights__ConnectionString"
         value = var.app_insights_connection_string
+      }
+
+      env {
+        name  = "AZURE_CLIENT_ID"
+        value = var.managed_identity_client_id
       }
     }
   }

@@ -9,6 +9,12 @@ output "cosmos_connection_string" {
   sensitive   = true
 }
 
+output "cosmos_primary_key" {
+  description = "Cosmos DB primary key"
+  value       = azurerm_cosmosdb_account.main.primary_key
+  sensitive   = true
+}
+
 output "cosmos_database_name" {
   description = "Cosmos DB database name"
   value       = azurerm_cosmosdb_sql_database.main.name
@@ -17,6 +23,11 @@ output "cosmos_database_name" {
 output "cosmos_container_name" {
   description = "Cosmos DB container name"
   value       = azurerm_cosmosdb_sql_container.transactions.name
+}
+
+output "cosmos_partition_key_path" {
+  description = "Cosmos DB partition key path"
+  value       = "/id"
 }
 
 output "eventhub_namespace_name" {
