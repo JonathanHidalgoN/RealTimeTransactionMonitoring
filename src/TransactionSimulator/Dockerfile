@@ -12,6 +12,8 @@ COPY tests/unit/FinancialMonitoring.Models.Tests/FinancialMonitoring.Models.Test
 COPY tests/unit/TransactionSimulator.Tests/TransactionSimulator.Tests.csproj ./tests/unit/TransactionSimulator.Tests/
 COPY tests/unit/TransactionProcessor.Tests/TransactionProcessor.Tests.csproj ./tests/unit/TransactionProcessor.Tests/
 COPY src/FinancialMonitoring.WebApp/FinancialMonitoring.WebApp.csproj ./src/FinancialMonitoring.WebApp/
+COPY tests/integration/FinancialMonitoring.IntegrationTests/FinancialMonitoring.IntegrationTests.csproj ./tests/integration/FinancialMonitoring.IntegrationTests/
+COPY tests/load/FinancialMonitoring.LoadTests/FinancialMonitoring.LoadTests.csproj ./tests/load/FinancialMonitoring.LoadTests/
 
 RUN dotnet restore "FinancialMonitoringSolution.sln"
 
