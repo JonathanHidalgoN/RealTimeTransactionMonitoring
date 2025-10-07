@@ -44,8 +44,8 @@ resource "azurerm_container_app" "api" {
       }
 
       env {
-        name  = "CosmosDb__PrimaryKey"
-        value = var.cosmos_primary_key
+        name       = "CosmosDb__PrimaryKey"
+        secret_name = "cosmos-primary-key"
       }
 
       env {
@@ -64,8 +64,8 @@ resource "azurerm_container_app" "api" {
       }
 
       env {
-        name  = "ApplicationInsights__ConnectionString"
-        value = var.app_insights_connection_string
+        name       = "ApplicationInsights__ConnectionString"
+        secret_name = "app-insights-connection-string"
       }
 
       env {
@@ -99,6 +99,16 @@ resource "azurerm_container_app" "api" {
   secret {
     name  = "acr-password"
     value = var.acr_admin_password
+  }
+
+  secret {
+    name  = "cosmos-primary-key"
+    value = var.cosmos_primary_key
+  }
+
+  secret {
+    name  = "app-insights-connection-string"
+    value = var.app_insights_connection_string
   }
 
   tags = var.tags
@@ -136,8 +146,8 @@ resource "azurerm_container_app" "processor" {
       }
 
       env {
-        name  = "CosmosDb__PrimaryKey"
-        value = var.cosmos_primary_key
+        name       = "CosmosDb__PrimaryKey"
+        secret_name = "cosmos-primary-key"
       }
 
       env {
@@ -156,8 +166,8 @@ resource "azurerm_container_app" "processor" {
       }
 
       env {
-        name  = "EventHubs__ConnectionString"
-        value = var.eventhub_connection_string
+        name       = "EventHubs__ConnectionString"
+        secret_name = "eventhub-connection-string"
       }
 
       env {
@@ -166,8 +176,8 @@ resource "azurerm_container_app" "processor" {
       }
 
       env {
-        name  = "EventHubs__BlobStorageConnectionString"
-        value = var.storage_connection_string
+        name       = "EventHubs__BlobStorageConnectionString"
+        secret_name = "storage-connection-string"
       }
 
       env {
@@ -186,13 +196,13 @@ resource "azurerm_container_app" "processor" {
       }
 
       env {
-        name  = "ApplicationInsights__ConnectionString"
-        value = var.app_insights_connection_string
+        name       = "ApplicationInsights__ConnectionString"
+        secret_name = "app-insights-connection-string"
       }
 
       env {
-        name  = "AzureWebJobsStorage"
-        value = var.storage_connection_string
+        name       = "AzureWebJobsStorage"
+        secret_name = "storage-connection-string"
       }
 
       env {
@@ -216,6 +226,26 @@ resource "azurerm_container_app" "processor" {
   secret {
     name  = "acr-password"
     value = var.acr_admin_password
+  }
+
+  secret {
+    name  = "cosmos-primary-key"
+    value = var.cosmos_primary_key
+  }
+
+  secret {
+    name  = "eventhub-connection-string"
+    value = var.eventhub_connection_string
+  }
+
+  secret {
+    name  = "storage-connection-string"
+    value = var.storage_connection_string
+  }
+
+  secret {
+    name  = "app-insights-connection-string"
+    value = var.app_insights_connection_string
   }
 
   tags = var.tags
@@ -248,8 +278,8 @@ resource "azurerm_container_app" "simulator" {
       }
 
       env {
-        name  = "EventHubs__ConnectionString"
-        value = var.eventhub_connection_string
+        name       = "EventHubs__ConnectionString"
+        secret_name = "eventhub-connection-string"
       }
 
       env {
@@ -263,8 +293,8 @@ resource "azurerm_container_app" "simulator" {
       }
 
       env {
-        name  = "ApplicationInsights__ConnectionString"
-        value = var.app_insights_connection_string
+        name       = "ApplicationInsights__ConnectionString"
+        secret_name = "app-insights-connection-string"
       }
 
       env {
@@ -288,6 +318,16 @@ resource "azurerm_container_app" "simulator" {
   secret {
     name  = "acr-password"
     value = var.acr_admin_password
+  }
+
+  secret {
+    name  = "eventhub-connection-string"
+    value = var.eventhub_connection_string
+  }
+
+  secret {
+    name  = "app-insights-connection-string"
+    value = var.app_insights_connection_string
   }
 
   tags = var.tags
