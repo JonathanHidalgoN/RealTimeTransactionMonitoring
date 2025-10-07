@@ -68,7 +68,6 @@ module "container_apps" {
   acr_login_server               = data.terraform_remote_state.shared.outputs.acr_login_server
   acr_admin_username             = data.terraform_remote_state.shared.outputs.acr_admin_username
   acr_admin_password             = data.terraform_remote_state.shared.outputs.acr_admin_password
-  cosmos_connection_string       = module.data.cosmos_connection_string
   cosmos_endpoint                = module.data.cosmos_endpoint
   cosmos_primary_key             = module.data.cosmos_primary_key
   cosmos_database_name           = module.data.cosmos_database_name

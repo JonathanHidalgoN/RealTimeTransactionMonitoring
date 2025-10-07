@@ -64,23 +64,8 @@ resource "azurerm_container_app" "api" {
       }
 
       env {
-        name  = "EventHubs__ConnectionString"
-        value = var.eventhub_connection_string
-      }
-
-      env {
-        name  = "EventHubs__EventHubName"
-        value = "transactions"
-      }
-
-      env {
         name  = "ApplicationInsights__ConnectionString"
         value = var.app_insights_connection_string
-      }
-
-      env {
-        name  = "ApiSettings__ApiKey"
-        value = "demo-api-key-12345"
       }
 
       env {
@@ -146,18 +131,28 @@ resource "azurerm_container_app" "processor" {
       }
 
       env {
-        name  = "CosmosDb__ConnectionString"
-        value = var.cosmos_connection_string
+        name  = "CosmosDb__EndpointUri"
+        value = var.cosmos_endpoint
+      }
+
+      env {
+        name  = "CosmosDb__PrimaryKey"
+        value = var.cosmos_primary_key
       }
 
       env {
         name  = "CosmosDb__DatabaseName"
-        value = "FinancialMonitoring"
+        value = var.cosmos_database_name
       }
 
       env {
-        name  = "CosmosDb__CollectionName"
-        value = "Transactions"
+        name  = "CosmosDb__ContainerName"
+        value = var.cosmos_container_name
+      }
+
+      env {
+        name  = "CosmosDb__PartitionKeyPath"
+        value = var.cosmos_partition_key_path
       }
 
       env {
@@ -168,6 +163,11 @@ resource "azurerm_container_app" "processor" {
       env {
         name  = "EventHubs__EventHubName"
         value = "transactions"
+      }
+
+      env {
+        name  = "EventHubs__BlobStorageConnectionString"
+        value = var.storage_connection_string
       }
 
       env {
@@ -193,6 +193,11 @@ resource "azurerm_container_app" "processor" {
       env {
         name  = "AzureWebJobsStorage"
         value = var.storage_connection_string
+      }
+
+      env {
+        name  = "KEY_VAULT_URI"
+        value = var.key_vault_uri
       }
 
       env {
@@ -260,6 +265,11 @@ resource "azurerm_container_app" "simulator" {
       env {
         name  = "ApplicationInsights__ConnectionString"
         value = var.app_insights_connection_string
+      }
+
+      env {
+        name  = "KEY_VAULT_URI"
+        value = var.key_vault_uri
       }
 
       env {

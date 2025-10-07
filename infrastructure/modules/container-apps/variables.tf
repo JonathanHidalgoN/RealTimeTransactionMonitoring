@@ -39,12 +39,6 @@ variable "acr_admin_password" {
   sensitive   = true
 }
 
-variable "cosmos_connection_string" {
-  description = "Cosmos DB connection string"
-  type        = string
-  sensitive   = true
-}
-
 variable "cosmos_endpoint" {
   description = "Cosmos DB endpoint"
   type        = string
