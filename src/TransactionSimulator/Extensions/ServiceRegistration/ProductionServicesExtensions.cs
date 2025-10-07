@@ -11,7 +11,7 @@ public static class ProductionServicesExtensions
 {
     public static IServiceCollection AddProductionServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddOptions<MessagingSettings>()
+        services.AddOptions<EventHubsSettings>()
             .Bind(configuration.GetSection(AppConstants.EventHubsConfigPrefix))
             .ValidateDataAnnotations()
             .ValidateOnStart();

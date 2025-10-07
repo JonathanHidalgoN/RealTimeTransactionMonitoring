@@ -5,9 +5,8 @@ namespace FinancialMonitoring.Abstractions.Persistence;
 
 /// <summary>
 /// Cosmos DB implementation of ITransactionRepository that wraps existing Cosmos services.
-/// This maintains backward compatibility while providing the unified repository interface.
 /// </summary>
-public class CosmosTransactionRepository : ITransactionRepository, IAsyncDisposable
+public class CosmosTransactionRepository : ITransactionRepository
 {
     private readonly ICosmosDbService _cosmosDbService;
     private readonly ITransactionQueryService? _queryService;
@@ -87,7 +86,6 @@ public class CosmosTransactionRepository : ITransactionRepository, IAsyncDisposa
         _logger.LogInformation("Searching transactions in Cosmos DB with advanced criteria, Page: {PageNumber}, Size: {PageSize}",
             searchRequest.PageNumber, searchRequest.PageSize);
 
-        // For now, fall back to basic query - this can be enhanced when ITransactionQueryService is extended
         if (searchRequest.AnomaliesOnly)
         {
             return await _queryService!.GetAnomalousTransactionsAsync(searchRequest.PageNumber, searchRequest.PageSize);
@@ -105,16 +103,5 @@ public class CosmosTransactionRepository : ITransactionRepository, IAsyncDisposa
             PageNumber = pageNumber,
             PageSize = pageSize
         };
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        _logger.LogInformation("Disposing Cosmos DB repository");
-
-        if (_cosmosDbService is IAsyncDisposable cosmosDisposable)
-            await cosmosDisposable.DisposeAsync();
-
-        if (_queryService is IAsyncDisposable queryDisposable)
-            await queryDisposable.DisposeAsync();
     }
 }

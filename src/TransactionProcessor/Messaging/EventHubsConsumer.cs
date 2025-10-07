@@ -22,6 +22,16 @@ public class EventHubsConsumer : IMessageConsumer<object?, string>
         _logger = logger;
         var eventHubsSettings = settings.Value;
 
+        // Validate consumer-specific fields
+        if (string.IsNullOrWhiteSpace(eventHubsSettings.BlobStorageConnectionString))
+        {
+            throw new ArgumentException("BlobStorageConnectionString is required for EventHubsConsumer", nameof(settings));
+        }
+        if (string.IsNullOrWhiteSpace(eventHubsSettings.BlobContainerName))
+        {
+            throw new ArgumentException("BlobContainerName is required for EventHubsConsumer", nameof(settings));
+        }
+
         var storageClient = new BlobContainerClient(
             eventHubsSettings.BlobStorageConnectionString,
             eventHubsSettings.BlobContainerName);
