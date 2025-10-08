@@ -27,3 +27,9 @@ output "managed_identity_principal_id" {
   description = "Managed Identity principal ID"
   value       = azurerm_user_assigned_identity.container_apps.principal_id
 }
+
+output "api_key" {
+  description = "Generated API Key for V1 endpoints (save securely, rotate regularly)"
+  value       = random_password.api_key.result
+  sensitive   = true
+}
