@@ -25,6 +25,26 @@ if [ ! -d "$ENV_DIR" ]; then
     exit 1
 fi
 
+# Check terraform.tfvars exists
+TFVARS_FILE="$ENV_DIR/terraform.tfvars"
+if [ ! -f "$TFVARS_FILE" ]; then
+    echo "ERROR: terraform.tfvars not found at $TFVARS_FILE"
+    echo "Please create and populate it with required values (resource_prefix, location, admin_user_object_id)"
+    exit 1
+fi
+
+echo "Please ensure $TFVARS_FILE contains the required values:"
+echo "  - resource_prefix"
+echo "  - location"
+echo "  - admin_user_object_id"
+echo ""
+read -p "Have you configured terraform.tfvars? (yes/no): " TFVARS_CONFIRM
+if [ "$TFVARS_CONFIRM" != "yes" ]; then
+    echo "Aborted."
+    exit 0
+fi
+echo ""
+
 # Check prerequisites
 if ! command -v az &>/dev/null; then
     echo "ERROR: Azure CLI is not installed"
