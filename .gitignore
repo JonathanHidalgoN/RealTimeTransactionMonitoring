@@ -1,6 +1,7 @@
 # .NET Core
 **/bin/
 **/obj/
+build/
 .vs/
 *.user
 *.suo
