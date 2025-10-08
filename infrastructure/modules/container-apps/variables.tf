@@ -103,3 +103,14 @@ variable "managed_identity_client_id" {
   description = "Managed Identity Client ID for Container Apps"
   type        = string
 }
+
+variable "frontend_url" {
+  description = "Frontend URL for CORS configuration"
+  type        = string
+}
+
+variable "api_key" {
+  description = "API Key for authentication"
+  type        = string
+  sensitive   = true
+}

@@ -79,6 +79,8 @@ module "container_apps" {
   key_vault_uri                  = module.security.key_vault_uri
   managed_identity_id            = module.security.managed_identity_id
   managed_identity_client_id     = module.security.managed_identity_client_id
+  frontend_url                   = "https://${module.frontend.default_hostname}"
+  api_key                        = module.security.api_key
   tags                           = local.common_tags
 }
 
@@ -89,6 +91,5 @@ module "frontend" {
   resource_prefix     = var.resource_prefix
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
-  api_url             = module.container_apps.api_url
   tags                = local.common_tags
 }

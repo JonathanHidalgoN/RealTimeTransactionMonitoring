@@ -13,3 +13,8 @@ output "api_key" {
   value       = azurerm_static_web_app.main.api_key
   sensitive   = true
 }
+
+output "static_web_app_name" {
+  description = "Static Web App name"
+  value       = azurerm_static_web_app.main.name
+}

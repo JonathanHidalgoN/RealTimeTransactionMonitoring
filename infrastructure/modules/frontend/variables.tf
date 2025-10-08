@@ -18,11 +18,6 @@ variable "resource_group_name" {
   type        = string
 }
 
-variable "api_url" {
-  description = "Backend API URL"
-  type        = string
-}
-
 variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)
