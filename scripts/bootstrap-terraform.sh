@@ -6,31 +6,36 @@
 
 set -e # Exit on any error
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
 LOCATION="mexicocentral"
 RG_NAME="finmon-tfstate-rg"
 STORAGE_NAME="finmontfstate"
 CONTAINER_NAME="tfstate"
 
-echo "Bootstrapping Terraform backend..."
+echo -e "${YELLOW}Bootstrapping Terraform backend...${NC}"
 echo "   Location: $LOCATION"
 echo "   Resource Group: $RG_NAME"
 echo "   Storage Account: $STORAGE_NAME"
 echo "   Container: $CONTAINER_NAME"
 echo ""
-echo "WARNING: These values must match the backend configuration in:"
+echo -e "${YELLOW}WARNING: These values must match the backend configuration in:${NC}"
 echo "   - infrastructure/shared/backend.tf"
 echo "   - infrastructure/environments/dev/backend.tf"
 echo "   - infrastructure/environments/*/backend.tf (any other environments)"
 echo ""
 
 if ! command -v az &>/dev/null; then
-    echo "ERROR: Azure CLI is not installed. Please install it first:"
+    echo -e "${RED}ERROR: Azure CLI is not installed. Please install it first:${NC}"
     echo "   https://docs.microsoft.com/en-us/cli/azure/install-azure-cli"
     exit 1
 fi
 
 if ! az account show &>/dev/null; then
-    echo "ERROR: Not logged into Azure. Please run: az login"
+    echo -e "${RED}ERROR: Not logged into Azure. Please run: az login${NC}"
     exit 1
 fi
 
@@ -53,7 +58,7 @@ else
         --name "$RG_NAME" \
         --location "$LOCATION" \
         --output none
-    echo "   Created"
+    echo -e "   ${GREEN}Created${NC}"
 fi
 
 echo "Creating storage account '$STORAGE_NAME'..."
@@ -67,7 +72,7 @@ else
         --sku Standard_LRS \
         --encryption-services blob \
         --output none
-    echo "   Created"
+    echo -e "   ${GREEN}Created${NC}"
 fi
 
 echo "Retrieving storage account key..."
@@ -77,7 +82,7 @@ ACCOUNT_KEY=$(az storage account keys list \
     --query '[0].value' -o tsv)
 
 if [ -z "$ACCOUNT_KEY" ]; then
-    echo "ERROR: Failed to retrieve storage account key"
+    echo -e "${RED}ERROR: Failed to retrieve storage account key${NC}"
     exit 1
 fi
 
@@ -94,9 +99,9 @@ else
         --account-name "$STORAGE_NAME" \
         --account-key "$ACCOUNT_KEY" \
         --output none
-    echo "   Created"
+    echo -e "   ${GREEN}Created${NC}"
 fi
 
 echo ""
-echo "SUCCESS: Terraform backend is ready!"
+echo -e "${GREEN}SUCCESS: Terraform backend is ready!${NC}"
 echo ""

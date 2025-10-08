@@ -4,8 +4,14 @@
 
 set -e
 
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
 if [ -z "$1" ]; then
-    echo "ERROR: ACR server address required"
+    echo -e "${RED}ERROR: ACR server address required${NC}"
     echo "Usage: $0 <acr_login_server>"
     echo "Example: $0 finmonacr123.azurecr.io"
     exit 1
@@ -26,37 +32,37 @@ cd "$PROJECT_ROOT"
 echo "Project root: $PROJECT_ROOT"
 echo ""
 
-echo "[1/3] Building API image..."
+echo -e "${YELLOW}[1/3] Building API image...${NC}"
 docker build \
     -t "$ACR_SERVER/financialmonitoring-api:latest" \
     -f src/FinancialMonitoring.Api/Dockerfile \
     .
 
-echo "[1/3] Pushing API image..."
+echo -e "${YELLOW}[1/3] Pushing API image...${NC}"
 docker push "$ACR_SERVER/financialmonitoring-api:latest"
 echo ""
 
-echo "[2/3] Building Processor image..."
+echo -e "${YELLOW}[2/3] Building Processor image...${NC}"
 docker build \
     -t "$ACR_SERVER/transactionprocessor:latest" \
     -f src/TransactionProcessor/Dockerfile \
     .
 
-echo "[2/3] Pushing Processor image..."
+echo -e "${YELLOW}[2/3] Pushing Processor image...${NC}"
 docker push "$ACR_SERVER/transactionprocessor:latest"
 echo ""
 
-echo "[3/3] Building Simulator image..."
+echo -e "${YELLOW}[3/3] Building Simulator image...${NC}"
 docker build \
     -t "$ACR_SERVER/transactionsimulator:latest" \
     -f src/TransactionSimulator/Dockerfile \
     .
 
-echo "[3/3] Pushing Simulator image..."
+echo -e "${YELLOW}[3/3] Pushing Simulator image...${NC}"
 docker push "$ACR_SERVER/transactionsimulator:latest"
 echo ""
 
-echo "SUCCESS: All images built and pushed to ACR"
+echo -e "${GREEN}SUCCESS: All images built and pushed to ACR${NC}"
 echo ""
 echo "Images available:"
 echo "  - $ACR_SERVER/financialmonitoring-api:latest"
