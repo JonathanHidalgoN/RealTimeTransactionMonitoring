@@ -241,18 +241,20 @@ docker-compose up -d
 cd src/FinancialMonitoring.WebApp && dotnet run
 ```
 
-### Cloud Deployment
+### Cloud Deployment (Azure)
 ```bash
-# Complete Azure deployment
-make deploy
+# One-time: Setup Terraform backend
+./scripts/bootstrap-terraform.sh
 
-# Or step-by-step
-make infra        # Deploy infrastructure
-make apps         # Deploy applications
-make frontend     # Deploy frontend
+# Configure infrastructure/environments/dev/terraform.tfvars
+# Then deploy infrastructure and backend services
+./scripts/deploy.sh dev
+
+# Deploy frontend
+./scripts/deploy-frontend.sh dev
 ```
 
-**Detailed Setup**: [Setup Documentation](docs/setup-docs.md) • [CI/CD Pipeline](docs/ci-cd-pipeline.md)
+**Detailed Deployment Guide**: [DEPLOYMENT.md](docs/DEPLOYMENT.md) • [Setup Documentation](docs/setup-docs.md) • [CI/CD Pipeline](docs/ci-cd-pipeline.md)
 
 ## Project Structure
 
