@@ -58,8 +58,6 @@ cd "$ENV_DIR"
 
 API_URL=$(terraform output -raw api_url 2>/dev/null || true)
 API_KEY=$(terraform output -raw api_key 2>/dev/null || true)
-STATIC_APP_NAME=$(terraform output -raw static_web_app_name 2>/dev/null || true)
-RESOURCE_GROUP=$(terraform output -raw resource_group_name 2>/dev/null || true)
 DEPLOYMENT_TOKEN=$(terraform output -raw frontend_api_key 2>/dev/null || true)
 
 if [ -z "$API_URL" ]; then
@@ -73,16 +71,6 @@ if [ -z "$API_KEY" ]; then
     exit 1
 fi
 
-if [ -z "$STATIC_APP_NAME" ]; then
-    echo -e "${RED}ERROR: Could not retrieve static_web_app_name from Terraform${NC}"
-    exit 1
-fi
-
-if [ -z "$RESOURCE_GROUP" ]; then
-    echo -e "${RED}ERROR: Could not retrieve resource_group_name from Terraform${NC}"
-    exit 1
-fi
-
 if [ -z "$DEPLOYMENT_TOKEN" ]; then
     echo -e "${RED}ERROR: Could not retrieve deployment token from Terraform${NC}"
     exit 1
@@ -90,8 +78,6 @@ fi
 
 echo -e "${GREEN}Configuration retrieved:${NC}"
 echo "  API URL: $API_URL"
-echo "  Static Web App: $STATIC_APP_NAME"
-echo "  Resource Group: $RESOURCE_GROUP"
 echo ""
 
 echo -e "${YELLOW}Building Blazor WebAssembly app...${NC}"
