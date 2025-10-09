@@ -7,6 +7,14 @@ public static class ConfigurationValidator
 {
     public static void ValidateConfiguration(IConfiguration configuration)
     {
+        var environment = configuration[AppConstants.runTimeEnvVarName] ?? "Development";
+        var runTimeEnv = RunTimeEnvironmentExtensions.FromString(environment);
+
+        if (runTimeEnv == RunTimeEnvironment.Testing)
+        {
+            return;
+        }
+
         var errors = new List<string>();
 
         ValidateSection<ApiSettings>(configuration, AppConstants.ApiSettingsConfigPrefix, errors);
@@ -15,9 +23,6 @@ public static class ConfigurationValidator
         ValidateSection<RateLimitSettings>(configuration, AppConstants.RateLimitSettingsConfigPrefix, errors);
         ValidateSection<JwtSettings>(configuration, AppConstants.JwtSettingsConfigPrefix, errors);
         ValidateSection<CorsSettings>(configuration, AppConstants.CorsConfigPrefix, errors);
-
-        var environment = configuration[AppConstants.runTimeEnvVarName] ?? "Development";
-        var runTimeEnv = RunTimeEnvironmentExtensions.FromString(environment);
 
         if (runTimeEnv == RunTimeEnvironment.Production)
         {

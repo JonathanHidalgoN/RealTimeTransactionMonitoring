@@ -7,6 +7,11 @@ public static class ConfigurationValidator
 {
     public static void ValidateConfiguration(IConfiguration configuration, RunTimeEnvironment environment)
     {
+        if (environment == RunTimeEnvironment.Testing)
+        {
+            return;
+        }
+
         var errors = new List<string>();
 
         ValidateSection<AnomalyDetectionSettings>(configuration, "AnomalyDetection", errors);
