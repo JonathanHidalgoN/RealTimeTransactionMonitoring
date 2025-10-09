@@ -140,3 +140,70 @@ Test the health endpoint:
 ```bash
 curl https://<api-fqdn>/health
 ```
+
+## Step 6: Deploy Frontend
+
+The frontend is a Blazor WebAssembly application that runs entirely in the browser. It needs to be:
+1. Built as static files (HTML, CSS, JS, WebAssembly)
+2. Configured with the API URL and API Key
+3. Deployed to Azure Static Web Apps
+
+### Prerequisites
+
+Install the Azure Static Web Apps CLI:
+
+```bash
+npm install -g @azure/static-web-apps-cli
+```
+
+### Manual Deployment Steps
+
+1. **Get configuration from Terraform:**
+
+```bash
+cd infrastructure/environments/dev
+API_URL=$(terraform output -raw api_url)
+API_KEY=$(terraform output -raw api_key)
+DEPLOYMENT_TOKEN=$(terraform output -raw frontend_api_key)
+```
+
+2. **Build the Blazor WebAssembly app:**
+
+```bash
+cd ../../src/FinancialMonitoring.WebApp
+dotnet publish -c Release -o ../../build/webapp
+```
+
+3. **Replace configuration placeholders:**
+
+The source code contains placeholders `__ApiBaseUrl__` and `__ApiKey__` that need to be replaced with actual values:
+
+```bash
+cd ../../build/webapp/wwwroot
+sed -i "s|__ApiBaseUrl__|$API_URL|g" appsettings.json
+sed -i "s|__ApiKey__|$API_KEY|g" appsettings.json
+```
+
+4. **Deploy to Azure Static Web Apps:**
+
+```bash
+swa deploy . --deployment-token "$DEPLOYMENT_TOKEN" --env production
+```
+
+### Automated Deployment
+
+For convenience, all the above steps are automated in a single script:
+
+```bash
+./scripts/deploy-frontend.sh dev
+```
+
+### Verify Frontend
+
+
+```bash
+cd infrastructure/environments/dev
+terraform output frontend_url
+```
+
+Open the URL in your browser. The application should load and be able to fetch data from the API.
