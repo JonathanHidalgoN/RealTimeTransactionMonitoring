@@ -1,6 +1,5 @@
 using FinancialMonitoring.Models;
 using System.ComponentModel.DataAnnotations;
-using TransactionProcessor.AnomalyDetection;
 
 namespace TransactionProcessor.Extensions.Configuration;
 
