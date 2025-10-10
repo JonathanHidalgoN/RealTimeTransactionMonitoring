@@ -18,9 +18,12 @@ public static class DataAccessExtensions
         {
             AddProductionDataAccess(services, configuration, logger);
         }
-        else
+        else if (environment == RunTimeEnvironment.Development)
         {
-            AddDevelopmentDataAccess(services, configuration, logger);
+
+        }
+        {
+            AddDevelopmentDataAccess(services, configuration, logger, environment);
         }
 
         return services;
@@ -52,17 +55,14 @@ public static class DataAccessExtensions
     private static void AddDevelopmentDataAccess(
         IServiceCollection services,
         IConfiguration configuration,
-        ILogger logger)
+        ILogger logger,
+        RunTimeEnvironment environment)
     {
-        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-        if (environment != "Testing")
-        {
-            services.AddOptions<ApplicationInsightsSettings>()
-                .Bind(configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix))
-                .ValidateDataAnnotations()
-                .ValidateOnStart();
-            services.AddApplicationInsightsTelemetry();
-        }
+        services.AddOptions<ApplicationInsightsSettings>()
+            .Bind(configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddApplicationInsightsTelemetry();
 
         services.AddOptions<MongoDbSettings>()
             .Bind(configuration.GetSection(AppConstants.MongoDbConfigPrefix))

@@ -5,12 +5,9 @@ namespace FinancialMonitoring.Api.Extensions.Configuration;
 
 public static class ConfigurationValidator
 {
-    public static void ValidateConfiguration(IConfiguration configuration)
+    public static void ValidateConfiguration(IConfiguration configuration, RunTimeEnvironment environment)
     {
-        var environment = configuration[AppConstants.runTimeEnvVarName] ?? "Development";
-        var runTimeEnv = RunTimeEnvironmentExtensions.FromString(environment);
-
-        if (runTimeEnv == RunTimeEnvironment.Testing)
+        if (environment == RunTimeEnvironment.Testing)
         {
             return;
         }
@@ -24,7 +21,7 @@ public static class ConfigurationValidator
         ValidateSection<JwtSettings>(configuration, AppConstants.JwtSettingsConfigPrefix, errors);
         ValidateSection<CorsSettings>(configuration, AppConstants.CorsConfigPrefix, errors);
 
-        if (runTimeEnv == RunTimeEnvironment.Production)
+        if (environment == RunTimeEnvironment.Production)
         {
             ValidateSection<ApplicationInsightsSettings>(configuration, AppConstants.ApplicationInsightsConfigPrefix, errors);
             ValidateSection<CosmosDbSettings>(configuration, AppConstants.CosmosDbConfigPrefix, errors);

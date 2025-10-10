@@ -13,7 +13,7 @@ public static class EnvironmentDetector
         using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var logger = loggerFactory.CreateLogger("EnvironmentDetector");
 
-        var environmentString = builder.Configuration[AppConstants.runTimeEnvVarName] ?? "Development";
+        var environmentString = builder.Environment.EnvironmentName;
         var runTimeEnv = RunTimeEnvironmentExtensions.FromString(environmentString);
 
         logger.LogInformation("Running API program in environment: {Environment}", runTimeEnv);

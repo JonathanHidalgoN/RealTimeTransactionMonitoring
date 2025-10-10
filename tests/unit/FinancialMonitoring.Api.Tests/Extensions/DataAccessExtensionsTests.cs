@@ -70,11 +70,11 @@ public class DataAccessExtensionsTests
             {
                 ["MongoDb:ConnectionString"] = "mongodb://localhost:27017",
                 ["MongoDb:DatabaseName"] = "TestDb",
-                ["ASPNETCORE_ENVIRONMENT"] = "Testing"
+                [AppConstants.runTimeEnvVarName] = "Testing"
             })
             .Build();
 
-        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
+        Environment.SetEnvironmentVariable(AppConstants.runTimeEnvVarName, "Testing");
 
         try
         {
@@ -86,7 +86,7 @@ public class DataAccessExtensionsTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
+            Environment.SetEnvironmentVariable(AppConstants.runTimeEnvVarName, null);
         }
     }
 

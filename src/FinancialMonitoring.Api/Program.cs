@@ -12,7 +12,7 @@ public partial class Program
         var environment = EnvironmentDetector.DetectAndConfigureEnvironment(builder);
         var portSettings = builder.Configuration.BuildPortSettings();
 
-        ConfigurationValidator.ValidateConfiguration(builder.Configuration);
+        ConfigurationValidator.ValidateConfiguration(builder.Configuration, environment);
 
         builder.Services.AddCaching(builder.Configuration);
         builder.Services.AddCorsConfiguration(builder.Configuration, portSettings);

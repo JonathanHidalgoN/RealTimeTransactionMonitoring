@@ -27,7 +27,9 @@ public class ConfigurationValidatorTests
             })
             .Build();
 
-        var action = () => ConfigurationValidator.ValidateConfiguration(configuration);
+        var environmentString = configuration[AppConstants.runTimeEnvVarName] ?? "Development";
+        var environment = RunTimeEnvironmentExtensions.FromString(environmentString);
+        var action = () => ConfigurationValidator.ValidateConfiguration(configuration, environment);
 
         action.Should().NotThrow();
     }
@@ -54,7 +56,9 @@ public class ConfigurationValidatorTests
             })
             .Build();
 
-        var action = () => ConfigurationValidator.ValidateConfiguration(configuration);
+        var environmentString = configuration[AppConstants.runTimeEnvVarName] ?? "Development";
+        var environment = RunTimeEnvironmentExtensions.FromString(environmentString);
+        var action = () => ConfigurationValidator.ValidateConfiguration(configuration, environment);
 
         action.Should().NotThrow();
     }
@@ -71,7 +75,9 @@ public class ConfigurationValidatorTests
             })
             .Build();
 
-        var action = () => ConfigurationValidator.ValidateConfiguration(configuration);
+        var environmentString = configuration[AppConstants.runTimeEnvVarName] ?? "Development";
+        var environment = RunTimeEnvironmentExtensions.FromString(environmentString);
+        var action = () => ConfigurationValidator.ValidateConfiguration(configuration, environment);
 
         action.Should().Throw<InvalidOperationException>();
     }
@@ -90,7 +96,9 @@ public class ConfigurationValidatorTests
             })
             .Build();
 
-        var action = () => ConfigurationValidator.ValidateConfiguration(configuration);
+        var environmentString = configuration[AppConstants.runTimeEnvVarName] ?? "Development";
+        var environment = RunTimeEnvironmentExtensions.FromString(environmentString);
+        var action = () => ConfigurationValidator.ValidateConfiguration(configuration, environment);
 
         action.Should().Throw<InvalidOperationException>();
     }
@@ -107,7 +115,9 @@ public class ConfigurationValidatorTests
             })
             .Build();
 
-        var action = () => ConfigurationValidator.ValidateConfiguration(configuration);
+        var environmentString = configuration[AppConstants.runTimeEnvVarName] ?? "Development";
+        var environment = RunTimeEnvironmentExtensions.FromString(environmentString);
+        var action = () => ConfigurationValidator.ValidateConfiguration(configuration, environment);
 
         action.Should().Throw<InvalidOperationException>();
     }
@@ -127,7 +137,9 @@ public class ConfigurationValidatorTests
             })
             .Build();
 
-        var action = () => ConfigurationValidator.ValidateConfiguration(configuration);
+        var environmentString = configuration[AppConstants.runTimeEnvVarName] ?? "Development";
+        var environment = RunTimeEnvironmentExtensions.FromString(environmentString);
+        var action = () => ConfigurationValidator.ValidateConfiguration(configuration, environment);
 
         action.Should().Throw<InvalidOperationException>();
     }
@@ -144,7 +156,9 @@ public class ConfigurationValidatorTests
             })
             .Build();
 
-        var action = () => ConfigurationValidator.ValidateConfiguration(configuration);
+        var environmentString = configuration[AppConstants.runTimeEnvVarName] ?? "Development";
+        var environment = RunTimeEnvironmentExtensions.FromString(environmentString);
+        var action = () => ConfigurationValidator.ValidateConfiguration(configuration, environment);
 
         action.Should().Throw<InvalidOperationException>();
     }
@@ -170,7 +184,9 @@ public class ConfigurationValidatorTests
             })
             .Build();
 
-        var action = () => ConfigurationValidator.ValidateConfiguration(configuration);
+        var environmentString = configuration[AppConstants.runTimeEnvVarName] ?? "Development";
+        var environment = RunTimeEnvironmentExtensions.FromString(environmentString);
+        var action = () => ConfigurationValidator.ValidateConfiguration(configuration, environment);
 
         action.Should().NotThrow();
     }
@@ -198,7 +214,9 @@ public class ConfigurationValidatorTests
             })
             .Build();
 
-        var action = () => ConfigurationValidator.ValidateConfiguration(configuration);
+        var environmentString = configuration[AppConstants.runTimeEnvVarName] ?? "Development";
+        var environment = RunTimeEnvironmentExtensions.FromString(environmentString);
+        var action = () => ConfigurationValidator.ValidateConfiguration(configuration, environment);
 
         action.Should().NotThrow();
     }
@@ -223,7 +241,9 @@ public class ConfigurationValidatorTests
             })
             .Build();
 
-        var action = () => ConfigurationValidator.ValidateConfiguration(configuration);
+        var environmentString = configuration[AppConstants.runTimeEnvVarName] ?? "Development";
+        var environment = RunTimeEnvironmentExtensions.FromString(environmentString);
+        var action = () => ConfigurationValidator.ValidateConfiguration(configuration, environment);
 
         action.Should().NotThrow();
     }
@@ -248,7 +268,9 @@ public class ConfigurationValidatorTests
             })
             .Build();
 
-        var action = () => ConfigurationValidator.ValidateConfiguration(configuration);
+        var environmentString = configuration[AppConstants.runTimeEnvVarName] ?? "Development";
+        var environment = RunTimeEnvironmentExtensions.FromString(environmentString);
+        var action = () => ConfigurationValidator.ValidateConfiguration(configuration, environment);
 
         action.Should().NotThrow();
     }
