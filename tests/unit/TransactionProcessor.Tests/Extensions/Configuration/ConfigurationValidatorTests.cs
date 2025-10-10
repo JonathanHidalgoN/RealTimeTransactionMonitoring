@@ -17,6 +17,7 @@ public class ConfigurationValidatorTests
                 ["AnomalyDetection:AmountThreshold"] = "1000",
                 ["MongoDb:ConnectionString"] = "mongodb://localhost:27017",
                 ["MongoDb:DatabaseName"] = "testdb",
+                ["MongoDb:CollectionName"] = "transactions",
                 ["Kafka:BootstrapServers"] = "localhost:9092",
                 ["Kafka:Topic"] = "transactions"
             })
@@ -39,8 +40,15 @@ public class ConfigurationValidatorTests
                 ["ApplicationInsights:ConnectionString"] = "InstrumentationKey=test-key",
                 ["CosmosDb:AccountEndpoint"] = "https://test.documents.azure.com:443/",
                 ["CosmosDb:DatabaseName"] = "production-db",
+                ["CosmosDb:EndpointUri"] = "https://test.documents.azure.com:443/",
+                ["CosmosDb:PrimaryKey"] = "test-primary-key",
+                ["CosmosDb:ContainerName"] = "transactions",
+                ["CosmosDb:PartitionKeyPath"] = "/id",
+                ["CosmosDb:ApplicationName"] = "TransactionProcessor",
+                ["CosmosDb:ConnectionString"] = "AccountEndpoint=https://test.documents.azure.com:443/;",
                 ["EventHubs:ConnectionString"] = "Endpoint=sb://test.servicebus.windows.net/",
-                ["EventHubs:EntityPath"] = "transactions"
+                ["EventHubs:EntityPath"] = "transactions",
+                ["EventHubs:EventHubName"] = "transactions"
             })
             .Build();
 
@@ -61,8 +69,15 @@ public class ConfigurationValidatorTests
                 ["ApplicationInsights:ConnectionString"] = "InstrumentationKey=test-key",
                 ["CosmosDb:AccountEndpoint"] = "https://test.documents.azure.com:443/",
                 ["CosmosDb:DatabaseName"] = "production-db",
+                ["CosmosDb:EndpointUri"] = "https://test.documents.azure.com:443/",
+                ["CosmosDb:PrimaryKey"] = "test-primary-key",
+                ["CosmosDb:ContainerName"] = "transactions",
+                ["CosmosDb:PartitionKeyPath"] = "/id",
+                ["CosmosDb:ApplicationName"] = "TransactionProcessor",
+                ["CosmosDb:ConnectionString"] = "AccountEndpoint=https://test.documents.azure.com:443/;",
                 ["EventHubs:ConnectionString"] = "Endpoint=sb://test.servicebus.windows.net/",
                 ["EventHubs:EntityPath"] = "transactions",
+                ["EventHubs:EventHubName"] = "transactions",
                 ["Redis:ConnectionString"] = "production.redis.cache.windows.net"
             })
             .Build();
@@ -138,8 +153,15 @@ public class ConfigurationValidatorTests
                 ["ApplicationInsights:ConnectionString"] = "InstrumentationKey=test-key",
                 ["CosmosDb:AccountEndpoint"] = "https://test.documents.azure.com:443/",
                 ["CosmosDb:DatabaseName"] = "production-db",
+                ["CosmosDb:EndpointUri"] = "https://test.documents.azure.com:443/",
+                ["CosmosDb:PrimaryKey"] = "test-primary-key",
+                ["CosmosDb:ContainerName"] = "transactions",
+                ["CosmosDb:PartitionKeyPath"] = "/id",
+                ["CosmosDb:ApplicationName"] = "TransactionProcessor",
+                ["CosmosDb:ConnectionString"] = "AccountEndpoint=https://test.documents.azure.com:443/;",
                 ["EventHubs:ConnectionString"] = "Endpoint=sb://test.servicebus.windows.net/",
-                ["EventHubs:EntityPath"] = "transactions"
+                ["EventHubs:EntityPath"] = "transactions",
+                ["EventHubs:EventHubName"] = "transactions"
                 // No Redis configuration - should be fine for stateless mode
             })
             .Build();
@@ -159,6 +181,7 @@ public class ConfigurationValidatorTests
                 ["AnomalyDetection:AmountThreshold"] = "1000",
                 ["MongoDb:ConnectionString"] = "mongodb://localhost:27017",
                 ["MongoDb:DatabaseName"] = "testdb",
+                ["MongoDb:CollectionName"] = "transactions",
                 ["Kafka:BootstrapServers"] = "localhost:9092",
                 ["Kafka:Topic"] = "transactions"
                 // No CosmosDb, EventHubs, or ApplicationInsights - should be fine for Development
@@ -182,8 +205,15 @@ public class ConfigurationValidatorTests
                 ["ApplicationInsights:ConnectionString"] = "InstrumentationKey=test-key",
                 ["CosmosDb:AccountEndpoint"] = "https://test.documents.azure.com:443/",
                 ["CosmosDb:DatabaseName"] = "production-db",
+                ["CosmosDb:EndpointUri"] = "https://test.documents.azure.com:443/",
+                ["CosmosDb:PrimaryKey"] = "test-primary-key",
+                ["CosmosDb:ContainerName"] = "transactions",
+                ["CosmosDb:PartitionKeyPath"] = "/id",
+                ["CosmosDb:ApplicationName"] = "TransactionProcessor",
+                ["CosmosDb:ConnectionString"] = "AccountEndpoint=https://test.documents.azure.com:443/;",
                 ["EventHubs:ConnectionString"] = "Endpoint=sb://test.servicebus.windows.net/",
-                ["EventHubs:EntityPath"] = "transactions"
+                ["EventHubs:EntityPath"] = "transactions",
+                ["EventHubs:EventHubName"] = "transactions"
                 // No MongoDb or Kafka settings - should be fine for Production
             })
             .Build();
@@ -238,6 +268,7 @@ public class ConfigurationValidatorTests
                 ["AnomalyDetection:AmountThreshold"] = "1000",
                 ["MongoDb:ConnectionString"] = "mongodb://localhost:27017",
                 ["MongoDb:DatabaseName"] = "testdb",
+                ["MongoDb:CollectionName"] = "transactions",
                 ["Kafka:BootstrapServers"] = "localhost:9092",
                 ["Kafka:Topic"] = "transactions"
             })
@@ -260,8 +291,15 @@ public class ConfigurationValidatorTests
                 ["ApplicationInsights:ConnectionString"] = "InstrumentationKey=test-key",
                 ["CosmosDb:AccountEndpoint"] = "https://test.documents.azure.com:443/",
                 ["CosmosDb:DatabaseName"] = "production-db",
+                ["CosmosDb:EndpointUri"] = "https://test.documents.azure.com:443/",
+                ["CosmosDb:PrimaryKey"] = "test-primary-key",
+                ["CosmosDb:ContainerName"] = "transactions",
+                ["CosmosDb:PartitionKeyPath"] = "/id",
+                ["CosmosDb:ApplicationName"] = "TransactionProcessor",
+                ["CosmosDb:ConnectionString"] = "AccountEndpoint=https://test.documents.azure.com:443/;",
                 ["EventHubs:ConnectionString"] = "Endpoint=sb://test.servicebus.windows.net/",
                 ["EventHubs:EntityPath"] = "transactions",
+                ["EventHubs:EventHubName"] = "transactions",
                 ["Redis:ConnectionString"] = "production.redis.cache.windows.net"
             })
             .Build();
