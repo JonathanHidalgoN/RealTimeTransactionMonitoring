@@ -26,8 +26,4 @@ RUN dotnet build tests/integration/FinancialMonitoring.IntegrationTests/Financia
 FROM build AS test
 WORKDIR /source
 
-# Add container test runner script to support category filtering
-COPY scripts/generalUtils/container-test-runner.sh /app/container-test-runner.sh
-RUN chmod +x /app/container-test-runner.sh
-
-ENTRYPOINT ["/app/container-test-runner.sh"]
+CMD ["sh", "-c", "dotnet test tests/integration/FinancialMonitoring.IntegrationTests/FinancialMonitoring.IntegrationTests.csproj --no-build -c Release --logger \"console;verbosity=${TEST_VERBOSITY:-normal}\" --results-directory /app/test-results ${TEST_CATEGORY:+--filter Category=$TEST_CATEGORY}"]
