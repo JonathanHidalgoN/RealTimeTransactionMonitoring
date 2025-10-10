@@ -303,10 +303,6 @@ docker compose -f docker-compose.test.yml run --rm integration-tests
 | **Transaction Processor** | Core processing engine details | [transaction-processor.md](docs/transaction-processor.md) |
 | **Transaction Simulator** | Data generation engine | [simulator-docs.md](docs/simulator-docs.md) |
 
-## Contributing
-
-This project uses AI as a development mentor and teaching tool. See [AI Usage Documentation](docs/ai-usage.md) for the development philosophy and [CLAUDE.md](CLAUDE.md) for AI configuration.
-
 ## Future Enhancements
 
 - **OAuth 2.0/JWT Authentication**: Enhanced API security with standard authentication flows
