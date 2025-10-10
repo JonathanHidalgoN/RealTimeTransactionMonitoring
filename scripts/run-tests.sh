@@ -2,7 +2,7 @@
 
 set -e
 
-echo "Starting Integration Tests..."
+echo "Starting Test Suite..."
 
 echo "Building test environment..."
 docker compose -f docker-compose.test.yml build
@@ -13,13 +13,16 @@ dotnet test tests/unit/FinancialMonitoring.Api.Tests/FinancialMonitoring.Api.Tes
 dotnet test tests/unit/TransactionProcessor.Tests/TransactionProcessor.Tests.csproj --configuration Release --logger "console;verbosity=minimal"
 dotnet test tests/unit/TransactionSimulator.Tests/TransactionSimulator.Tests.csproj --configuration Release --logger "console;verbosity=minimal"
 
-echo "Starting integration test environment..."
+echo "Running Integration Tests (WebApplicationFactory - fast)..."
+dotnet test tests/integration/FinancialMonitoring.IntegrationTests/FinancialMonitoring.IntegrationTests.csproj --configuration Release --logger "console;verbosity=minimal"
+
+echo "Starting end-to-end test environment..."
 docker compose -f docker-compose.test.yml up -d
 
 echo "Waiting for services to be ready..."
 sleep 120
 
-echo "Running Integration Tests..."
+echo "Running End-to-End Tests (full infrastructure - slow)..."
 docker compose -f docker-compose.test.yml run --rm integration-tests
 
 echo "Cleaning up..."

@@ -4,7 +4,7 @@ using Confluent.Kafka;
 using MongoDB.Driver;
 using FinancialMonitoring.Models;
 
-namespace FinancialMonitoring.IntegrationTests.Workflows;
+namespace FinancialMonitoring.EndToEndTests.Workflows;
 
 [Trait("Category", "E2E")]
 public class EndToEndTransactionFlowTests : IAsyncLifetime

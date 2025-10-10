@@ -5,7 +5,7 @@ using FinancialMonitoring.Models.OAuth;
 using System.Net;
 using System.Text;
 
-namespace FinancialMonitoring.IntegrationTests.ApiContracts.V2;
+namespace FinancialMonitoring.EndToEndTests.ApiContracts.V2;
 
 /// <summary>
 /// Integration tests for V2 API endpoints that use JWT authentication and OAuth2 flows

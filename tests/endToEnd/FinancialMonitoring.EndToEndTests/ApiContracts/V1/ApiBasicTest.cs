@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace FinancialMonitoring.IntegrationTests.ApiContracts.V1;
+namespace FinancialMonitoring.EndToEndTests.ApiContracts.V1;
 
 //Test that the api respond to request with new modernized structure
 [Trait("Category", "API")]

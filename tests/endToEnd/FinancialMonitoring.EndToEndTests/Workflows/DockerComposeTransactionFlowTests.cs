@@ -4,7 +4,7 @@ using Confluent.Kafka;
 using MongoDB.Driver;
 using FinancialMonitoring.Models;
 
-namespace FinancialMonitoring.IntegrationTests.Workflows;
+namespace FinancialMonitoring.EndToEndTests.Workflows;
 
 /// <summary>
 /// End-to-end transaction workflow tests using Docker Compose environment

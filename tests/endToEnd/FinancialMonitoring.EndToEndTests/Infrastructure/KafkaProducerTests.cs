@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Confluent.Kafka;
 
-namespace FinancialMonitoring.IntegrationTests.Infrastructure;
+namespace FinancialMonitoring.EndToEndTests.Infrastructure;
 
 /// <summary>
 /// Kafka producer functionality tests

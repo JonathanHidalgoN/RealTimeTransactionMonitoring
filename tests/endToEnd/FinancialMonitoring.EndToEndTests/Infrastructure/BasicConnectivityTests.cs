@@ -4,7 +4,7 @@ using MongoDB.Bson;
 using StackExchange.Redis;
 using System.Text.Json;
 
-namespace FinancialMonitoring.IntegrationTests.Infrastructure;
+namespace FinancialMonitoring.EndToEndTests.Infrastructure;
 
 
 /// <summary>

@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace FinancialMonitoring.IntegrationTests;
+namespace FinancialMonitoring.EndToEndTests;
 
 /// <summary>
-/// Centralized configuration management for integration tests
+/// Centralized configuration management for end-to-end tests
 /// Eliminates scattered Environment.GetEnvironmentVariable calls and provides validation
 /// </summary>
 public class IntegrationTestConfiguration
