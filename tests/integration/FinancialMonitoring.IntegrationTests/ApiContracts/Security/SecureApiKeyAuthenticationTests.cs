@@ -1,28 +1,65 @@
 using System.Net;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Api.Authentication;
-using FinancialMonitoring.Api.Tests.Infrastructure;
+using FinancialMonitoring.Api.Services;
+using FinancialMonitoring.Abstractions;
+using FinancialMonitoring.Abstractions.Persistence;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
 
-namespace FinancialMonitoring.Api.Tests.Services;
+namespace FinancialMonitoring.IntegrationTests.ApiContracts.Security;
 
 /// <summary>
 /// Tests for the secure API key authentication system
 /// </summary>
-public class SecureApiKeyAuthenticationTests : IClassFixture<SharedWebApplicationFactory>
+public class SecureApiKeyAuthenticationTests
 {
-    private readonly SharedWebApplicationFactory _factory;
+    private readonly WebApplicationFactory<Program> _factory;
+    private readonly Mock<ITransactionRepository> _mockRepository;
+    private const string TestApiKey = "test-api-key-123";
 
-    public SecureApiKeyAuthenticationTests(SharedWebApplicationFactory factory)
+    public SecureApiKeyAuthenticationTests()
     {
-        _factory = factory;
+        _mockRepository = new Mock<ITransactionRepository>();
+        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+
+            builder.ConfigureAppConfiguration((context, configBuilder) =>
+            {
+                configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    { "ApiSettings:ApiKey", TestApiKey },
+                    { "JwtSettings:SecretKey", "test-secret-key-that-is-very-long-for-hmac-sha256" },
+                    { "JwtSettings:Issuer", "TestIssuer" },
+                    { "JwtSettings:Audience", "TestAudience" },
+                    { "JwtSettings:AccessTokenExpiryMinutes", "15" },
+                    { "JwtSettings:RefreshTokenExpiryDays", "7" }
+                });
+            });
+
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll<ITransactionRepository>();
+                services.AddSingleton<ITransactionRepository>(_mockRepository.Object);
+
+                services.RemoveAll<IPasswordHashingService>();
+                services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
+                services.RemoveAll<IJwtTokenService>();
+                services.AddScoped<IJwtTokenService, JwtTokenService>();
+            });
+        });
     }
 
     [Fact]
     public async Task Request_WithValidApiKey_ShouldSucceed()
     {
         var client = _factory.CreateClient();
-        client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, SharedWebApplicationFactory.TestApiKey);
+        client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, TestApiKey);
 
         var expectedPagedResult = new PagedResult<Transaction>
         {
@@ -32,7 +69,7 @@ public class SecureApiKeyAuthenticationTests : IClassFixture<SharedWebApplicatio
             PageSize = 20
         };
 
-        _factory.MockRepository
+        _mockRepository
             .Setup(service => service.GetAllTransactionsAsync(1, 20))
             .ReturnsAsync(expectedPagedResult);
 
@@ -118,7 +155,7 @@ public class SecureApiKeyAuthenticationTests : IClassFixture<SharedWebApplicatio
 
         for (int i = 0; i < concurrentRequests; i++)
         {
-            _factory.MockRepository
+            _mockRepository
                 .Setup(service => service.GetAllTransactionsAsync(1, 20))
                 .ReturnsAsync(new PagedResult<Transaction>
                 {
@@ -131,7 +168,7 @@ public class SecureApiKeyAuthenticationTests : IClassFixture<SharedWebApplicatio
             tasks.Add(Task.Run(async () =>
             {
                 var client = _factory.CreateClient();
-                client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, SharedWebApplicationFactory.TestApiKey);
+                client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, TestApiKey);
                 return await client.GetAsync(AppConstants.Routes.GetTransactionsPath());
             }));
         }
@@ -170,7 +207,7 @@ public class SecureApiKeyAuthenticationTests : IClassFixture<SharedWebApplicatio
     public async Task Request_WithValidationError_AndValidApiKey_ShouldReturnBadRequest()
     {
         var client = _factory.CreateClient();
-        client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, SharedWebApplicationFactory.TestApiKey);
+        client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, TestApiKey);
 
         var response = await client.GetAsync($"{AppConstants.Routes.GetTransactionsPath()}?pageNumber=0");
 

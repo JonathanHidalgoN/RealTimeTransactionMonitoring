@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Abstractions.Persistence;
@@ -11,7 +12,7 @@ using FinancialMonitoring.Api.Authentication;
 using FinancialMonitoring.Api.Services;
 using FinancialMonitoring.Models.OAuth;
 
-namespace FinancialMonitoring.Api.Tests.WebApi;
+namespace FinancialMonitoring.IntegrationTests.ApiContracts.Security;
 
 /// <summary>
 /// Tests for rate limiting functionality including OAuth endpoints
@@ -52,10 +53,36 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
 
         _factory = factory.WithWebHostBuilder(builder =>
         {
+            builder.UseEnvironment("Testing");
+
             builder.ConfigureAppConfiguration((context, configBuilder) =>
             {
-                var testConfigPath = Path.Combine(AppContext.BaseDirectory, "appsettings.Test.json");
-                configBuilder.AddJsonFile(testConfigPath, optional: false);
+                configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    { "ApiSettings:ApiKey", "test-api-key-123" },
+                    { "JwtSettings:SecretKey", "test-secret-key-that-is-very-long-for-hmac-sha256" },
+                    { "JwtSettings:Issuer", "TestIssuer" },
+                    { "JwtSettings:Audience", "TestAudience" },
+                    { "JwtSettings:AccessTokenExpiryMinutes", "15" },
+                    { "JwtSettings:RefreshTokenExpiryDays", "7" },
+                    { "RateLimitSettings:EnableEndpointRateLimiting", "true" },
+                    { "RateLimitSettings:StackBlockedRequests", "false" },
+                    { "RateLimitSettings:HttpStatusCode", "429" },
+                    { "RateLimitSettings:RealIpHeader", "X-Real-IP" },
+                    { "RateLimitSettings:ClientIdHeader", "X-ClientId" },
+                    { "RateLimitSettings:GeneralRules:0:Endpoint", "*/oauth/token" },
+                    { "RateLimitSettings:GeneralRules:0:Period", "1m" },
+                    { "RateLimitSettings:GeneralRules:0:Limit", "10" },
+                    { "RateLimitSettings:GeneralRules:1:Endpoint", "*/oauth/clients" },
+                    { "RateLimitSettings:GeneralRules:1:Period", "1m" },
+                    { "RateLimitSettings:GeneralRules:1:Limit", "20" },
+                    { "RateLimitSettings:GeneralRules:2:Endpoint", "*/transactions" },
+                    { "RateLimitSettings:GeneralRules:2:Period", "1m" },
+                    { "RateLimitSettings:GeneralRules:2:Limit", "50" },
+                    { "RateLimitSettings:GeneralRules:3:Endpoint", "*" },
+                    { "RateLimitSettings:GeneralRules:3:Period", "1m" },
+                    { "RateLimitSettings:GeneralRules:3:Limit", "100" }
+                });
             });
 
             builder.ConfigureServices(services =>

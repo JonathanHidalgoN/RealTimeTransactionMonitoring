@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using FinancialMonitoring.Abstractions.Persistence;
 using FinancialMonitoring.Abstractions;
@@ -9,7 +10,7 @@ using Microsoft.Extensions.Configuration;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Api.Services;
 
-namespace FinancialMonitoring.Api.Tests.WebApi;
+namespace FinancialMonitoring.IntegrationTests.Infrastructure;
 
 /// <summary>
 /// Tests for health check functionality
@@ -24,10 +25,19 @@ public class HealthCheckTests : IClassFixture<WebApplicationFactory<Program>>
         _mockRepository = new Mock<ITransactionRepository>();
         _factory = factory.WithWebHostBuilder(builder =>
         {
+            builder.UseEnvironment("Testing");
+
             builder.ConfigureAppConfiguration((context, configBuilder) =>
             {
-                var testConfigPath = Path.Combine(AppContext.BaseDirectory, "appsettings.Test.json");
-                configBuilder.AddJsonFile(testConfigPath, optional: false);
+                configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    { "ApiSettings:ApiKey", "test-api-key-123" },
+                    { "JwtSettings:SecretKey", "test-secret-key-that-is-very-long-for-hmac-sha256" },
+                    { "JwtSettings:Issuer", "TestIssuer" },
+                    { "JwtSettings:Audience", "TestAudience" },
+                    { "JwtSettings:AccessTokenExpiryMinutes", "15" },
+                    { "JwtSettings:RefreshTokenExpiryDays", "7" }
+                });
             });
 
             builder.ConfigureServices(services =>

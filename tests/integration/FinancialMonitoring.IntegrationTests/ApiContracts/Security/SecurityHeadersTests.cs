@@ -1,21 +1,58 @@
 using System.Net;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Api.Authentication;
-using FinancialMonitoring.Api.Tests.Infrastructure;
+using FinancialMonitoring.Api.Services;
+using FinancialMonitoring.Abstractions;
+using FinancialMonitoring.Abstractions.Persistence;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
 
-namespace FinancialMonitoring.Api.Tests.Services;
+namespace FinancialMonitoring.IntegrationTests.ApiContracts.Security;
 
 /// <summary>
 /// Tests for security headers middleware functionality
 /// </summary>
-public class SecurityHeadersTests : IClassFixture<SharedWebApplicationFactory>
+public class SecurityHeadersTests
 {
-    private readonly SharedWebApplicationFactory _factory;
+    private readonly WebApplicationFactory<Program> _factory;
+    private readonly Mock<ITransactionRepository> _mockRepository;
+    private const string TestApiKey = "test-api-key-123";
 
-    public SecurityHeadersTests(SharedWebApplicationFactory factory)
+    public SecurityHeadersTests()
     {
-        _factory = factory;
+        _mockRepository = new Mock<ITransactionRepository>();
+        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+
+            builder.ConfigureAppConfiguration((context, configBuilder) =>
+            {
+                configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    { "ApiSettings:ApiKey", TestApiKey },
+                    { "JwtSettings:SecretKey", "test-secret-key-that-is-very-long-for-hmac-sha256" },
+                    { "JwtSettings:Issuer", "TestIssuer" },
+                    { "JwtSettings:Audience", "TestAudience" },
+                    { "JwtSettings:AccessTokenExpiryMinutes", "15" },
+                    { "JwtSettings:RefreshTokenExpiryDays", "7" }
+                });
+            });
+
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll<ITransactionRepository>();
+                services.AddSingleton<ITransactionRepository>(_mockRepository.Object);
+
+                services.RemoveAll<IPasswordHashingService>();
+                services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
+                services.RemoveAll<IJwtTokenService>();
+                services.AddScoped<IJwtTokenService, JwtTokenService>();
+            });
+        });
     }
 
     /// <summary>
@@ -25,7 +62,7 @@ public class SecurityHeadersTests : IClassFixture<SharedWebApplicationFactory>
     public async Task SecurityHeaders_ShouldBePresent_OnApiResponses()
     {
         var client = _factory.CreateClient();
-        client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, SharedWebApplicationFactory.TestApiKey);
+        client.DefaultRequestHeaders.Add(SecureApiKeyAuthenticationDefaults.ApiKeyHeaderName, TestApiKey);
 
         var expectedPagedResult = new PagedResult<Transaction>
         {
@@ -35,7 +72,7 @@ public class SecurityHeadersTests : IClassFixture<SharedWebApplicationFactory>
             PageSize = 20
         };
 
-        _factory.MockRepository
+        _mockRepository
             .Setup(service => service.GetAllTransactionsAsync(1, 20))
             .ReturnsAsync(expectedPagedResult);
 
