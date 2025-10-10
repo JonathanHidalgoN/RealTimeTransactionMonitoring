@@ -9,7 +9,7 @@ public static class EnvironmentDetector
 {
     public static RunTimeEnvironment DetectAndConfigureEnvironment(IHostApplicationBuilder builder)
     {
-        var environmentString = builder.Configuration[AppConstants.runTimeEnvVarName] ?? "Development";
+        var environmentString = builder.Environment.EnvironmentName;
         var runTimeEnv = RunTimeEnvironmentExtensions.FromString(environmentString);
 
         Console.WriteLine($"Running processor program in environment: {runTimeEnv}");

@@ -10,22 +10,22 @@ namespace TransactionSimulator.Tests.Extensions.Configuration;
 public class EnvironmentDetectorTests
 {
     [Fact]
-    public void DetectAndConfigureEnvironment_WithNullEnvironmentVariable_ShouldDefaultToDevelopment()
+    public void DetectAndConfigureEnvironment_WithNullEnvironmentVariable_ShouldDefaultToProduction()
     {
-        var mockBuilder = CreateMockHostApplicationBuilder(new Dictionary<string, string?>());
+        var mockBuilder = CreateMockHostApplicationBuilder("Production", new Dictionary<string, string?>
+        {
+            ["KEY_VAULT_URI"] = "https://test-vault.vault.azure.net/"
+        });
 
         var result = EnvironmentDetector.DetectAndConfigureEnvironment(mockBuilder.Object);
 
-        result.Should().Be(RunTimeEnvironment.Development);
+        result.Should().Be(RunTimeEnvironment.Production);
     }
 
     [Fact]
     public void DetectAndConfigureEnvironment_WithDevelopmentEnvironment_ShouldReturnDevelopment()
     {
-        var mockBuilder = CreateMockHostApplicationBuilder(new Dictionary<string, string?>
-        {
-            [AppConstants.runTimeEnvVarName] = "Development"
-        });
+        var mockBuilder = CreateMockHostApplicationBuilder("Development", new Dictionary<string, string?>());
 
         var result = EnvironmentDetector.DetectAndConfigureEnvironment(mockBuilder.Object);
 
@@ -35,10 +35,7 @@ public class EnvironmentDetectorTests
     [Fact]
     public void DetectAndConfigureEnvironment_WithTestingEnvironment_ShouldReturnTesting()
     {
-        var mockBuilder = CreateMockHostApplicationBuilder(new Dictionary<string, string?>
-        {
-            [AppConstants.runTimeEnvVarName] = "Testing"
-        });
+        var mockBuilder = CreateMockHostApplicationBuilder("Testing", new Dictionary<string, string?>());
 
         var result = EnvironmentDetector.DetectAndConfigureEnvironment(mockBuilder.Object);
 
@@ -48,9 +45,8 @@ public class EnvironmentDetectorTests
     [Fact]
     public void DetectAndConfigureEnvironment_WithProductionAndValidKeyVault_ShouldReturnProduction()
     {
-        var mockBuilder = CreateMockHostApplicationBuilder(new Dictionary<string, string?>
+        var mockBuilder = CreateMockHostApplicationBuilder("Production", new Dictionary<string, string?>
         {
-            [AppConstants.runTimeEnvVarName] = "Production",
             ["KEY_VAULT_URI"] = "https://test-vault.vault.azure.net/"
         });
 
@@ -62,11 +58,7 @@ public class EnvironmentDetectorTests
     [Fact]
     public void DetectAndConfigureEnvironment_WithProductionAndMissingKeyVault_ShouldThrow()
     {
-        var mockBuilder = CreateMockHostApplicationBuilder(new Dictionary<string, string?>
-        {
-            [AppConstants.runTimeEnvVarName] = "Production"
-            // Missing KEY_VAULT_URI
-        });
+        var mockBuilder = CreateMockHostApplicationBuilder("Production", new Dictionary<string, string?>());
 
         var action = () => EnvironmentDetector.DetectAndConfigureEnvironment(mockBuilder.Object);
 
@@ -76,9 +68,8 @@ public class EnvironmentDetectorTests
     [Fact]
     public void DetectAndConfigureEnvironment_WithProductionAndEmptyKeyVault_ShouldThrow()
     {
-        var mockBuilder = CreateMockHostApplicationBuilder(new Dictionary<string, string?>
+        var mockBuilder = CreateMockHostApplicationBuilder("Production", new Dictionary<string, string?>
         {
-            [AppConstants.runTimeEnvVarName] = "Production",
             ["KEY_VAULT_URI"] = ""
         });
 
@@ -90,9 +81,8 @@ public class EnvironmentDetectorTests
     [Fact]
     public void DetectAndConfigureEnvironment_WithProductionAndInvalidKeyVaultUri_ShouldThrow()
     {
-        var mockBuilder = CreateMockHostApplicationBuilder(new Dictionary<string, string?>
+        var mockBuilder = CreateMockHostApplicationBuilder("Production", new Dictionary<string, string?>
         {
-            [AppConstants.runTimeEnvVarName] = "Production",
             ["KEY_VAULT_URI"] = "invalid-uri"
         });
 
@@ -104,10 +94,7 @@ public class EnvironmentDetectorTests
     [Fact]
     public void DetectAndConfigureEnvironment_WithCaseInsensitiveEnvironment_ShouldWork()
     {
-        var mockBuilder = CreateMockHostApplicationBuilder(new Dictionary<string, string?>
-        {
-            [AppConstants.runTimeEnvVarName] = "DEVELOPMENT"
-        });
+        var mockBuilder = CreateMockHostApplicationBuilder("DEVELOPMENT", new Dictionary<string, string?>());
 
         var result = EnvironmentDetector.DetectAndConfigureEnvironment(mockBuilder.Object);
 
@@ -117,10 +104,7 @@ public class EnvironmentDetectorTests
     [Fact]
     public void DetectAndConfigureEnvironment_WithUnknownEnvironment_ShouldThrow()
     {
-        var mockBuilder = CreateMockHostApplicationBuilder(new Dictionary<string, string?>
-        {
-            [AppConstants.runTimeEnvVarName] = "UnknownEnvironment"
-        });
+        var mockBuilder = CreateMockHostApplicationBuilder("UnknownEnvironment", new Dictionary<string, string?>());
 
         var action = () => EnvironmentDetector.DetectAndConfigureEnvironment(mockBuilder.Object);
 
@@ -130,18 +114,14 @@ public class EnvironmentDetectorTests
     [Fact]
     public void DetectAndConfigureEnvironment_WithDevelopmentEnvironment_ShouldNotConfigureKeyVault()
     {
-        var mockBuilder = CreateMockHostApplicationBuilder(new Dictionary<string, string?>
-        {
-            [AppConstants.runTimeEnvVarName] = "Development"
-        });
+        var mockBuilder = CreateMockHostApplicationBuilder("Development", new Dictionary<string, string?>());
 
         var result = EnvironmentDetector.DetectAndConfigureEnvironment(mockBuilder.Object);
 
         result.Should().Be(RunTimeEnvironment.Development);
-        // Key Vault should not be configured for development environment
     }
 
-    private static Mock<IHostApplicationBuilder> CreateMockHostApplicationBuilder(Dictionary<string, string?> configurationValues)
+    private static Mock<IHostApplicationBuilder> CreateMockHostApplicationBuilder(string environmentName, Dictionary<string, string?> configurationValues)
     {
         var mockConfiguration = new Mock<IConfigurationManager>();
 
@@ -150,8 +130,12 @@ public class EnvironmentDetectorTests
             mockConfiguration.Setup(x => x[kvp.Key]).Returns(kvp.Value);
         }
 
+        var mockEnvironment = new Mock<IHostEnvironment>();
+        mockEnvironment.Setup(x => x.EnvironmentName).Returns(environmentName);
+
         var mockBuilder = new Mock<IHostApplicationBuilder>();
         mockBuilder.Setup(x => x.Configuration).Returns(mockConfiguration.Object);
+        mockBuilder.Setup(x => x.Environment).Returns(mockEnvironment.Object);
 
         return mockBuilder;
     }
