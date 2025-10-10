@@ -14,16 +14,17 @@ public class ConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [AppConstants.runTimeEnvVarName] = "Development",
-                ["Api:ApiKey"] = "test-key",
-                ["Cache:ConnectionString"] = "localhost:6379",
-                ["ResponseCache:DefaultDuration"] = "300",
-                ["RateLimit:PermitLimit"] = "100",
-                ["Jwt:SecretKey"] = "super-secret-key-with-sufficient-length",
-                ["Jwt:Issuer"] = "test-issuer",
-                ["Jwt:Audience"] = "test-audience",
-                ["Cors:AllowedOrigins:0"] = "http://localhost:3000",
-                ["MongoDb:ConnectionString"] = "mongodb://localhost:27017",
-                ["MongoDb:DatabaseName"] = "testdb"
+                ["ApiSettings:ApiKey"] ="test-key",
+                ["CacheSettings:ConnectionString"] ="localhost:6379",
+                ["ResponseCacheSettings:DefaultDuration"] ="300",
+                ["RateLimitSettings:PermitLimit"] ="100",
+                ["JwtSettings:SecretKey"] ="super-secret-key-with-sufficient-length",
+                ["JwtSettings:Issuer"] ="test-issuer",
+                ["JwtSettings:Audience"] ="test-audience",
+                ["Cors:AllowedOrigins:0"] ="http://localhost:3000",
+                ["MongoDb:ConnectionString"] ="mongodb://localhost:27017",
+                ["MongoDb:DatabaseName"] ="testdb",
+                ["MongoDb:CollectionName"] ="transactions"
             })
             .Build();
 
@@ -42,17 +43,23 @@ public class ConfigurationValidatorTests
             {
                 [AppConstants.runTimeEnvVarName] = "Production",
                 ["KEY_VAULT_URI"] = "https://test-vault.vault.azure.net/",
-                ["Api:ApiKey"] = "test-key",
-                ["Cache:ConnectionString"] = "production.redis.cache.windows.net",
-                ["ResponseCache:DefaultDuration"] = "300",
-                ["RateLimit:PermitLimit"] = "100",
-                ["Jwt:SecretKey"] = "super-secret-key-with-sufficient-length",
-                ["Jwt:Issuer"] = "production-issuer",
-                ["Jwt:Audience"] = "production-audience",
-                ["Cors:AllowedOrigins:0"] = "https://myapp.com",
+                ["ApiSettings:ApiKey"] ="test-key",
+                ["CacheSettings:ConnectionString"] ="production.redis.cache.windows.net",
+                ["ResponseCacheSettings:DefaultDuration"] ="300",
+                ["RateLimitSettings:PermitLimit"] ="100",
+                ["JwtSettings:SecretKey"] ="super-secret-key-with-sufficient-length",
+                ["JwtSettings:Issuer"] ="production-issuer",
+                ["JwtSettings:Audience"] ="production-audience",
+                ["Cors:AllowedOrigins:0"] ="https://myapp.com",
                 ["ApplicationInsights:ConnectionString"] = "InstrumentationKey=test-key",
-                ["CosmosDb:AccountEndpoint"] = "https://test.documents.azure.com:443/",
-                ["CosmosDb:DatabaseName"] = "production-db"
+                ["CosmosDb:AccountEndpoint"] ="https://test.documents.azure.com:443/",
+                ["CosmosDb:DatabaseName"] ="production-db",
+                ["CosmosDb:ApplicationName"] ="FinancialMonitoring",
+                ["CosmosDb:ConnectionString"] ="AccountEndpoint=https://test.documents.azure.com:443/;",
+                ["CosmosDb:EndpointUri"] ="https://test.documents.azure.com:443/",
+                ["CosmosDb:PrimaryKey"] ="test-primary-key-value",
+                ["CosmosDb:ContainerName"] ="transactions",
+                ["CosmosDb:PartitionKeyPath"] ="/id"
             })
             .Build();
 
@@ -70,8 +77,8 @@ public class ConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [AppConstants.runTimeEnvVarName] = "Development",
-                ["Cache:ConnectionString"] = "localhost:6379",
-                ["MongoDb:ConnectionString"] = "mongodb://localhost:27017"
+                ["CacheSettings:ConnectionString"] ="localhost:6379",
+                ["MongoDb:ConnectionString"] ="mongodb://localhost:27017"
             })
             .Build();
 
@@ -89,10 +96,10 @@ public class ConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [AppConstants.runTimeEnvVarName] = "Production",
-                ["Api:ApiKey"] = "test-key",
-                ["Cache:ConnectionString"] = "production.redis.cache.windows.net",
+                ["ApiSettings:ApiKey"] ="test-key",
+                ["CacheSettings:ConnectionString"] ="production.redis.cache.windows.net",
                 ["ApplicationInsights:ConnectionString"] = "InstrumentationKey=test-key",
-                ["CosmosDb:AccountEndpoint"] = "https://test.documents.azure.com:443/"
+                ["CosmosDb:AccountEndpoint"] ="https://test.documents.azure.com:443/"
             })
             .Build();
 
@@ -111,7 +118,7 @@ public class ConfigurationValidatorTests
             {
                 [AppConstants.runTimeEnvVarName] = "Production",
                 ["KEY_VAULT_URI"] = "",
-                ["Api:ApiKey"] = "test-key"
+                ["ApiSettings:ApiKey"] ="test-key"
             })
             .Build();
 
@@ -129,11 +136,11 @@ public class ConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [AppConstants.runTimeEnvVarName] = "Development",
-                ["Api:ApiKey"] = "", // Invalid: empty required field
-                ["Cache:ConnectionString"] = "localhost:6379",
-                ["RateLimit:PermitLimit"] = "-1", // Invalid: negative number
-                ["Jwt:SecretKey"] = "short", // Invalid: too short
-                ["MongoDb:ConnectionString"] = "mongodb://localhost:27017"
+                ["ApiSettings:ApiKey"] ="", // Invalid: empty required field
+                ["CacheSettings:ConnectionString"] ="localhost:6379",
+                ["RateLimitSettings:PermitLimit"] ="-1", // Invalid: negative number
+                ["JwtSettings:SecretKey"] ="short", // Invalid: too short
+                ["MongoDb:ConnectionString"] ="mongodb://localhost:27017"
             })
             .Build();
 
@@ -151,7 +158,7 @@ public class ConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [AppConstants.runTimeEnvVarName] = "Development",
-                ["Api:ApiKey"] = "test-key"
+                ["ApiSettings:ApiKey"] ="test-key"
                 // Missing Cache, RateLimit, Jwt, Cors, MongoDb sections
             })
             .Build();
@@ -170,16 +177,17 @@ public class ConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [AppConstants.runTimeEnvVarName] = "Development",
-                ["Api:ApiKey"] = "test-key",
-                ["Cache:ConnectionString"] = "localhost:6379",
-                ["ResponseCache:DefaultDuration"] = "300",
-                ["RateLimit:PermitLimit"] = "100",
-                ["Jwt:SecretKey"] = "super-secret-key-with-sufficient-length",
-                ["Jwt:Issuer"] = "test-issuer",
-                ["Jwt:Audience"] = "test-audience",
-                ["Cors:AllowedOrigins:0"] = "http://localhost:3000",
-                ["MongoDb:ConnectionString"] = "mongodb://localhost:27017",
-                ["MongoDb:DatabaseName"] = "testdb"
+                ["ApiSettings:ApiKey"] ="test-key",
+                ["CacheSettings:ConnectionString"] ="localhost:6379",
+                ["ResponseCacheSettings:DefaultDuration"] ="300",
+                ["RateLimitSettings:PermitLimit"] ="100",
+                ["JwtSettings:SecretKey"] ="super-secret-key-with-sufficient-length",
+                ["JwtSettings:Issuer"] ="test-issuer",
+                ["JwtSettings:Audience"] ="test-audience",
+                ["Cors:AllowedOrigins:0"] ="http://localhost:3000",
+                ["MongoDb:ConnectionString"] ="mongodb://localhost:27017",
+                ["MongoDb:DatabaseName"] ="testdb",
+                ["MongoDb:CollectionName"] ="transactions"
                 // No CosmosDb or ApplicationInsights - should be fine for Development
             })
             .Build();
@@ -199,17 +207,23 @@ public class ConfigurationValidatorTests
             {
                 [AppConstants.runTimeEnvVarName] = "Production",
                 ["KEY_VAULT_URI"] = "https://test-vault.vault.azure.net/",
-                ["Api:ApiKey"] = "test-key",
-                ["Cache:ConnectionString"] = "production.redis.cache.windows.net",
-                ["ResponseCache:DefaultDuration"] = "300",
-                ["RateLimit:PermitLimit"] = "100",
-                ["Jwt:SecretKey"] = "super-secret-key-with-sufficient-length",
-                ["Jwt:Issuer"] = "production-issuer",
-                ["Jwt:Audience"] = "production-audience",
-                ["Cors:AllowedOrigins:0"] = "https://myapp.com",
+                ["ApiSettings:ApiKey"] ="test-key",
+                ["CacheSettings:ConnectionString"] ="production.redis.cache.windows.net",
+                ["ResponseCacheSettings:DefaultDuration"] ="300",
+                ["RateLimitSettings:PermitLimit"] ="100",
+                ["JwtSettings:SecretKey"] ="super-secret-key-with-sufficient-length",
+                ["JwtSettings:Issuer"] ="production-issuer",
+                ["JwtSettings:Audience"] ="production-audience",
+                ["Cors:AllowedOrigins:0"] ="https://myapp.com",
                 ["ApplicationInsights:ConnectionString"] = "InstrumentationKey=test-key",
-                ["CosmosDb:AccountEndpoint"] = "https://test.documents.azure.com:443/",
-                ["CosmosDb:DatabaseName"] = "production-db"
+                ["CosmosDb:AccountEndpoint"] ="https://test.documents.azure.com:443/",
+                ["CosmosDb:DatabaseName"] ="production-db",
+                ["CosmosDb:ApplicationName"] ="FinancialMonitoring",
+                ["CosmosDb:ConnectionString"] ="AccountEndpoint=https://test.documents.azure.com:443/;",
+                ["CosmosDb:EndpointUri"] ="https://test.documents.azure.com:443/",
+                ["CosmosDb:PrimaryKey"] ="test-primary-key-value",
+                ["CosmosDb:ContainerName"] ="transactions",
+                ["CosmosDb:PartitionKeyPath"] ="/id"
                 // No MongoDb settings - should be fine for Production
             })
             .Build();
@@ -228,16 +242,17 @@ public class ConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [AppConstants.runTimeEnvVarName] = "Testing",
-                ["Api:ApiKey"] = "test-key",
-                ["Cache:ConnectionString"] = "localhost:6379",
-                ["ResponseCache:DefaultDuration"] = "300",
-                ["RateLimit:PermitLimit"] = "100",
-                ["Jwt:SecretKey"] = "super-secret-key-with-sufficient-length",
-                ["Jwt:Issuer"] = "test-issuer",
-                ["Jwt:Audience"] = "test-audience",
-                ["Cors:AllowedOrigins:0"] = "http://localhost:3000",
-                ["MongoDb:ConnectionString"] = "mongodb://localhost:27017",
-                ["MongoDb:DatabaseName"] = "testdb"
+                ["ApiSettings:ApiKey"] ="test-key",
+                ["CacheSettings:ConnectionString"] ="localhost:6379",
+                ["ResponseCacheSettings:DefaultDuration"] ="300",
+                ["RateLimitSettings:PermitLimit"] ="100",
+                ["JwtSettings:SecretKey"] ="super-secret-key-with-sufficient-length",
+                ["JwtSettings:Issuer"] ="test-issuer",
+                ["JwtSettings:Audience"] ="test-audience",
+                ["Cors:AllowedOrigins:0"] ="http://localhost:3000",
+                ["MongoDb:ConnectionString"] ="mongodb://localhost:27017",
+                ["MongoDb:DatabaseName"] ="testdb",
+                ["MongoDb:CollectionName"] ="transactions"
             })
             .Build();
 
@@ -255,16 +270,17 @@ public class ConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 // No environment variable set - should default to Development
-                ["Api:ApiKey"] = "test-key",
-                ["Cache:ConnectionString"] = "localhost:6379",
-                ["ResponseCache:DefaultDuration"] = "300",
-                ["RateLimit:PermitLimit"] = "100",
-                ["Jwt:SecretKey"] = "super-secret-key-with-sufficient-length",
-                ["Jwt:Issuer"] = "test-issuer",
-                ["Jwt:Audience"] = "test-audience",
-                ["Cors:AllowedOrigins:0"] = "http://localhost:3000",
-                ["MongoDb:ConnectionString"] = "mongodb://localhost:27017",
-                ["MongoDb:DatabaseName"] = "testdb"
+                ["ApiSettings:ApiKey"] ="test-key",
+                ["CacheSettings:ConnectionString"] ="localhost:6379",
+                ["ResponseCacheSettings:DefaultDuration"] ="300",
+                ["RateLimitSettings:PermitLimit"] ="100",
+                ["JwtSettings:SecretKey"] ="super-secret-key-with-sufficient-length",
+                ["JwtSettings:Issuer"] ="test-issuer",
+                ["JwtSettings:Audience"] ="test-audience",
+                ["Cors:AllowedOrigins:0"] ="http://localhost:3000",
+                ["MongoDb:ConnectionString"] ="mongodb://localhost:27017",
+                ["MongoDb:DatabaseName"] ="testdb",
+                ["MongoDb:CollectionName"] ="transactions"
             })
             .Build();
 

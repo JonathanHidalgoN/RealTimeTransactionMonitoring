@@ -18,10 +18,7 @@ public static class DataAccessExtensions
         {
             AddProductionDataAccess(services, configuration, logger);
         }
-        else if (environment == RunTimeEnvironment.Development)
-        {
-
-        }
+        else
         {
             AddDevelopmentDataAccess(services, configuration, logger, environment);
         }
@@ -58,16 +55,19 @@ public static class DataAccessExtensions
         ILogger logger,
         RunTimeEnvironment environment)
     {
-        services.AddOptions<ApplicationInsightsSettings>()
-            .Bind(configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-        services.AddApplicationInsightsTelemetry();
+        if (environment != RunTimeEnvironment.Testing)
+        {
+            services.AddOptions<ApplicationInsightsSettings>()
+                .Bind(configuration.GetSection(AppConstants.ApplicationInsightsConfigPrefix))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+            services.AddApplicationInsightsTelemetry();
 
-        services.AddOptions<MongoDbSettings>()
-            .Bind(configuration.GetSection(AppConstants.MongoDbConfigPrefix))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
+            services.AddOptions<MongoDbSettings>()
+                .Bind(configuration.GetSection(AppConstants.MongoDbConfigPrefix))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+        }
 
         logger.LogInformation("Configuring MongoDB repository for local development/testing");
         services.AddSingleton<ITransactionRepository, MongoTransactionRepository>();

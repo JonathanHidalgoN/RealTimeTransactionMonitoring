@@ -14,10 +14,7 @@ public class EnvironmentDetectorTests
     public void DetectAndConfigureEnvironment_Development_ShouldReturnDevelopment()
     {
         var builder = WebApplication.CreateBuilder();
-        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
-        {
-            [AppConstants.runTimeEnvVarName] = "Development"
-        });
+        builder.Environment.EnvironmentName = "Development";
 
         var result = EnvironmentDetector.DetectAndConfigureEnvironment(builder);
 
@@ -28,10 +25,7 @@ public class EnvironmentDetectorTests
     public void DetectAndConfigureEnvironment_Testing_ShouldReturnTesting()
     {
         var builder = WebApplication.CreateBuilder();
-        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
-        {
-            [AppConstants.runTimeEnvVarName] = "Testing"
-        });
+        builder.Environment.EnvironmentName = "Testing";
 
         var result = EnvironmentDetector.DetectAndConfigureEnvironment(builder);
 
@@ -39,22 +33,28 @@ public class EnvironmentDetectorTests
     }
 
     [Fact]
-    public void DetectAndConfigureEnvironment_NoEnvironmentSet_ShouldDefaultToDevelopment()
+    public void DetectAndConfigureEnvironment_NoEnvironmentSet_ShouldDefaultToProduction()
     {
         var builder = WebApplication.CreateBuilder();
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["KEY_VAULT_URI"] = "https://test-keyvault.vault.azure.net/"
+        });
 
-        var result = EnvironmentDetector.DetectAndConfigureEnvironment(builder);
+        var mockKeyVaultConfigurer = new Mock<IKeyVaultConfigurer>();
 
-        result.Should().Be(RunTimeEnvironment.Development);
+        var result = EnvironmentDetector.DetectAndConfigureEnvironment(builder, mockKeyVaultConfigurer.Object);
+
+        result.Should().Be(RunTimeEnvironment.Production);
     }
 
     [Fact]
     public void DetectAndConfigureEnvironment_Production_WithValidKeyVault_ShouldConfigureKeyVault()
     {
         var builder = WebApplication.CreateBuilder();
+        builder.Environment.EnvironmentName = "Production";
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            [AppConstants.runTimeEnvVarName] = "Production",
             ["KEY_VAULT_URI"] = "https://test-keyvault.vault.azure.net/"
         });
 
@@ -73,10 +73,7 @@ public class EnvironmentDetectorTests
     public void DetectAndConfigureEnvironment_Production_WithoutKeyVaultUri_ShouldThrowException()
     {
         var builder = WebApplication.CreateBuilder();
-        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
-        {
-            [AppConstants.runTimeEnvVarName] = "Production"
-        });
+        builder.Environment.EnvironmentName = "Production";
 
         var mockKeyVaultConfigurer = new Mock<IKeyVaultConfigurer>();
 
@@ -91,9 +88,9 @@ public class EnvironmentDetectorTests
     public void DetectAndConfigureEnvironment_Production_WithEmptyKeyVaultUri_ShouldThrowException()
     {
         var builder = WebApplication.CreateBuilder();
+        builder.Environment.EnvironmentName = "Production";
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            [AppConstants.runTimeEnvVarName] = "Production",
             ["KEY_VAULT_URI"] = ""
         });
 
@@ -108,9 +105,9 @@ public class EnvironmentDetectorTests
     public void DetectAndConfigureEnvironment_Production_WithInvalidKeyVaultUri_ShouldThrowException()
     {
         var builder = WebApplication.CreateBuilder();
+        builder.Environment.EnvironmentName = "Production";
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            [AppConstants.runTimeEnvVarName] = "Production",
             ["KEY_VAULT_URI"] = "invalid-uri"
         });
 
@@ -125,9 +122,9 @@ public class EnvironmentDetectorTests
     public void DetectAndConfigureEnvironment_Production_KeyVaultThrowsException_ShouldPropagateException()
     {
         var builder = WebApplication.CreateBuilder();
+        builder.Environment.EnvironmentName = "Production";
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            [AppConstants.runTimeEnvVarName] = "Production",
             ["KEY_VAULT_URI"] = "https://test-keyvault.vault.azure.net/"
         });
 
@@ -148,10 +145,7 @@ public class EnvironmentDetectorTests
     public void DetectAndConfigureEnvironment_ShouldBeCaseInsensitive(string environmentString, RunTimeEnvironment expected)
     {
         var builder = WebApplication.CreateBuilder();
-        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
-        {
-            [AppConstants.runTimeEnvVarName] = environmentString
-        });
+        builder.Environment.EnvironmentName = environmentString;
 
         var result = EnvironmentDetector.DetectAndConfigureEnvironment(builder);
 
@@ -162,10 +156,7 @@ public class EnvironmentDetectorTests
     public void DetectAndConfigureEnvironment_Development_ShouldNotCallKeyVaultConfigurer()
     {
         var builder = WebApplication.CreateBuilder();
-        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
-        {
-            [AppConstants.runTimeEnvVarName] = "Development"
-        });
+        builder.Environment.EnvironmentName = "Development";
 
         var mockKeyVaultConfigurer = new Mock<IKeyVaultConfigurer>();
 
