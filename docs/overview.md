@@ -10,7 +10,7 @@ This project demonstrates modern software engineering practices including:
 - **Cloud-Native Deployment**: Azure and local development support
 - **Real-Time Processing**: Stream processing with Kafka/EventHubs
 - **Multiple Database Support**: MongoDB and CosmosDB adapters
-- **Comprehensive Testing**: Unit, integration, and load testing
+- **Comprehensive Testing**: Unit and integration testing
 
 ## System Architecture
 

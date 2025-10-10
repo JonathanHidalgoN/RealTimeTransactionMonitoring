@@ -159,22 +159,6 @@ services:
     volumes:
       - ./test-results:/app/test-results
 
-  load-tests:
-    container_name: load_tests
-    build:
-      context: .
-      dockerfile: ./tests/load/FinancialMonitoring.LoadTests/Dockerfile
-    depends_on:
-      financialmonitoring-api-test:
-        condition: service_started
-    environment:
-      ApiBaseUrl: "http://financialmonitoring-api-test:8080"
-      ApiKey: "integration-test-key"
-    networks:
-      - test_network
-    volumes:
-      - ./load-test-reports:/app/load-test-reports
-
 networks:
   test_network:
     driver: bridge

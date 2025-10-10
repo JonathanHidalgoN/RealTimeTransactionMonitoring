@@ -69,13 +69,12 @@ The Real-Time Financial Monitoring System can be set up in two primary ways:
 Run the comprehensive test suite:
 
 ```bash
-# Run all tests (unit, integration, load)
-./scripts/generalUtils/run-tests.sh
+# Run all tests (unit + integration)
+./scripts/run-tests.sh
 
 # Or run individual test types
 dotnet test tests/unit/FinancialMonitoring.Api.Tests/
 dotnet test tests/integration/FinancialMonitoring.IntegrationTests/
-dotnet test tests/load/FinancialMonitoring.LoadTests/
 ```
 
 ---

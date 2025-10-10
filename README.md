@@ -115,10 +115,9 @@ graph TD
     subgraph "Testing Phase"
         ACTIONS --> UNIT[Unit Tests]
         ACTIONS --> INTEGRATION[Integration Tests]
-        ACTIONS --> LOAD[Load Tests]
     end
 
-    LOAD --> BUILD
+    INTEGRATION --> BUILD
 
     subgraph "Build & Push Phase"
         BUILD[Build 4 Docker Images]
@@ -198,7 +197,7 @@ Professional-grade synthetic data generation for testing and development.
 - **Infrastructure**: Docker, Kubernetes, Terraform, GitHub Actions
 
 ### Development Tools
-- **Testing**: xUnit, Docker Compose integration tests, NBomber load testing
+- **Testing**: xUnit, Docker Compose integration tests
 - **Security**: FluentValidation, rate limiting, CORS, security headers
 - **Monitoring**: Application Insights, structured logging, health checks
 
@@ -277,7 +276,7 @@ cd src/FinancialMonitoring.WebApp && dotnet run
 
 ## Testing
 
-Comprehensive testing strategy with unit, integration, and load tests.
+Comprehensive testing strategy with unit and integration tests.
 
 ```bash
 # Build test environment
@@ -286,12 +285,11 @@ docker compose -f docker-compose.test.yml build
 # Run unit tests only
 dotnet test --configuration Release --logger "console;verbosity=minimal"
 
-# Run full test suite (unit, integration, load)
-./scripts/generalUtils/run-tests.sh
+# Run full test suite (unit + integration)
+./scripts/run-tests.sh
 
-# Run specific test types
+# Run integration tests
 docker compose -f docker-compose.test.yml run --rm integration-tests
-docker compose -f docker-compose.test.yml run --rm load-tests
 ```
 
 ## Documentation

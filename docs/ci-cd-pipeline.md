@@ -16,10 +16,9 @@ graph TD
     subgraph "Testing Phase"
         ACTIONS --> UNIT[Unit Tests]
         ACTIONS --> INTEGRATION[Integration Tests]
-        ACTIONS --> LOAD[Load Tests]
     end
 
-    LOAD --> BUILD
+    INTEGRATION --> BUILD
 
     subgraph "Build & Push Phase"
         BUILD[Build 4 Docker Images]
