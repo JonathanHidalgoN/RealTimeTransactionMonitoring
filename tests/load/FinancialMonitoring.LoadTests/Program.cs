@@ -1,8 +1,6 @@
 using NBomber.CSharp;
-using NBomber.Http.CSharp;
 using FinancialMonitoring.Models;
 using System.Text.Json;
-using System.Text;
 using Microsoft.Extensions.Configuration;
 
 var config = new ConfigurationBuilder()
