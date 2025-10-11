@@ -6,7 +6,6 @@ on:
 
 env:
   DOTNET_VERSION: '8.0.x'
-  DOTNET_ENVIRONMENT: 'Testing'
 
 jobs:
   test:
@@ -37,7 +36,7 @@ jobs:
       run: |
         mkdir -p ./test-results
         echo "Running FinancialMonitoring.Models.Tests..."
-        DOTNET_ENVIRONMENT=Testing dotnet test tests/unit/FinancialMonitoring.Models.Tests/FinancialMonitoring.Models.Tests.csproj \
+        dotnet test tests/unit/FinancialMonitoring.Models.Tests/FinancialMonitoring.Models.Tests.csproj \
           --configuration Release \
           --no-build \
           --collect:"XPlat Code Coverage" \
@@ -45,7 +44,7 @@ jobs:
           --logger trx
 
         echo "Running FinancialMonitoring.Api.Tests..."
-        DOTNET_ENVIRONMENT=Testing dotnet test tests/unit/FinancialMonitoring.Api.Tests/FinancialMonitoring.Api.Tests.csproj \
+        dotnet test tests/unit/FinancialMonitoring.Api.Tests/FinancialMonitoring.Api.Tests.csproj \
           --configuration Release \
           --no-build \
           --collect:"XPlat Code Coverage" \
@@ -53,7 +52,7 @@ jobs:
           --logger trx
 
         echo "Running TransactionProcessor.Tests..."
-        DOTNET_ENVIRONMENT=Testing dotnet test tests/unit/TransactionProcessor.Tests/TransactionProcessor.Tests.csproj \
+        dotnet test tests/unit/TransactionProcessor.Tests/TransactionProcessor.Tests.csproj \
           --configuration Release \
           --no-build \
           --collect:"XPlat Code Coverage" \
@@ -61,7 +60,7 @@ jobs:
           --logger trx
 
         echo "Running TransactionSimulator.Tests..."
-        DOTNET_ENVIRONMENT=Testing dotnet test tests/unit/TransactionSimulator.Tests/TransactionSimulator.Tests.csproj \
+        dotnet test tests/unit/TransactionSimulator.Tests/TransactionSimulator.Tests.csproj \
           --configuration Release \
           --no-build \
           --collect:"XPlat Code Coverage" \
@@ -74,7 +73,7 @@ jobs:
     - name: Run Integration Tests
       run: |
         echo "Running Integration Tests with WebApplicationFactory..."
-        DOTNET_ENVIRONMENT=Testing dotnet test tests/integration/FinancialMonitoring.IntegrationTests/FinancialMonitoring.IntegrationTests.csproj \
+        dotnet test tests/integration/FinancialMonitoring.IntegrationTests/FinancialMonitoring.IntegrationTests.csproj \
           --configuration Release \
           --no-build \
           --collect:"XPlat Code Coverage" \
