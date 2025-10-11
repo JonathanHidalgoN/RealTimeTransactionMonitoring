@@ -167,7 +167,7 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
     public async Task DisposeAsync()
     {
         _producer?.Dispose();
-        _mongoClient = null; // MongoDB client doesn't need explicit disposal
+        _mongoClient = null!; // MongoDB client doesn't need explicit disposal
         _client?.Dispose();
         await Task.CompletedTask;
     }

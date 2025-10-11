@@ -50,7 +50,7 @@ public class TransactionsController : ControllerBase
             request.PageNumber, request.PageSize, correlationId);
 
         var pagedResult = await _transactionRepository.GetAllTransactionsAsync(request.PageNumber, request.PageSize);
-        var response = ApiResponse<PagedResult<Transaction>>.SuccessResponse(pagedResult, correlationId);
+        var response = ApiResponse<PagedResult<Transaction>>.SuccessResponse(pagedResult!, correlationId);
 
         return Ok(response);
     }
@@ -115,7 +115,7 @@ public class TransactionsController : ControllerBase
             request.PageNumber, request.PageSize, correlationId);
 
         var pagedResult = await _transactionRepository.GetAnomalousTransactionsAsync(request.PageNumber, request.PageSize);
-        var response = ApiResponse<PagedResult<Transaction>>.SuccessResponse(pagedResult, correlationId);
+        var response = ApiResponse<PagedResult<Transaction>>.SuccessResponse(pagedResult!, correlationId);
 
         return Ok(response);
     }
@@ -140,7 +140,7 @@ public class TransactionsController : ControllerBase
             searchRequest.PageNumber, searchRequest.PageSize, correlationId);
 
         var pagedResult = await _transactionRepository.SearchTransactionsAsync(searchRequest);
-        var response = ApiResponse<PagedResult<Transaction>>.SuccessResponse(pagedResult, correlationId);
+        var response = ApiResponse<PagedResult<Transaction>>.SuccessResponse(pagedResult!, correlationId);
 
         return Ok(response);
     }
