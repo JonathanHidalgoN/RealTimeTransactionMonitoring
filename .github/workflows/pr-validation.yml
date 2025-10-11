@@ -1,0 +1,132 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  DOTNET_ENVIRONMENT: 'Testing'
+
+jobs:
+  test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    # Build once for all tests
+    - name: Build Solution
+      run: dotnet build --configuration Release
+
+    # ========================================
+    # UNIT TESTS (Fast, No Docker)
+    # ========================================
+    - name: Run Unit Tests
+      run: |
+        mkdir -p ./test-results
+        echo "Running FinancialMonitoring.Models.Tests..."
+        DOTNET_ENVIRONMENT=Testing dotnet test tests/unit/FinancialMonitoring.Models.Tests/FinancialMonitoring.Models.Tests.csproj \
+          --configuration Release \
+          --no-build \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./test-results \
+          --logger trx
+
+        echo "Running FinancialMonitoring.Api.Tests..."
+        DOTNET_ENVIRONMENT=Testing dotnet test tests/unit/FinancialMonitoring.Api.Tests/FinancialMonitoring.Api.Tests.csproj \
+          --configuration Release \
+          --no-build \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./test-results \
+          --logger trx
+
+        echo "Running TransactionProcessor.Tests..."
+        DOTNET_ENVIRONMENT=Testing dotnet test tests/unit/TransactionProcessor.Tests/TransactionProcessor.Tests.csproj \
+          --configuration Release \
+          --no-build \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./test-results \
+          --logger trx
+
+        echo "Running TransactionSimulator.Tests..."
+        DOTNET_ENVIRONMENT=Testing dotnet test tests/unit/TransactionSimulator.Tests/TransactionSimulator.Tests.csproj \
+          --configuration Release \
+          --no-build \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./test-results \
+          --logger trx
+
+    # ========================================
+    # INTEGRATION TESTS (WebApplicationFactory, No Docker)
+    # ========================================
+    - name: Run Integration Tests
+      run: |
+        echo "Running Integration Tests with WebApplicationFactory..."
+        DOTNET_ENVIRONMENT=Testing dotnet test tests/integration/FinancialMonitoring.IntegrationTests/FinancialMonitoring.IntegrationTests.csproj \
+          --configuration Release \
+          --no-build \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./test-results \
+          --logger trx
+
+    # Publish test results to PR
+    - name: Publish Test Results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Test Results
+        path: ./test-results/*.trx
+        reporter: dotnet-trx
+        fail-on-error: true
+
+    # Upload raw test results as artifacts
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: ./test-results/
+        if-no-files-found: warn
+
+    # ========================================
+    # END-TO-END TESTS (Docker Compose, Full Infrastructure)
+    # ========================================
+    - name: Build Test Environment
+      run: docker compose -f docker-compose.test.yml build
+
+    - name: Start Test Infrastructure
+      run: |
+        docker compose -f docker-compose.test.yml up -d
+        echo "Waiting for services to be ready..."
+        sleep 120
+
+    - name: Run End-to-End Tests
+      run: |
+        docker compose -f docker-compose.test.yml run --rm integration-tests
+
+    - name: Cleanup Test Infrastructure
+      if: always()
+      run: docker compose -f docker-compose.test.yml down -v
+
+    # ========================================
+    # SUMMARY
+    # ========================================
+    - name: Test Summary
+      if: success()
+      run: |
+        echo "✅ All tests passed!"
+        echo "- Unit tests: PASSED"
+        echo "- Integration tests: PASSED"
+        echo "- End-to-end tests: PASSED"
