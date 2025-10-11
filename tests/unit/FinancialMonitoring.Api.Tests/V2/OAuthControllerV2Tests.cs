@@ -329,7 +329,7 @@ public class OAuthControllerV2Tests
 
         var errorResponse = Assert.IsType<OAuthErrorResponse>(statusCodeResult.Value);
         Assert.Equal("invalid_request", errorResponse.Error);
-        Assert.Contains("internal error", errorResponse.ErrorDescription.ToLower());
+        Assert.Contains("internal error", errorResponse.ErrorDescription?.ToLower() ?? string.Empty);
     }
 
     [Fact]

@@ -8,7 +8,7 @@ public static class EnvironmentDetector
 {
     public static RunTimeEnvironment DetectAndConfigureEnvironment(
         WebApplicationBuilder builder,
-        IKeyVaultConfigurer keyVaultConfigurer = null)
+        IKeyVaultConfigurer? keyVaultConfigurer = null)
     {
         using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var logger = loggerFactory.CreateLogger("EnvironmentDetector");
