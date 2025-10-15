@@ -1,6 +1,5 @@
 using FinancialMonitoring.Abstractions.Persistence;
 using FinancialMonitoring.Abstractions.Messaging;
-using FinancialMonitoring.Abstractions.Services;
 using FinancialMonitoring.Models;
 using TransactionProcessor.Messaging;
 
