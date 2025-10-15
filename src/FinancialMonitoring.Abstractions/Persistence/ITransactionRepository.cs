@@ -10,8 +10,9 @@ public interface ITransactionRepository
     /// <summary>
     /// Initializes the database and ensures required collections/containers exist.
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous initialization operation.</returns>
-    Task InitializeAsync();
+    Task InitializeAsync(CancellationToken cancellationToken);
 
     /// <summary>
     /// Adds a new transaction to the repository.

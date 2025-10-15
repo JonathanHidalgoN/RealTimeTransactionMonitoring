@@ -24,10 +24,10 @@ public class CosmosTransactionRepository : ITransactionRepository
         _hasQueryService = queryService != null;
     }
 
-    public async Task InitializeAsync()
+    public async Task InitializeAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Initializing Cosmos DB through existing service");
-        await _cosmosDbService.InitializeDatabaseAsync();
+        await _cosmosDbService.InitializeDatabaseAsync(cancellationToken);
     }
 
     public async Task AddTransactionAsync(Transaction transaction)

@@ -17,6 +17,7 @@ public interface ICosmosDbService
     /// <summary>
     /// Ensures that the database and its container are created if they do not already exist.
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous initialization operation.</returns>
-    Task InitializeDatabaseAsync();
+    Task InitializeDatabaseAsync(CancellationToken cancellationToken);
 }

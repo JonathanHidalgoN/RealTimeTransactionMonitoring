@@ -37,12 +37,12 @@ public class CosmosDbService : ICosmosDbService, IAsyncDisposable
         _cosmosClient = new CosmosClient(_settings.EndpointUri, _settings.PrimaryKey, clientOptions);
     }
 
-    public async Task InitializeDatabaseAsync()
+    public async Task InitializeDatabaseAsync(CancellationToken cancellationToken)
     {
         try
         {
             _logger.LogInformation("Ensuring database '{DatabaseName}' exists...", _settings.DatabaseName);
-            _database = await _cosmosClient.CreateDatabaseIfNotExistsAsync(_settings.DatabaseName);
+            _database = await _cosmosClient.CreateDatabaseIfNotExistsAsync(_settings.DatabaseName, cancellationToken: cancellationToken);
             _logger.LogInformation("Database '{DatabaseName}' ensured.", _settings.DatabaseName);
 
             _logger.LogInformation("Ensuring container '{ContainerName}' exists in database '{DatabaseName}' with partition key '{PartitionKeyPath}'...",
@@ -52,9 +52,15 @@ public class CosmosDbService : ICosmosDbService, IAsyncDisposable
 
             _container = await _database.CreateContainerIfNotExistsAsync(
                 _settings.ContainerName,
-                partitionKeyPath
+                partitionKeyPath,
+                cancellationToken: cancellationToken
             );
             _logger.LogInformation("Container '{ContainerName}' ensured.", _settings.ContainerName);
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("Cosmos DB initialization was cancelled");
+            throw;
         }
         catch (Exception ex)
         {
