@@ -17,7 +17,7 @@ public class TransactionProcessor : ITransactionProcessor
         _serviceScopeFactory = serviceScopeFactory;
     }
 
-    public async Task ProcessMessageAsync(ReceivedMessage<object?, string> message)
+    public async Task ProcessMessageAsync(ReceivedMessage<object?, string> message, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(message);
 
@@ -35,7 +35,7 @@ public class TransactionProcessor : ITransactionProcessor
                 string? anomalyFlag = await anomalyDetector.DetectAsync(kafkaTransaction);
                 var processedTransaction = kafkaTransaction with { AnomalyFlag = anomalyFlag };
 
-                await transactionRepository.AddTransactionAsync(processedTransaction);
+                await transactionRepository.AddTransactionAsync(processedTransaction, cancellationToken);
                 _logger.LogInformation("Successfully processed and stored transaction {TransactionId}", processedTransaction.Id);
             }
             else
