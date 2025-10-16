@@ -51,10 +51,10 @@ public class TransactionProcessorTests
         _mockAnomalyDetector.Setup(d => d.DetectAsync(It.IsAny<Transaction>()))
                            .ReturnsAsync((string?)null);
 
-        await _processor.ProcessMessageAsync(message);
+        await _processor.ProcessMessageAsync(message, CancellationToken.None);
 
         _mockAnomalyDetector.Verify(d => d.DetectAsync(It.Is<Transaction>(t => t.Id == "TXN123")), Times.Once);
-        _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.Is<Transaction>(t => t.Id == "TXN123" && t.AnomalyFlag == null)), Times.Once);
+        _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.Is<Transaction>(t => t.Id == "TXN123" && t.AnomalyFlag == null), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -67,10 +67,10 @@ public class TransactionProcessorTests
         _mockAnomalyDetector.Setup(d => d.DetectAsync(It.IsAny<Transaction>()))
                            .ReturnsAsync("HIGH_AMOUNT");
 
-        await _processor.ProcessMessageAsync(message);
+        await _processor.ProcessMessageAsync(message, CancellationToken.None);
 
         _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.Is<Transaction>(t =>
-            t.Id == "TXN123" && t.AnomalyFlag == "HIGH_AMOUNT")), Times.Once);
+            t.Id == "TXN123" && t.AnomalyFlag == "HIGH_AMOUNT"), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -79,9 +79,9 @@ public class TransactionProcessorTests
         var message = new ReceivedMessage<object?, string>(null, "invalid-json");
 
         // Should not throw - should handle gracefully
-        await _processor.ProcessMessageAsync(message);
+        await _processor.ProcessMessageAsync(message, CancellationToken.None);
 
-        _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>()), Times.Never);
+        _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -89,16 +89,16 @@ public class TransactionProcessorTests
     {
         var message = new ReceivedMessage<object?, string>(null, "null");
 
-        await _processor.ProcessMessageAsync(message);
+        await _processor.ProcessMessageAsync(message, CancellationToken.None);
 
-        _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>()), Times.Never);
+        _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Never);
         _mockAnomalyDetector.Verify(d => d.DetectAsync(It.IsAny<Transaction>()), Times.Never);
     }
 
     [Fact]
     public async Task ProcessMessageAsync_WithNullMessage_ShouldThrowArgumentNullException()
     {
-        var exception = await Assert.ThrowsAsync<ArgumentNullException>(() => _processor.ProcessMessageAsync(null!));
+        var exception = await Assert.ThrowsAsync<ArgumentNullException>(() => _processor.ProcessMessageAsync(null!, CancellationToken.None));
 
         exception.ParamName.Should().Be("message");
     }
@@ -113,9 +113,9 @@ public class TransactionProcessorTests
         _mockAnomalyDetector.Setup(d => d.DetectAsync(It.IsAny<Transaction>()))
                            .ThrowsAsync(new InvalidOperationException("Anomaly detector failed"));
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _processor.ProcessMessageAsync(message));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _processor.ProcessMessageAsync(message, CancellationToken.None));
 
-        _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>()), Times.Never);
+        _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -127,10 +127,10 @@ public class TransactionProcessorTests
 
         _mockAnomalyDetector.Setup(d => d.DetectAsync(It.IsAny<Transaction>()))
                            .ReturnsAsync((string?)null);
-        _mockTransactionRepository.Setup(r => r.AddTransactionAsync(It.IsAny<Transaction>()))
+        _mockTransactionRepository.Setup(r => r.AddTransactionAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()))
                                   .ThrowsAsync(new InvalidOperationException("Database connection failed"));
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _processor.ProcessMessageAsync(message));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _processor.ProcessMessageAsync(message, CancellationToken.None));
     }
 
     [Theory]
@@ -142,9 +142,9 @@ public class TransactionProcessorTests
         var message = new ReceivedMessage<object?, string>(null, invalidJson);
 
         // Should not throw - should handle gracefully
-        await _processor.ProcessMessageAsync(message);
+        await _processor.ProcessMessageAsync(message, CancellationToken.None);
 
-        _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>()), Times.Never);
+        _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Theory]
@@ -155,9 +155,9 @@ public class TransactionProcessorTests
         var message = new ReceivedMessage<object?, string>(null, invalidTransaction);
 
         // Should not throw - should handle gracefully
-        await _processor.ProcessMessageAsync(message);
+        await _processor.ProcessMessageAsync(message, CancellationToken.None);
 
-        _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>()), Times.Never);
+        _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Theory]
@@ -174,9 +174,9 @@ public class TransactionProcessorTests
         _mockAnomalyDetector.Setup(d => d.DetectAsync(It.IsAny<Transaction>()))
                            .ReturnsAsync(anomalyFlag);
 
-        await _processor.ProcessMessageAsync(message);
+        await _processor.ProcessMessageAsync(message, CancellationToken.None);
 
         _mockTransactionRepository.Verify(r => r.AddTransactionAsync(It.Is<Transaction>(t =>
-            t.Id == "TXN123" && t.AnomalyFlag == anomalyFlag)), Times.Once);
+            t.Id == "TXN123" && t.AnomalyFlag == anomalyFlag), It.IsAny<CancellationToken>()), Times.Once);
     }
 }
