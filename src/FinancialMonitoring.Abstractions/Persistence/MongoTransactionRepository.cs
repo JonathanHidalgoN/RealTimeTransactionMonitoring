@@ -105,7 +105,7 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
         }
     }
 
-    public async Task AddTransactionAsync(Transaction transaction)
+    public async Task AddTransactionAsync(Transaction transaction, CancellationToken cancellationToken)
     {
         try
         {
@@ -114,7 +114,8 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
             await _collection.ReplaceOneAsync(
                 Builders<Transaction>.Filter.Eq(t => t.Id, transaction.Id),
                 transaction,
-                new ReplaceOptions { IsUpsert = true }
+                new ReplaceOptions { IsUpsert = true },
+                cancellationToken: cancellationToken
             );
 
             _logger.LogInformation("Successfully added/updated transaction with ID '{TransactionId}'", transaction.Id);

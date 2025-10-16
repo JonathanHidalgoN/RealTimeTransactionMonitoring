@@ -69,7 +69,7 @@ public class CosmosDbService : ICosmosDbService, IAsyncDisposable
         }
     }
 
-    public async Task AddTransactionAsync(TransactionForCosmos item)
+    public async Task AddTransactionAsync(TransactionForCosmos item, CancellationToken cancellationToken)
     {
         if (_container == null)
         {
@@ -83,7 +83,8 @@ public class CosmosDbService : ICosmosDbService, IAsyncDisposable
             _logger.LogInformation("Attempting to upsert item with id '{ItemId}' to Cosmos DB. JSON Payload: {JsonPayload}", item.id, jsonToUpsert);
             var response = await _container.UpsertItemAsync(
                 item,
-                new PartitionKey(item.id)
+                new PartitionKey(item.id),
+                cancellationToken: cancellationToken
             );
             _logger.LogInformation("Upserted item to Cosmos DB. Id: {Id}, RU Charge: {RU}", response.Resource.id, response.RequestCharge);
         }

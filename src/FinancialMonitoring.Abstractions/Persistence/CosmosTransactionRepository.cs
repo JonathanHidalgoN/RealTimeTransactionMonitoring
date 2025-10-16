@@ -30,13 +30,13 @@ public class CosmosTransactionRepository : ITransactionRepository
         await _cosmosDbService.InitializeDatabaseAsync(cancellationToken);
     }
 
-    public async Task AddTransactionAsync(Transaction transaction)
+    public async Task AddTransactionAsync(Transaction transaction, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Adding transaction with ID '{TransactionId}' to Cosmos DB", transaction.Id);
 
         // Convert domain Transaction to TransactionForCosmos (preserving the ID mapping)
         var cosmosTransaction = TransactionForCosmos.FromDomainTransaction(transaction);
-        await _cosmosDbService.AddTransactionAsync(cosmosTransaction);
+        await _cosmosDbService.AddTransactionAsync(cosmosTransaction, cancellationToken);
     }
 
     public async Task<PagedResult<Transaction>?> GetAllTransactionsAsync(int pageNumber, int pageSize)
