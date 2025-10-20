@@ -25,7 +25,7 @@ public static class ProductionServicesExtensions
             .ValidateOnStart();
 
         services.AddSingleton<IMessageConsumer<object?, string>, EventHubsConsumer>();
-        services.AddScoped<ICosmosDbService, CosmosDbService>();
+        services.AddSingleton<ICosmosDbService, CosmosDbService>();
         services.AddScoped<ITransactionRepository, CosmosTransactionRepository>();
         services.AddSingleton<IAnomalyEventPublisher, EventHubsAnomalyEventPublisher>();
         services.AddApplicationInsightsTelemetryWorkerService();

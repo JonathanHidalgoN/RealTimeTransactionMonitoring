@@ -16,9 +16,6 @@ public class TransactionProcessorTests
     private readonly Mock<ILogger<TxnProcessor>> _mockLogger;
     private readonly Mock<ITransactionAnomalyDetector> _mockAnomalyDetector;
     private readonly Mock<ITransactionRepository> _mockTransactionRepository;
-    private readonly Mock<IServiceScopeFactory> _mockServiceScopeFactory;
-    private readonly Mock<IServiceScope> _mockServiceScope;
-    private readonly Mock<IServiceProvider> _mockServiceProvider;
     private readonly TxnProcessor _processor;
 
     public TransactionProcessorTests()
@@ -26,19 +23,8 @@ public class TransactionProcessorTests
         _mockLogger = new Mock<ILogger<TxnProcessor>>();
         _mockAnomalyDetector = new Mock<ITransactionAnomalyDetector>();
         _mockTransactionRepository = new Mock<ITransactionRepository>();
-        _mockServiceScopeFactory = new Mock<IServiceScopeFactory>();
-        _mockServiceScope = new Mock<IServiceScope>();
-        _mockServiceProvider = new Mock<IServiceProvider>();
 
-        // Setup service scope factory to return our mock scope
-        _mockServiceScopeFactory.Setup(x => x.CreateScope()).Returns(_mockServiceScope.Object);
-        _mockServiceScope.Setup(x => x.ServiceProvider).Returns(_mockServiceProvider.Object);
-
-        // Setup service provider to return our mock services
-        _mockServiceProvider.Setup(x => x.GetService(typeof(ITransactionAnomalyDetector))).Returns(_mockAnomalyDetector.Object);
-        _mockServiceProvider.Setup(x => x.GetService(typeof(ITransactionRepository))).Returns(_mockTransactionRepository.Object);
-
-        _processor = new TxnProcessor(_mockLogger.Object, _mockServiceScopeFactory.Object);
+        _processor = new TxnProcessor(_mockLogger.Object, _mockTransactionRepository.Object, _mockAnomalyDetector.Object);
     }
 
     [Fact]

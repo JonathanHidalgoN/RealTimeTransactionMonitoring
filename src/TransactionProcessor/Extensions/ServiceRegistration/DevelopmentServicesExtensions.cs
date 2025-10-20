@@ -20,7 +20,7 @@ public static class DevelopmentServicesExtensions
             .ValidateOnStart();
 
         services.AddSingleton<IMessageConsumer<object?, string>, KafkaConsumer>();
-        services.AddScoped<ITransactionRepository, MongoTransactionRepository>();
+        services.AddSingleton<ITransactionRepository, MongoTransactionRepository>();
         services.AddSingleton<IAnomalyEventPublisher, NoOpAnomalyEventPublisher>();
 
         Console.WriteLine("Configured development services: MongoDB, Kafka, NoOp publisher");
