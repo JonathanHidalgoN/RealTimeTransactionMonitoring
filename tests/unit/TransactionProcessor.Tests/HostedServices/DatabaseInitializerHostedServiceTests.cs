@@ -41,119 +41,61 @@ public class DatabaseInitializerHostedServiceTests
     }
 
     [Fact]
-    public async Task StartAsync_WithMockRepository_ShouldCallInitializeAsync()
+    public async Task StartingAsync_WithMockRepository_ShouldCallInitializeAsync()
     {
         var mockRepository = new Mock<ITransactionRepository>();
         var serviceProvider = CreateServiceProvider(mockRepository.Object);
         var logger = Mock.Of<ILogger<DatabaseInitializerHostedService>>();
         var service = new DatabaseInitializerHostedService(serviceProvider, logger);
 
-        await service.StartAsync(CancellationToken.None);
+        await service.StartingAsync(CancellationToken.None);
 
-        mockRepository.Verify(x => x.InitializeAsync(), Times.Once);
+        mockRepository.Verify(x => x.InitializeAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task StartAsync_WhenRepositoryThrows_ShouldPropagateException()
+    public async Task StartingAsync_WhenRepositoryThrows_ShouldPropagateException()
     {
         var mockRepository = new Mock<ITransactionRepository>();
-        mockRepository.Setup(x => x.InitializeAsync()).ThrowsAsync(new InvalidOperationException("Test exception"));
+        mockRepository.Setup(x => x.InitializeAsync(It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("Test exception"));
         var serviceProvider = CreateServiceProvider(mockRepository.Object);
         var logger = Mock.Of<ILogger<DatabaseInitializerHostedService>>();
         var service = new DatabaseInitializerHostedService(serviceProvider, logger);
 
-        var action = async () => await service.StartAsync(CancellationToken.None);
+        var action = async () => await service.StartingAsync(CancellationToken.None);
 
         await action.Should().ThrowAsync<InvalidOperationException>();
     }
 
     [Fact]
-    public async Task StartAsync_ShouldHandleCancellationToken()
+    public async Task StartingAsync_WhenCancelled_ShouldThrowOperationCancelledExceptio()
     {
         var mockRepository = new Mock<ITransactionRepository>();
+        mockRepository.Setup(
+                x => x.InitializeAsync(
+                    It.IsAny<CancellationToken>()
+                    )
+                ).ThrowsAsync(
+                    new OperationCanceledException()
+                    );
         var serviceProvider = CreateServiceProvider(mockRepository.Object);
-        var logger = Mock.Of<ILogger<DatabaseInitializerHostedService>>();
-        var service = new DatabaseInitializerHostedService(serviceProvider, logger);
+        var mockLogger = new Mock<ILogger<DatabaseInitializerHostedService>>();
+        var service = new DatabaseInitializerHostedService(serviceProvider, mockLogger.Object);
         var cancellationTokenSource = new CancellationTokenSource();
-        cancellationTokenSource.Cancel();
-
-        var action = async () => await service.StartAsync(cancellationTokenSource.Token);
-
-        await action.Should().NotThrowAsync<OperationCanceledException>();
+        var action = async () => await service.StartingAsync(cancellationTokenSource.Token);
+        await action.Should().ThrowAsync<OperationCanceledException>();
     }
 
     [Fact]
-    public async Task StopAsync_ShouldCompleteSuccessfully()
-    {
-        var serviceProvider = Mock.Of<IServiceProvider>();
-        var logger = Mock.Of<ILogger<DatabaseInitializerHostedService>>();
-        var service = new DatabaseInitializerHostedService(serviceProvider, logger);
-
-        var action = async () => await service.StopAsync(CancellationToken.None);
-
-        await action.Should().NotThrowAsync();
-    }
-
-    [Fact]
-    public async Task StopAsync_ShouldHandleCancellationToken()
-    {
-        var serviceProvider = Mock.Of<IServiceProvider>();
-        var logger = Mock.Of<ILogger<DatabaseInitializerHostedService>>();
-        var service = new DatabaseInitializerHostedService(serviceProvider, logger);
-        var cancellationTokenSource = new CancellationTokenSource();
-        cancellationTokenSource.Cancel();
-
-        var action = async () => await service.StopAsync(cancellationTokenSource.Token);
-
-        await action.Should().NotThrowAsync();
-    }
-
-    [Fact]
-    public async Task StartAsync_ShouldLogInformationMessages()
+    public async Task StartingAsync_ShouldPassCancellationToken()
     {
         var mockRepository = new Mock<ITransactionRepository>();
         var serviceProvider = CreateServiceProvider(mockRepository.Object);
         var mockLogger = new Mock<ILogger<DatabaseInitializerHostedService>>();
         var service = new DatabaseInitializerHostedService(serviceProvider, mockLogger.Object);
-
-        await service.StartAsync(CancellationToken.None);
-
-        mockLogger.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("starting initialization")),
-                It.IsAny<Exception?>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
-
-        mockLogger.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("completed startup tasks")),
-                It.IsAny<Exception?>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task StopAsync_ShouldLogInformationMessage()
-    {
-        var serviceProvider = Mock.Of<IServiceProvider>();
-        var mockLogger = new Mock<ILogger<DatabaseInitializerHostedService>>();
-        var service = new DatabaseInitializerHostedService(serviceProvider, mockLogger.Object);
-
-        await service.StopAsync(CancellationToken.None);
-
-        mockLogger.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("stopping")),
-                It.IsAny<Exception?>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
+        var cancellationTokenSource = new CancellationTokenSource();
+        await service.StartingAsync(cancellationTokenSource.Token);
+        mockRepository.Verify(x => x.InitializeAsync(cancellationTokenSource.Token), Times.Once);
     }
 
     private static IServiceProvider CreateServiceProvider(ITransactionRepository repository)

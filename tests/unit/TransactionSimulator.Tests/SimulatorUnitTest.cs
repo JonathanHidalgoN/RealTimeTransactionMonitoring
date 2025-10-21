@@ -7,7 +7,7 @@ public class SimulatorTests
     [Fact]
     public void GenerateTransaction_ShouldReturnValidTransaction_WhenCalled()
     {
-        ITransactionGenerator generator = new TransactionGenerator(seed: 12345);
+        ITransactionGenerator generator = new TransactionGenerator();
         Transaction transaction = generator.GenerateTransaction();
 
         Assert.NotNull(transaction);
@@ -22,36 +22,22 @@ public class SimulatorTests
     }
 
     [Fact]
-    public void GenerateTransaction_ShouldBeDeterministic_WithSameSeed()
+    public void GenerateTransaction_ShouldProduceDifferentResults_WhenCalledMultipleTimes()
     {
-        var generator1 = new TransactionGenerator(seed: 12345);
-        var generator2 = new TransactionGenerator(seed: 12345);
+        var generator = new TransactionGenerator();
 
-        var transaction1 = generator1.GenerateTransaction();
-        var transaction2 = generator2.GenerateTransaction();
-
-        Assert.Equal(transaction1.Amount, transaction2.Amount);
-        Assert.Equal(transaction1.SourceAccount.AccountId, transaction2.SourceAccount.AccountId);
-        Assert.Equal(transaction1.MerchantName, transaction2.MerchantName);
-    }
-
-    [Fact]
-    public void GenerateTransaction_ShouldProduceDifferentResults_WithDifferentSeeds()
-    {
-        var generator1 = new TransactionGenerator(seed: 12345);
-        var generator2 = new TransactionGenerator(seed: 54321);
-
-        var transaction1 = generator1.GenerateTransaction();
-        var transaction2 = generator2.GenerateTransaction();
+        var transaction1 = generator.GenerateTransaction();
+        var transaction2 = generator.GenerateTransaction();
 
         Assert.True(transaction1.Amount != transaction2.Amount ||
-                   transaction1.MerchantName != transaction2.MerchantName);
+                   transaction1.MerchantName != transaction2.MerchantName ||
+                   transaction1.SourceAccount.AccountId != transaction2.SourceAccount.AccountId);
     }
 
     [Fact]
     public void GenerateTransaction_ShouldHaveReasonableAmounts_ForAllCategories()
     {
-        var generator = new TransactionGenerator(seed: 12345);
+        var generator = new TransactionGenerator();
         var transactions = Enumerable.Range(0, 50)
             .Select(_ => generator.GenerateTransaction())
             .ToList();

@@ -24,13 +24,11 @@ public class TransactionGenerator : ITransactionGenerator
     private const int MERCHANT_ID_MIN = 1000;
     private const int MERCHANT_ID_MAX = 9999;
 
-    private readonly Random _random;
     private readonly List<UserProfile> _userProfiles;
     private readonly Dictionary<MerchantCategory, (double min, double max)> _categoryAmountRanges;
 
-    public TransactionGenerator(int? seed = null)
+    public TransactionGenerator()
     {
-        _random = seed.HasValue ? new Random(seed.Value) : new Random();
         _userProfiles = GenerateUserProfiles();
         _categoryAmountRanges = InitializeCategoryAmountRanges();
     }
@@ -40,14 +38,14 @@ public class TransactionGenerator : ITransactionGenerator
     /// </summary>
     public Transaction GenerateTransaction()
     {
-        var userProfile = _userProfiles[_random.Next(_userProfiles.Count)];
+        var userProfile = _userProfiles[Random.Shared.Next(_userProfiles.Count)];
         var now = DateTimeOffset.UtcNow;
         var userLocalTime = now.AddHours(userProfile.TimeZoneOffset);
         var adjustedTime = GetRealisticTransactionTime(userLocalTime, userProfile);
         var (category, pattern) = SelectCategoryAndPattern(userProfile, adjustedTime);
         var transactionType = GetTransactionTypeForCategory(category);
         var amount = GenerateRealisticAmount(pattern, category);
-        var merchantName = MerchantData.GetRandomMerchant(category, _random);
+        var merchantName = MerchantData.GetRandomMerchant(category, Random.Shared);
         var location = GetTransactionLocation(userProfile, adjustedTime);
         var paymentMethod = GetRealisticPaymentMethod(category, amount);
 
@@ -78,14 +76,14 @@ public class TransactionGenerator : ITransactionGenerator
 
         hourWeight = ApplyUserTypeHourAdjustment(hourWeight, hour, profile.Type, isWeekend);
 
-        if (_random.NextDouble() > hourWeight)
+        if (Random.Shared.NextDouble() > hourWeight)
         {
             var activeHours = GetActiveHoursForUserType(profile.Type, isWeekend);
-            var newHour = activeHours[_random.Next(activeHours.Length)];
-            userLocalTime = userLocalTime.Date.AddHours(newHour).AddMinutes(_random.Next(0, 60));
+            var newHour = activeHours[Random.Shared.Next(activeHours.Length)];
+            userLocalTime = userLocalTime.Date.AddHours(newHour).AddMinutes(Random.Shared.Next(0, 60));
         }
 
-        var minuteOffset = _random.Next(-MINUTE_OFFSET_RANGE, MINUTE_OFFSET_RANGE + 1);
+        var minuteOffset = Random.Shared.Next(-MINUTE_OFFSET_RANGE, MINUTE_OFFSET_RANGE + 1);
         return userLocalTime.AddMinutes(minuteOffset);
     }
 
@@ -162,7 +160,7 @@ public class TransactionGenerator : ITransactionGenerator
         }
 
         var totalWeight = weightedPatterns.Sum(w => w.Weight);
-        var randomValue = _random.NextDouble() * totalWeight;
+        var randomValue = Random.Shared.NextDouble() * totalWeight;
 
         double currentWeight = 0;
         foreach (var weighted in weightedPatterns)
@@ -225,8 +223,8 @@ public class TransactionGenerator : ITransactionGenerator
     /// </summary>
     private double GenerateGaussianRandom()
     {
-        double u1 = 1.0 - _random.NextDouble();
-        double u2 = 1.0 - _random.NextDouble();
+        double u1 = 1.0 - Random.Shared.NextDouble();
+        double u2 = 1.0 - Random.Shared.NextDouble();
         return Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2);
     }
 
@@ -235,11 +233,11 @@ public class TransactionGenerator : ITransactionGenerator
     /// </summary>
     private Location GetTransactionLocation(UserProfile profile, DateTimeOffset time)
     {
-        if (_random.NextDouble() > profile.TravelProbability)
+        if (Random.Shared.NextDouble() > profile.TravelProbability)
         {
-            return LocationData.GetNearbyLocation(profile.HomeLocation, _random);
+            return LocationData.GetNearbyLocation(profile.HomeLocation, Random.Shared);
         }
-        return LocationData.GetRandomLocation(_random);
+        return LocationData.GetRandomLocation(Random.Shared);
     }
 
     /// <summary>
@@ -263,7 +261,7 @@ public class TransactionGenerator : ITransactionGenerator
     {
         if (amount > LARGE_AMOUNT_THRESHOLD)
         {
-            return _random.NextDouble() < CHECK_PROBABILITY ? PaymentMethod.Check : PaymentMethod.ACH;
+            return Random.Shared.NextDouble() < CHECK_PROBABILITY ? PaymentMethod.Check : PaymentMethod.ACH;
         }
 
         if (category == MerchantCategory.ATM)
@@ -273,10 +271,10 @@ public class TransactionGenerator : ITransactionGenerator
 
         if (category == MerchantCategory.OnlineServices || category == MerchantCategory.Subscription)
         {
-            return _random.NextDouble() < DIGITAL_WALLET_PROBABILITY ? PaymentMethod.DigitalWallet : PaymentMethod.CreditCard;
+            return Random.Shared.NextDouble() < DIGITAL_WALLET_PROBABILITY ? PaymentMethod.DigitalWallet : PaymentMethod.CreditCard;
         }
 
-        return _random.NextDouble() < DEBIT_CARD_PROBABILITY ? PaymentMethod.DebitCard : PaymentMethod.CreditCard;
+        return Random.Shared.NextDouble() < DEBIT_CARD_PROBABILITY ? PaymentMethod.DebitCard : PaymentMethod.CreditCard;
     }
 
     /// <summary>
@@ -299,7 +297,7 @@ public class TransactionGenerator : ITransactionGenerator
             _ => "MER"
         };
 
-        var merchantId = $"{merchantPrefix}{_random.Next(MERCHANT_ID_MIN, MERCHANT_ID_MAX)}";
+        var merchantId = $"{merchantPrefix}{Random.Shared.Next(MERCHANT_ID_MIN, MERCHANT_ID_MAX)}";
         return new Account(merchantId);
     }
 
@@ -314,8 +312,8 @@ public class TransactionGenerator : ITransactionGenerator
         for (int i = 0; i < USER_PROFILE_COUNT; i++)
         {
             var accountId = $"ACC{ACCOUNT_ID_BASE + i}";
-            var userType = userTypes[_random.Next(userTypes.Length)];
-            var homeLocation = LocationData.GetRandomLocation(_random);
+            var userType = userTypes[Random.Shared.Next(userTypes.Length)];
+            var homeLocation = LocationData.GetRandomLocation(Random.Shared);
             var timeZoneOffset = GetTimeZoneForState(homeLocation.State);
 
             var profile = new UserProfile(
@@ -342,14 +340,14 @@ public class TransactionGenerator : ITransactionGenerator
     {
         return userType switch
         {
-            UserType.Student => (decimal)(_random.NextDouble() * 2000 + 500),
-            UserType.YoungProfessional => (decimal)(_random.NextDouble() * 4000 + 3000),
-            UserType.FamilyPerson => (decimal)(_random.NextDouble() * 6000 + 4000),
-            UserType.MiddleAged => (decimal)(_random.NextDouble() * 8000 + 5000),
-            UserType.Retiree => (decimal)(_random.NextDouble() * 3000 + 2000),
-            UserType.HighNetWorth => (decimal)(_random.NextDouble() * 20000 + 10000),
-            UserType.SmallBusiness => (decimal)(_random.NextDouble() * 15000 + 5000),
-            UserType.Freelancer => (decimal)(_random.NextDouble() * 5000 + 2000),
+            UserType.Student => (decimal)(Random.Shared.NextDouble() * 2000 + 500),
+            UserType.YoungProfessional => (decimal)(Random.Shared.NextDouble() * 4000 + 3000),
+            UserType.FamilyPerson => (decimal)(Random.Shared.NextDouble() * 6000 + 4000),
+            UserType.MiddleAged => (decimal)(Random.Shared.NextDouble() * 8000 + 5000),
+            UserType.Retiree => (decimal)(Random.Shared.NextDouble() * 3000 + 2000),
+            UserType.HighNetWorth => (decimal)(Random.Shared.NextDouble() * 20000 + 10000),
+            UserType.SmallBusiness => (decimal)(Random.Shared.NextDouble() * 15000 + 5000),
+            UserType.Freelancer => (decimal)(Random.Shared.NextDouble() * 5000 + 2000),
             _ => 3000
         };
     }

@@ -1,6 +1,5 @@
 using FinancialMonitoring.Abstractions.Persistence;
 using FinancialMonitoring.Abstractions.Messaging;
-using FinancialMonitoring.Abstractions.Services;
 using FinancialMonitoring.Models;
 using TransactionProcessor.Messaging;
 
@@ -21,7 +20,7 @@ public static class DevelopmentServicesExtensions
             .ValidateOnStart();
 
         services.AddSingleton<IMessageConsumer<object?, string>, KafkaConsumer>();
-        services.AddScoped<ITransactionRepository, MongoTransactionRepository>();
+        services.AddSingleton<ITransactionRepository, MongoTransactionRepository>();
         services.AddSingleton<IAnomalyEventPublisher, NoOpAnomalyEventPublisher>();
 
         Console.WriteLine("Configured development services: MongoDB, Kafka, NoOp publisher");

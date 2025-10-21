@@ -4,10 +4,8 @@ using Azure.Messaging.EventHubs.Processor;
 using Azure.Storage.Blobs;
 using FinancialMonitoring.Abstractions.Messaging;
 using FinancialMonitoring.Models;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text;
-using Confluent.Kafka;
 
 namespace TransactionProcessor.Messaging;
 

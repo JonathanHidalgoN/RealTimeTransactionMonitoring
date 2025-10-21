@@ -41,7 +41,7 @@ public class Worker : BackgroundService
         {
             await using var scope = _serviceProvider.CreateAsyncScope();
             var transactionProcessor = scope.ServiceProvider.GetRequiredService<ITransactionProcessor>();
-            await transactionProcessor.ProcessMessageAsync(message);
+            await transactionProcessor.ProcessMessageAsync(message, stoppingToken);
         }, stoppingToken);
 
         _logger.LogInformation("Worker consumption loop finished.");

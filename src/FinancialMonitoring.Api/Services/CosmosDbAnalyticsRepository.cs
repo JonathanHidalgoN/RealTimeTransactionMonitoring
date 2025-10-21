@@ -2,25 +2,70 @@ using FinancialMonitoring.Abstractions.Persistence;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Models.Analytics;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Options;
 
 namespace FinancialMonitoring.Api.Services;
 
 /// <summary>
 /// Cosmos DB implementation of the analytics repository.
 /// </summary>
-public class CosmosDbAnalyticsRepository : IAnalyticsRepository
+public class CosmosDbAnalyticsRepository : IAnalyticsRepository, IAsyncDisposable
 {
-    private readonly Container _container;
+    private readonly CosmosClient _cosmosClient;
+    private readonly CosmosDbSettings _settings;
     private readonly ILogger<CosmosDbAnalyticsRepository> _logger;
+    private Container? _container;
 
-    public CosmosDbAnalyticsRepository(Container container, ILogger<CosmosDbAnalyticsRepository> logger)
+    public CosmosDbAnalyticsRepository(IOptions<CosmosDbSettings> cosmosDbSettings, ILogger<CosmosDbAnalyticsRepository> logger)
     {
-        _container = container;
+        _settings = cosmosDbSettings.Value;
         _logger = logger;
+
+        _logger.LogInformation("Initializing CosmosDbAnalyticsRepository for endpoint {EndpointUri}", _settings.EndpointUri);
+
+        var clientOptions = new CosmosClientOptions
+        {
+            HttpClientFactory = () =>
+            {
+                HttpMessageHandler httpMessageHandler = new HttpClientHandler()
+                {
+                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                };
+                return new HttpClient(httpMessageHandler);
+            },
+            ConnectionMode = ConnectionMode.Gateway
+        };
+
+        _cosmosClient = new CosmosClient(_settings.EndpointUri, _settings.PrimaryKey, clientOptions);
+    }
+
+    private async Task EnsureContainerInitializedAsync()
+    {
+        if (_container == null)
+        {
+            try
+            {
+                var database = await _cosmosClient.CreateDatabaseIfNotExistsAsync(_settings.DatabaseName);
+                _container = database.Database.GetContainer(_settings.ContainerName);
+                _logger.LogInformation("Container '{ContainerName}' reference obtained.", _settings.ContainerName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error obtaining Cosmos DB container reference.");
+                throw;
+            }
+        }
     }
 
     public async Task<TransactionAnalytics> GetTransactionAnalyticsAsync()
     {
+        await EnsureContainerInitializedAsync();
+        if (_container == null)
+        {
+            _logger.LogError("Container not initialized");
+            throw new InvalidOperationException("Container not initialized");
+        }
+
         _logger.LogInformation("Calculating global transaction analytics");
 
         try
@@ -76,6 +121,13 @@ public class CosmosDbAnalyticsRepository : IAnalyticsRepository
 
     public async Task<List<TimeSeriesDataPoint>> GetTransactionTimeSeriesAsync(long fromTimestamp, long toTimestamp, int intervalMinutes = 60)
     {
+        await EnsureContainerInitializedAsync();
+        if (_container == null)
+        {
+            _logger.LogError("Container not initialized");
+            throw new InvalidOperationException("Container not initialized");
+        }
+
         _logger.LogInformation("Getting transaction time series from {FromTimestamp} to {ToTimestamp} with {IntervalMinutes} minute intervals",
             fromTimestamp, toTimestamp, intervalMinutes);
 
@@ -106,6 +158,13 @@ public class CosmosDbAnalyticsRepository : IAnalyticsRepository
 
     public async Task<List<TimeSeriesDataPoint>> GetAnomalyTimeSeriesAsync(long fromTimestamp, long toTimestamp, int intervalMinutes = 60)
     {
+        await EnsureContainerInitializedAsync();
+        if (_container == null)
+        {
+            _logger.LogError("Container not initialized");
+            throw new InvalidOperationException("Container not initialized");
+        }
+
         _logger.LogInformation("Getting anomaly time series from {FromTimestamp} to {ToTimestamp} with {IntervalMinutes} minute intervals",
             fromTimestamp, toTimestamp, intervalMinutes);
 
@@ -136,6 +195,13 @@ public class CosmosDbAnalyticsRepository : IAnalyticsRepository
 
     public async Task<List<MerchantAnalytics>> GetTopMerchantsAnalyticsAsync(int topCount = 10)
     {
+        await EnsureContainerInitializedAsync();
+        if (_container == null)
+        {
+            _logger.LogError("Container not initialized");
+            throw new InvalidOperationException("Container not initialized");
+        }
+
         _logger.LogInformation("Getting top {TopCount} merchants analytics", topCount);
 
         try
@@ -184,6 +250,13 @@ public class CosmosDbAnalyticsRepository : IAnalyticsRepository
 
     public async Task<List<MerchantAnalytics>> GetMerchantCategoryAnalyticsAsync()
     {
+        await EnsureContainerInitializedAsync();
+        if (_container == null)
+        {
+            _logger.LogError("Container not initialized");
+            throw new InvalidOperationException("Container not initialized");
+        }
+
         _logger.LogInformation("Getting merchant category analytics");
 
         try
@@ -227,5 +300,12 @@ public class CosmosDbAnalyticsRepository : IAnalyticsRepository
             _logger.LogError(ex, "Error getting merchant category analytics");
             throw;
         }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _logger.LogInformation("Disposing CosmosClient in CosmosDbAnalyticsRepository");
+        _cosmosClient?.Dispose();
+        await ValueTask.CompletedTask;
     }
 }

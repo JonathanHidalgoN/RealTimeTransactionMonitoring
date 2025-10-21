@@ -24,19 +24,19 @@ public class CosmosTransactionRepository : ITransactionRepository
         _hasQueryService = queryService != null;
     }
 
-    public async Task InitializeAsync()
+    public async Task InitializeAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Initializing Cosmos DB through existing service");
-        await _cosmosDbService.InitializeDatabaseAsync();
+        await _cosmosDbService.InitializeDatabaseAsync(cancellationToken);
     }
 
-    public async Task AddTransactionAsync(Transaction transaction)
+    public async Task AddTransactionAsync(Transaction transaction, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Adding transaction with ID '{TransactionId}' to Cosmos DB", transaction.Id);
 
         // Convert domain Transaction to TransactionForCosmos (preserving the ID mapping)
         var cosmosTransaction = TransactionForCosmos.FromDomainTransaction(transaction);
-        await _cosmosDbService.AddTransactionAsync(cosmosTransaction);
+        await _cosmosDbService.AddTransactionAsync(cosmosTransaction, cancellationToken);
     }
 
     public async Task<PagedResult<Transaction>?> GetAllTransactionsAsync(int pageNumber, int pageSize)

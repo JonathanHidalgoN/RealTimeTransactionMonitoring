@@ -12,5 +12,5 @@ public interface ITransactionProcessor
     /// </summary>
     /// <param name="message">The received message containing the transaction data.</param>
     /// <returns>A task representing the asynchronous processing operation.</returns>
-    Task ProcessMessageAsync(ReceivedMessage<object?, string> message);
+    Task ProcessMessageAsync(ReceivedMessage<object?, string> message, CancellationToken cancellationToken);
 }

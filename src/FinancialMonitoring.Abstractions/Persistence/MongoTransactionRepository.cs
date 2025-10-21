@@ -2,7 +2,6 @@ using FinancialMonitoring.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Microsoft.Extensions.Logging;
-using System.Linq;
 
 namespace FinancialMonitoring.Abstractions.Persistence;
 
@@ -26,7 +25,7 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
         _collection = _database.GetCollection<Transaction>(_settings.CollectionName);
     }
 
-    public async Task InitializeAsync()
+    public async Task InitializeAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -37,14 +36,21 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
             await CreateIndexIfNotExistsAsync(
                 "idx_anomaly_flag",
                 Builders<Transaction>.IndexKeys.Ascending(t => t.AnomalyFlag),
-                new CreateIndexOptions { Background = true });
+                new CreateIndexOptions { Background = true },
+                cancellationToken);
 
             await CreateIndexIfNotExistsAsync(
                 "idx_timestamp",
                 Builders<Transaction>.IndexKeys.Descending(t => t.Timestamp),
-                new CreateIndexOptions { Background = true });
+                new CreateIndexOptions { Background = true },
+                cancellationToken);
 
             _logger.LogInformation("MongoDB initialization completed successfully");
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("MongoDB initialization was cancelled");
+            throw;
         }
         catch (Exception ex)
         {
@@ -53,11 +59,11 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
         }
     }
 
-    private async Task CreateIndexIfNotExistsAsync(string indexName, IndexKeysDefinition<Transaction> indexKeys, CreateIndexOptions options)
+    private async Task CreateIndexIfNotExistsAsync(string indexName, IndexKeysDefinition<Transaction> indexKeys, CreateIndexOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            if (await IndexExistsAsync(indexName))
+            if (await IndexExistsAsync(indexName, cancellationToken))
             {
                 _logger.LogInformation("Index '{IndexName}' already exists, skipping creation", indexName);
                 return;
@@ -66,7 +72,7 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
             options.Name = indexName;
 
             var createIndexModel = new CreateIndexModel<Transaction>(indexKeys, options);
-            await _collection.Indexes.CreateOneAsync(createIndexModel);
+            await _collection.Indexes.CreateOneAsync(createIndexModel, cancellationToken: cancellationToken);
 
             _logger.LogInformation("Successfully created index '{IndexName}'", indexName);
         }
@@ -81,12 +87,12 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
         }
     }
 
-    private async Task<bool> IndexExistsAsync(string indexName)
+    private async Task<bool> IndexExistsAsync(string indexName, CancellationToken cancellationToken)
     {
         try
         {
-            using var cursor = await _collection.Indexes.ListAsync();
-            var indexes = await cursor.ToListAsync();
+            using var cursor = await _collection.Indexes.ListAsync(cancellationToken);
+            var indexes = await cursor.ToListAsync(cancellationToken);
 
             return indexes.Any(index =>
                 index.TryGetValue("name", out var nameValue) &&
@@ -99,7 +105,7 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
         }
     }
 
-    public async Task AddTransactionAsync(Transaction transaction)
+    public async Task AddTransactionAsync(Transaction transaction, CancellationToken cancellationToken)
     {
         try
         {
@@ -108,7 +114,8 @@ public class MongoTransactionRepository : ITransactionRepository, IAsyncDisposab
             await _collection.ReplaceOneAsync(
                 Builders<Transaction>.Filter.Eq(t => t.Id, transaction.Id),
                 transaction,
-                new ReplaceOptions { IsUpsert = true }
+                new ReplaceOptions { IsUpsert = true },
+                cancellationToken: cancellationToken
             );
 
             _logger.LogInformation("Successfully added/updated transaction with ID '{TransactionId}'", transaction.Id);

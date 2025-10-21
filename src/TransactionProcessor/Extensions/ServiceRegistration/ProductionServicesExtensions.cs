@@ -26,7 +26,7 @@ public static class ProductionServicesExtensions
 
         services.AddSingleton<IMessageConsumer<object?, string>, EventHubsConsumer>();
         services.AddSingleton<ICosmosDbService, CosmosDbService>();
-        services.AddSingleton<ITransactionRepository, CosmosTransactionRepository>();
+        services.AddScoped<ITransactionRepository, CosmosTransactionRepository>();
         services.AddSingleton<IAnomalyEventPublisher, EventHubsAnomalyEventPublisher>();
         services.AddApplicationInsightsTelemetryWorkerService();
 

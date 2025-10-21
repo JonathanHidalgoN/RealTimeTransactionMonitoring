@@ -9,33 +9,32 @@ namespace TransactionProcessor.Services;
 public class TransactionProcessor : ITransactionProcessor
 {
     private readonly ILogger<TransactionProcessor> _logger;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionAnomalyDetector _transactionAnomalyDetector;
 
-    public TransactionProcessor(ILogger<TransactionProcessor> logger, IServiceScopeFactory serviceScopeFactory)
+    public TransactionProcessor(ILogger<TransactionProcessor> logger,
+            ITransactionRepository transactionRepository, ITransactionAnomalyDetector transactionAnomalyDetector)
     {
         _logger = logger;
-        _serviceScopeFactory = serviceScopeFactory;
+        _transactionRepository = transactionRepository;
+        _transactionAnomalyDetector = transactionAnomalyDetector;
     }
 
-    public async Task ProcessMessageAsync(ReceivedMessage<object?, string> message)
+    public async Task ProcessMessageAsync(ReceivedMessage<object?, string> message, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(message);
 
         _logger.LogInformation("Received message: {MessageValue}", message.Value);
-
-        await using var scope = _serviceScopeFactory.CreateAsyncScope();
-        var anomalyDetector = scope.ServiceProvider.GetRequiredService<ITransactionAnomalyDetector>();
-        var transactionRepository = scope.ServiceProvider.GetRequiredService<ITransactionRepository>();
 
         try
         {
             Transaction? kafkaTransaction = JsonSerializer.Deserialize<Transaction>(message.Value);
             if (kafkaTransaction is not null)
             {
-                string? anomalyFlag = await anomalyDetector.DetectAsync(kafkaTransaction);
+                string? anomalyFlag = await _transactionAnomalyDetector.DetectAsync(kafkaTransaction);
                 var processedTransaction = kafkaTransaction with { AnomalyFlag = anomalyFlag };
 
-                await transactionRepository.AddTransactionAsync(processedTransaction);
+                await _transactionRepository.AddTransactionAsync(processedTransaction, cancellationToken);
                 _logger.LogInformation("Successfully processed and stored transaction {TransactionId}", processedTransaction.Id);
             }
             else
