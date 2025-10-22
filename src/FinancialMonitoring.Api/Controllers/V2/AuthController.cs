@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using FinancialMonitoring.Api.Authentication;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Abstractions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -184,7 +183,7 @@ public class AuthController : ControllerBase
     /// <param name="request">User registration data</param>
     /// <returns>Created user information</returns>
     [HttpPost("register")]
-    [Authorize(Policy = AppConstants.AdminRole, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + "," + SecureApiKeyAuthenticationDefaults.SchemeName)]
+    [Authorize(Policy = AppConstants.AdminRole, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ProducesResponseType(typeof(ApiResponse<RegisterResponse>), 201)]
     [ProducesResponseType(typeof(ApiErrorResponse), 400)]
     [ProducesResponseType(typeof(ApiErrorResponse), 409)]

@@ -1,8 +1,6 @@
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using FinancialMonitoring.Api.Authentication;
 using FinancialMonitoring.Models;
 
 namespace FinancialMonitoring.Api.Extensions.ServiceRegistration;
@@ -23,10 +21,7 @@ public static class AuthenticationExtensions
 
         var jwtSettings = configuration.GetSection(AppConstants.JwtSettingsConfigPrefix).Get<JwtSettings>() ?? new JwtSettings();
 
-        services.AddAuthentication()
-            .AddScheme<AuthenticationSchemeOptions, SecureApiKeyAuthenticationHandler>(
-                SecureApiKeyAuthenticationDefaults.SchemeName,
-                options => { })
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters

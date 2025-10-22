@@ -1,5 +1,4 @@
 using FinancialMonitoring.Abstractions;
-using FinancialMonitoring.Api.Authentication;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Models.OAuth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -97,7 +96,7 @@ public class OAuthController : ControllerBase
     /// <param name="request">Client creation request</param>
     /// <returns>Created client information</returns>
     [HttpPost("clients")]
-    [Authorize(Policy = AppConstants.AdminRole, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + "," + SecureApiKeyAuthenticationDefaults.SchemeName)]
+    [Authorize(Policy = AppConstants.AdminRole, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ProducesResponseType(typeof(ApiResponse<OAuthClientResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -147,7 +146,7 @@ public class OAuthController : ControllerBase
     /// <param name="clientId">Client ID</param>
     /// <returns>Client information (without secret)</returns>
     [HttpGet("clients/{clientId}")]
-    [Authorize(Policy = AppConstants.AdminRole, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + "," + SecureApiKeyAuthenticationDefaults.SchemeName)]
+    [Authorize(Policy = AppConstants.AdminRole, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ProducesResponseType(typeof(ApiResponse<OAuthClientResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -196,7 +195,7 @@ public class OAuthController : ControllerBase
     /// </summary>
     /// <returns>List of OAuth clients (without secrets)</returns>
     [HttpGet("clients")]
-    [Authorize(Policy = AppConstants.AdminRole, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + "," + SecureApiKeyAuthenticationDefaults.SchemeName)]
+    [Authorize(Policy = AppConstants.AdminRole, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ProducesResponseType(typeof(ApiResponse<List<OAuthClientResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
