@@ -1,0 +1,33 @@
+@using FinancialMonitoring.WebApp.Services
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+
+@if (isAuthenticated)
+{
+    @ChildContent
+}
+else if (isLoading)
+{
+    <MudContainer MaxWidth="MaxWidth.Small" Class="mt-16 d-flex justify-center">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    </MudContainer>
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool isAuthenticated = false;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        isLoading = false;
+
+        if (!isAuthenticated)
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+    }
+}

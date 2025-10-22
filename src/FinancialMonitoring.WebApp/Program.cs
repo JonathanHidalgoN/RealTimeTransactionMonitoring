@@ -5,7 +5,6 @@ using MudBlazor.Services;
 using System.Net.Http;
 using FinancialMonitoring.WebApp.Services;
 using System.Globalization;
-using FinancialMonitoring.Models;
 
 public class Program
 {
@@ -22,11 +21,14 @@ public class Program
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
+        // Register AuthService as singleton (needs to persist tokens across components)
+        builder.Services.AddSingleton<AuthService>();
+
+        // Configure HttpClient for API calls (JWT token added per-request in ApiClientService)
         builder.Services.AddHttpClient<ApiClientService>(client =>
         {
             client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]!);
-
-            client.DefaultRequestHeaders.Add(AppConstants.ApiKeyHeader, builder.Configuration["ApiKey"]);
+            // Note: Authorization header is set per-request in ApiClientService using AuthService
         });
 
         builder.Services.AddMudServices();
