@@ -25,7 +25,6 @@ public class EndToEndTransactionFlowTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         _client = new HttpClient { BaseAddress = new Uri(_config.Api.BaseUrl) };
-        _client.DefaultRequestHeaders.Add("X-Api-Key", _config.Api.ApiKey);
 
         var producerConfig = new ProducerConfig
         {
