@@ -115,7 +115,6 @@ services:
       MongoDb__DatabaseName: "TestFinancialMonitoring"
       MongoDb__CollectionName: "transactions"
       Redis__ConnectionString: "redis:6379"
-      ApiSettings__ApiKey: "integration-test-key"
       APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://test.in.ai.azure.com/"
       ApplicationInsights__ConnectionString: "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://test.in.ai.azure.com/"
       ASPNETCORE_URLS: "http://0.0.0.0:8080"
@@ -145,7 +144,6 @@ services:
     environment:
       DOTNET_ENVIRONMENT: "Testing"
       ApiBaseUrl: "http://financialmonitoring-api-test:8080"
-      ApiKey: "integration-test-key"
       Kafka__BootstrapServers: "kafka:29092"
       MongoDb__ConnectionString: "mongodb://admin:password123@mongodb-test:27017"
       MongoDb__DatabaseName: "TestFinancialMonitoring"
