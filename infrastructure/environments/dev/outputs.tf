@@ -55,12 +55,6 @@ output "key_vault_uri" {
   value       = module.security.key_vault_uri
 }
 
-output "api_key" {
-  description = "API Key for client applications (from Key Vault)"
-  value       = module.security.api_key
-  sensitive   = true
-}
-
 output "static_web_app_name" {
   description = "Static Web App name"
   value       = module.frontend.static_web_app_name

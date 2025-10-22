@@ -39,18 +39,3 @@ resource "random_string" "suffix" {
   special = false
   upper   = false
 }
-
-resource "random_password" "api_key" {
-  length  = 32
-  special = true
-}
-
-resource "azurerm_key_vault_secret" "api_key" {
-  name         = "ApiKey"
-  value        = random_password.api_key.result
-  key_vault_id = azurerm_key_vault.main.id
-
-  depends_on = [
-    azurerm_role_assignment.admin_kv_secrets
-  ]
-}
