@@ -145,8 +145,10 @@ curl https://<api-fqdn>/health
 
 The frontend is a Blazor WebAssembly application that runs entirely in the browser. It needs to be:
 1. Built as static files (HTML, CSS, JS, WebAssembly)
-2. Configured with the API URL and API Key
+2. Configured with the API URL
 3. Deployed to Azure Static Web Apps
+
+**Note**: The application uses JWT authentication. Users will need to login with credentials when accessing the dashboard.
 
 ### Prerequisites
 
@@ -163,7 +165,6 @@ npm install -g @azure/static-web-apps-cli
 ```bash
 cd infrastructure/environments/dev
 API_URL=$(terraform output -raw api_url)
-API_KEY=$(terraform output -raw api_key)
 DEPLOYMENT_TOKEN=$(terraform output -raw frontend_api_key)
 ```
 
@@ -176,12 +177,11 @@ dotnet publish -c Release -o ../../build/webapp
 
 3. **Replace configuration placeholders:**
 
-The source code contains placeholders `__ApiBaseUrl__` and `__ApiKey__` that need to be replaced with actual values:
+The source code contains placeholder `__ApiBaseUrl__` that needs to be replaced with the actual API URL:
 
 ```bash
 cd ../../build/webapp/wwwroot
 sed -i "s|__ApiBaseUrl__|$API_URL|g" appsettings.json
-sed -i "s|__ApiKey__|$API_KEY|g" appsettings.json
 ```
 
 4. **Deploy to Azure Static Web Apps:**
@@ -200,10 +200,11 @@ For convenience, all the above steps are automated in a single script:
 
 ### Verify Frontend
 
+Get the frontend URL:
 
 ```bash
 cd infrastructure/environments/dev
 terraform output frontend_url
 ```
 
-Open the URL in your browser. The application should load and be able to fetch data from the API.
+Open the URL in your browser. You will be redirected to the login page. Use the credentials you created during user registration (via the API `/api/v2/auth/register` endpoint) to login and access the dashboard.
