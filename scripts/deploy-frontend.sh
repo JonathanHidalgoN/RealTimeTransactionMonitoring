@@ -57,7 +57,7 @@ echo "Getting configuration from Terraform..."
 cd "$ENV_DIR"
 
 API_URL=$(terraform output -raw api_url 2>/dev/null || true)
-DEPLOYMENT_TOKEN=$(terraform output -raw frontend_api_key 2>/dev/null || true)
+DEPLOYMENT_TOKEN=$(terraform output -raw frontend_deployment_token 2>/dev/null || true)
 
 if [ -z "$API_URL" ]; then
     echo -e "${RED}ERROR: Could not retrieve api_url from Terraform${NC}"

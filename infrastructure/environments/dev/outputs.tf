@@ -39,9 +39,9 @@ output "acr_name" {
   value       = data.terraform_remote_state.shared.outputs.acr_name
 }
 
-output "frontend_api_key" {
-  description = "Static Web App API key for deployment"
-  value       = module.frontend.api_key
+output "frontend_deployment_token" {
+  description = "Static Web App deployment token"
+  value       = module.frontend.deployment_token
   sensitive   = true
 }
 

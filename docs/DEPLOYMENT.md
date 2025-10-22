@@ -165,7 +165,7 @@ npm install -g @azure/static-web-apps-cli
 ```bash
 cd infrastructure/environments/dev
 API_URL=$(terraform output -raw api_url)
-DEPLOYMENT_TOKEN=$(terraform output -raw frontend_api_key)
+DEPLOYMENT_TOKEN=$(terraform output -raw frontend_deployment_token)
 ```
 
 2. **Build the Blazor WebAssembly app:**
