@@ -36,6 +36,14 @@ public static class AuthenticationExtensions
                     ClockSkew = TimeSpan.FromMinutes(jwtSettings.ClockSkewMinutes)
                 };
 
+                logger.LogInformation("JWT Authentication Configuration: ValidateIssuer={ValidateIssuer}, ValidateAudience={ValidateAudience}, ValidateLifetime={ValidateLifetime}, Issuer={Issuer}, Audience={Audience}, ClockSkewMinutes={ClockSkewMinutes}",
+                    jwtSettings.ValidateIssuer,
+                    jwtSettings.ValidateAudience,
+                    jwtSettings.ValidateLifetime,
+                    jwtSettings.Issuer,
+                    jwtSettings.Audience,
+                    jwtSettings.ClockSkewMinutes);
+
                 options.Events = new JwtBearerEvents
                 {
                     OnAuthenticationFailed = context =>
