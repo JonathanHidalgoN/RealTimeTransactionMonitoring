@@ -139,7 +139,7 @@ public class AuthControllerV2Tests
     {
         _mockJwtService.Setup(x => x.GenerateAccessToken(It.IsAny<AuthUser>()))
             .Returns(TestConstants.AccessToken);
-        _mockJwtService.Setup(x => x.GenerateRefreshToken())
+        _mockJwtService.Setup(x => x.GenerateRefreshToken(It.IsAny<int?>()))
             .Returns(TestConstants.RefreshToken);
         _mockJwtService.Setup(x => x.GetAccessTokenExpiration())
             .Returns(DateTime.UtcNow.AddMinutes(15));
