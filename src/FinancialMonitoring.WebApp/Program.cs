@@ -21,13 +21,22 @@ public class Program
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
-        // Register AuthService as singleton (needs to persist tokens across components)
-        builder.Services.AddSingleton<AuthService>();
+        // Configure base HttpClient with API URL
+        var apiBaseUrl = builder.Configuration["ApiBaseUrl"]
+            ?? throw new InvalidOperationException("ApiBaseUrl configuration is missing");
+
+        builder.Services.AddScoped(sp => new HttpClient
+        {
+            BaseAddress = new Uri(apiBaseUrl)
+        });
+
+        // Register AuthService as scoped (tokens are persisted in localStorage, not in the service)
+        builder.Services.AddScoped<AuthService>();
 
         // Configure HttpClient for API calls (JWT token added per-request in ApiClientService)
         builder.Services.AddHttpClient<ApiClientService>(client =>
         {
-            client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]!);
+            client.BaseAddress = new Uri(apiBaseUrl);
             // Note: Authorization header is set per-request in ApiClientService using AuthService
         });
 

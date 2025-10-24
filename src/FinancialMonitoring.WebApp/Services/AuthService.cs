@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Globalization;
 using Microsoft.JSInterop;
 
 namespace FinancialMonitoring.WebApp.Services;
@@ -75,7 +76,8 @@ public class AuthService
                 return token;
             }
 
-            var expiration = DateTime.Parse(expirationString);
+            // Parse with roundtrip format to preserve UTC timezone
+            var expiration = DateTime.ParseExact(expirationString, "O", CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
 
             // If token expires in less than 5 minutes, refresh it
             if (expiration < DateTime.UtcNow.AddMinutes(5))
