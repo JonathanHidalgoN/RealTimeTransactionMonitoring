@@ -41,6 +41,9 @@ public class JwtTokenService : IJwtTokenService
             new("lastName", user.LastName ?? "")
         };
 
+        // Add standard JWT claims
+        claims.AddRange(CreateStandardJwtClaims());
+
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
@@ -133,6 +136,9 @@ public class JwtTokenService : IJwtTokenService
             new("token_type", "client_credentials")
         };
 
+        // Add standard JWT claims
+        claims.AddRange(CreateStandardJwtClaims());
+
         var scopeList = scopes.ToList();
         if (scopeList.Any())
         {
@@ -164,6 +170,19 @@ public class JwtTokenService : IJwtTokenService
     public int GetAccessTokenExpirationSeconds()
     {
         return _jwtSettings.AccessTokenExpiryMinutes * 60;
+    }
+
+    /// <summary>
+    /// Creates standard JWT claims that should be included in all tokens
+    /// </summary>
+    /// <returns>List of standard JWT claims (jti, iat)</returns>
+    private static IEnumerable<Claim> CreateStandardJwtClaims()
+    {
+        return new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+        };
     }
 }
 
