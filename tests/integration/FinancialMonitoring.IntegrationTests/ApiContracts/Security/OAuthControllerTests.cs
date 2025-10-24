@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Net.Http.Headers;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -229,7 +230,7 @@ public class OAuthControllerTests : IClassFixture<WebApplicationFactory<Program>
         Assert.NotNull(result.Data);
         Assert.NotEmpty(result.Data.ClientId);
         Assert.NotEmpty(result.Data.ClientSecret);
-        Assert.NotEqual("***", result.Data.ClientSecret); // Should have actual secret on creation
+        Assert.NotEqual("***", result.Data.ClientSecret);
         Assert.Equal("Test OAuth Client", result.Data.Name);
     }
 
@@ -269,7 +270,7 @@ public class OAuthControllerTests : IClassFixture<WebApplicationFactory<Program>
         Assert.True(result.Success);
         Assert.NotNull(result.Data);
         Assert.Equal(clientId, result.Data.ClientId);
-        Assert.Equal("***", result.Data.ClientSecret); // Secret should be masked
+        Assert.Equal("***", result.Data.ClientSecret);
     }
 
     [Fact]
@@ -365,15 +366,25 @@ public class OAuthControllerTests : IClassFixture<WebApplicationFactory<Program>
 
     private class TokenResponse
     {
+        [JsonPropertyName("access_token")]
         public string AccessToken { get; set; } = string.Empty;
+
+        [JsonPropertyName("token_type")]
         public string TokenType { get; set; } = string.Empty;
+
+        [JsonPropertyName("expires_in")]
         public int ExpiresIn { get; set; }
+
+        [JsonPropertyName("scope")]
         public string? Scope { get; set; }
     }
 
     private class OAuthErrorResponse
     {
+        [JsonPropertyName("error")]
         public string Error { get; set; } = string.Empty;
+
+        [JsonPropertyName("error_description")]
         public string? ErrorDescription { get; set; }
     }
 
