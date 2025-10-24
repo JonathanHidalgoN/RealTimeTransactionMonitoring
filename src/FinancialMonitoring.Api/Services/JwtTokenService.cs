@@ -57,12 +57,7 @@ public class JwtTokenService : IJwtTokenService
         return tokenString;
     }
 
-    public string GenerateRefreshToken()
-    {
-        return GenerateRefreshToken(null);
-    }
-
-    public string GenerateRefreshToken(int? userId)
+    public string GenerateRefreshToken(int? userId = null)
     {
         var refreshToken = Guid.NewGuid().ToString();
 

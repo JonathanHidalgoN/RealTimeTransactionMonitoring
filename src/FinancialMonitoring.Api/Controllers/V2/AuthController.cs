@@ -72,7 +72,7 @@ public class AuthController : ControllerBase
             }
 
             var accessToken = _jwtTokenService.GenerateAccessToken(user);
-            var refreshToken = _jwtTokenService.GenerateRefreshToken();
+            var refreshToken = _jwtTokenService.GenerateRefreshToken(user.Id);
             var expiresAt = _jwtTokenService.GetAccessTokenExpiration();
 
             await _userRepository.UpdateLastLoginAsync(user.Id);
@@ -128,7 +128,7 @@ public class AuthController : ControllerBase
 
             _jwtTokenService.InvalidateRefreshToken(request.RefreshToken);
             var newAccessToken = _jwtTokenService.GenerateAccessToken(user);
-            var newRefreshToken = _jwtTokenService.GenerateRefreshToken();
+            var newRefreshToken = _jwtTokenService.GenerateRefreshToken(user.Id);
             var expiresAt = _jwtTokenService.GetAccessTokenExpiration();
 
             var response = new RefreshTokenResponse
