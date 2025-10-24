@@ -1,4 +1,5 @@
 using FinancialMonitoring.Abstractions;
+using FinancialMonitoring.Api.Models.OAuth;
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Models.OAuth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

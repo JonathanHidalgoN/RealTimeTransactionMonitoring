@@ -54,21 +54,21 @@ public class AuthController : ControllerBase
             {
                 _logger.LogWarning("Login attempt with invalid username: {Username}", request.Username);
                 return Unauthorized(ApiErrorResponse.FromProblemDetails(
-                    Models.ProblemDetails.Unauthorized("Invalid username or password")));
+                    FinancialMonitoring.Models.ProblemDetails.Unauthorized("Invalid username or password")));
             }
 
             if (!_passwordHashingService.VerifyPassword(request.Password, user.PasswordHash, user.Salt))
             {
                 _logger.LogWarning("Login attempt with invalid password for user: {Username}", request.Username);
                 return Unauthorized(ApiErrorResponse.FromProblemDetails(
-                    Models.ProblemDetails.Unauthorized("Invalid username or password")));
+                    FinancialMonitoring.Models.ProblemDetails.Unauthorized("Invalid username or password")));
             }
 
             if (!user.IsActive)
             {
                 _logger.LogWarning("Login attempt for inactive user: {Username}", request.Username);
                 return Unauthorized(ApiErrorResponse.FromProblemDetails(
-                    Models.ProblemDetails.Unauthorized("User account is inactive")));
+                    FinancialMonitoring.Models.ProblemDetails.Unauthorized("User account is inactive")));
             }
 
             var accessToken = _jwtTokenService.GenerateAccessToken(user);
@@ -92,7 +92,7 @@ public class AuthController : ControllerBase
         {
             _logger.LogError(ex, "Error during login for user: {Username}", request.Username);
             return StatusCode(500, ApiErrorResponse.FromProblemDetails(
-                Models.ProblemDetails.InternalServerError("An error occurred during login")));
+                FinancialMonitoring.Models.ProblemDetails.InternalServerError("An error occurred during login")));
         }
     }
 
@@ -115,7 +115,7 @@ public class AuthController : ControllerBase
             {
                 _logger.LogWarning("Invalid refresh token provided");
                 return Unauthorized(ApiErrorResponse.FromProblemDetails(
-                    Models.ProblemDetails.Unauthorized("Invalid refresh token")));
+                    FinancialMonitoring.Models.ProblemDetails.Unauthorized("Invalid refresh token")));
             }
 
             var user = await _userRepository.GetByIdAsync(userId.Value);
@@ -123,7 +123,7 @@ public class AuthController : ControllerBase
             {
                 _logger.LogWarning("Refresh token for invalid or inactive user: {UserId}", userId);
                 return Unauthorized(ApiErrorResponse.FromProblemDetails(
-                    Models.ProblemDetails.Unauthorized("User not found or inactive")));
+                    FinancialMonitoring.Models.ProblemDetails.Unauthorized("User not found or inactive")));
             }
 
             _jwtTokenService.InvalidateRefreshToken(request.RefreshToken);
@@ -145,7 +145,7 @@ public class AuthController : ControllerBase
         {
             _logger.LogError(ex, "Error during token refresh");
             return StatusCode(500, ApiErrorResponse.FromProblemDetails(
-                Models.ProblemDetails.InternalServerError("An error occurred during token refresh")));
+                FinancialMonitoring.Models.ProblemDetails.InternalServerError("An error occurred during token refresh")));
         }
     }
 
@@ -173,7 +173,7 @@ public class AuthController : ControllerBase
         {
             _logger.LogError(ex, "Error during logout");
             return StatusCode(500, ApiErrorResponse.FromProblemDetails(
-                Models.ProblemDetails.InternalServerError("An error occurred during logout")));
+                FinancialMonitoring.Models.ProblemDetails.InternalServerError("An error occurred during logout")));
         }
     }
 
@@ -195,14 +195,14 @@ public class AuthController : ControllerBase
             if (existingUserByUsername != null)
             {
                 return Conflict(ApiErrorResponse.FromProblemDetails(
-                    Models.ProblemDetails.ValidationError("Username already exists")));
+                    FinancialMonitoring.Models.ProblemDetails.ValidationError("Username already exists")));
             }
 
             var existingUserByEmail = await _userRepository.GetByEmailAsync(request.Email);
             if (existingUserByEmail != null)
             {
                 return Conflict(ApiErrorResponse.FromProblemDetails(
-                    Models.ProblemDetails.ValidationError("Email already exists")));
+                    FinancialMonitoring.Models.ProblemDetails.ValidationError("Email already exists")));
             }
 
             var salt = _passwordHashingService.GenerateRandomSalt();
@@ -238,7 +238,7 @@ public class AuthController : ControllerBase
         {
             _logger.LogError(ex, "Error during user registration");
             return StatusCode(500, ApiErrorResponse.FromProblemDetails(
-                Models.ProblemDetails.InternalServerError("An error occurred during registration")));
+                FinancialMonitoring.Models.ProblemDetails.InternalServerError("An error occurred during registration")));
         }
     }
 
@@ -259,14 +259,14 @@ public class AuthController : ControllerBase
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
             {
                 return Unauthorized(ApiErrorResponse.FromProblemDetails(
-                    Models.ProblemDetails.Unauthorized("Invalid user token")));
+                    FinancialMonitoring.Models.ProblemDetails.Unauthorized("Invalid user token")));
             }
 
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null)
             {
                 return NotFound(ApiErrorResponse.FromProblemDetails(
-                    Models.ProblemDetails.NotFound("User not found")));
+                    FinancialMonitoring.Models.ProblemDetails.NotFound("User not found")));
             }
 
             var userInfo = UserInfo.FromAuthUser(user);
@@ -276,7 +276,7 @@ public class AuthController : ControllerBase
         {
             _logger.LogError(ex, "Error retrieving current user information");
             return StatusCode(500, ApiErrorResponse.FromProblemDetails(
-                Models.ProblemDetails.InternalServerError("An error occurred retrieving user information")));
+                FinancialMonitoring.Models.ProblemDetails.InternalServerError("An error occurred retrieving user information")));
         }
     }
 
