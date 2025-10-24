@@ -57,7 +57,7 @@ public class AuthController : ControllerBase
                     FinancialMonitoring.Models.ProblemDetails.Unauthorized("Invalid username or password")));
             }
 
-            if (!_passwordHashingService.VerifyPassword(request.Password, user.PasswordHash, user.Salt))
+            if (!_passwordHashingService.VerifyPassword(request.Password, user.PasswordHash))
             {
                 _logger.LogWarning("Login attempt with invalid password for user: {Username}", request.Username);
                 return Unauthorized(ApiErrorResponse.FromProblemDetails(
@@ -205,13 +205,11 @@ public class AuthController : ControllerBase
                     FinancialMonitoring.Models.ProblemDetails.ValidationError("Email already exists")));
             }
 
-            var salt = _passwordHashingService.GenerateRandomSalt();
             var newUser = new AuthUser
             {
                 Username = request.Username,
                 Email = request.Email,
-                Salt = salt,
-                PasswordHash = _passwordHashingService.HashPassword(request.Password, salt),
+                PasswordHash = _passwordHashingService.HashPassword(request.Password),
                 Role = request.Role,
                 FirstName = request.FirstName,
                 LastName = request.LastName,

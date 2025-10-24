@@ -47,7 +47,7 @@ public class OAuthClientService : IOAuthClientService
                 return null;
             }
 
-            if (!_passwordHashingService.VerifyPassword(clientSecret, client.ClientSecret, "oauth_clients"))
+            if (!_passwordHashingService.VerifyPassword(clientSecret, client.ClientSecret))
             {
                 _logger.LogWarning("Client credentials validation failed: invalid secret for client {ClientId}", clientId);
                 return null;
@@ -109,7 +109,7 @@ public class OAuthClientService : IOAuthClientService
         var clientId = GenerateClientId();
         var clientSecret = GenerateClientSecret();
 
-        var hashedSecret = _passwordHashingService.HashPassword(clientSecret, "oauth_clients");
+        var hashedSecret = _passwordHashingService.HashPassword(clientSecret);
 
         var client = new OAuthClient
         {
