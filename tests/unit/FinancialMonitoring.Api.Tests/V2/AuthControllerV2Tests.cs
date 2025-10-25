@@ -14,8 +14,7 @@ public static class TestConstants
     public const string ValidUsername = "testuser";
     public const string ValidEmail = "test@example.com";
     public const string ValidPassword = "password123";
-    public const string HashedPassword = "hashed-password";
-    public const string TestSalt = "test-salt";
+    public const string HashedPassword = "100000;dGVzdC1zYWx0;aGFzaGVkLXBhc3N3b3Jk";
     public const string AccessToken = "access-token";
     public const string RefreshToken = "refresh-token";
     public const int ValidUserId = 1;
@@ -35,7 +34,6 @@ public static class AuthUserTestBuilder
         FirstName = "Test",
         LastName = "User",
         PasswordHash = TestConstants.HashedPassword,
-        Salt = TestConstants.TestSalt,
         IsActive = isActive,
         CreatedAt = DateTime.UtcNow.AddDays(-30),
         LastLoginAt = DateTime.UtcNow.AddHours(-2)
@@ -130,8 +128,7 @@ public class AuthControllerV2Tests
     {
         _mockPasswordService.Setup(x => x.VerifyPassword(
             TestConstants.ValidPassword,
-            TestConstants.HashedPassword,
-            TestConstants.TestSalt))
+            TestConstants.HashedPassword))
             .Returns(true);
     }
 
@@ -174,8 +171,7 @@ public class AuthControllerV2Tests
         _mockUserRepository.Verify(x => x.GetByUsernameAsync(TestConstants.ValidUsername), Times.Once);
         _mockPasswordService.Verify(x => x.VerifyPassword(
             TestConstants.ValidPassword,
-            TestConstants.HashedPassword,
-            TestConstants.TestSalt), Times.Once);
+            TestConstants.HashedPassword), Times.Once);
     }
 
     [Fact]
@@ -195,7 +191,7 @@ public class AuthControllerV2Tests
         Assert.NotNull(errorResponse.Error);
 
         _mockUserRepository.Verify(x => x.GetByUsernameAsync(TestConstants.InvalidUsername), Times.Once);
-        _mockPasswordService.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        _mockPasswordService.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -208,8 +204,7 @@ public class AuthControllerV2Tests
             .ReturnsAsync(testUser);
         _mockPasswordService.Setup(x => x.VerifyPassword(
             TestConstants.WrongPassword,
-            TestConstants.HashedPassword,
-            TestConstants.TestSalt))
+            TestConstants.HashedPassword))
             .Returns(false);
 
         var result = await _controller.Login(loginRequest);
@@ -261,7 +256,7 @@ public class AuthControllerV2Tests
         Assert.False(errorResponse.Success);
         Assert.NotNull(errorResponse.Error);
 
-        _mockPasswordService.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        _mockPasswordService.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         _mockUserRepository.Verify(x => x.UpdateLastLoginAsync(It.IsAny<int>()), Times.Never);
     }
 
@@ -435,9 +430,7 @@ public class AuthControllerV2Tests
             .ReturnsAsync((AuthUser?)null);
         _mockUserRepository.Setup(x => x.GetByEmailAsync(registerRequest.Email))
             .ReturnsAsync((AuthUser?)null);
-        _mockPasswordService.Setup(x => x.GenerateRandomSalt())
-            .Returns(TestConstants.TestSalt);
-        _mockPasswordService.Setup(x => x.HashPassword(registerRequest.Password, TestConstants.TestSalt))
+        _mockPasswordService.Setup(x => x.HashPassword(registerRequest.Password))
             .Returns(TestConstants.HashedPassword);
         _mockUserRepository.Setup(x => x.CreateAsync(It.IsAny<AuthUser>()))
             .ReturnsAsync(createdUser);
@@ -456,8 +449,7 @@ public class AuthControllerV2Tests
 
         _mockUserRepository.Verify(x => x.GetByUsernameAsync(registerRequest.Username), Times.Once);
         _mockUserRepository.Verify(x => x.GetByEmailAsync(registerRequest.Email), Times.Once);
-        _mockPasswordService.Verify(x => x.GenerateRandomSalt(), Times.Once);
-        _mockPasswordService.Verify(x => x.HashPassword(registerRequest.Password, TestConstants.TestSalt), Times.Once);
+        _mockPasswordService.Verify(x => x.HashPassword(registerRequest.Password), Times.Once);
         _mockUserRepository.Verify(x => x.CreateAsync(It.Is<AuthUser>(u =>
             u.Username == registerRequest.Username &&
             u.Email == registerRequest.Email &&
@@ -687,7 +679,7 @@ public class AuthControllerV2Tests
 
         Assert.False(errorResponse.Success);
 
-        _mockPasswordService.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        _mockPasswordService.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 
     [Theory]
@@ -737,7 +729,7 @@ public class AuthControllerV2Tests
 
         _mockUserRepository.Setup(x => x.GetByUsernameAsync(TestConstants.ValidUsername))
             .ReturnsAsync(testUser);
-        _mockPasswordService.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+        _mockPasswordService.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
             .Throws(new InvalidOperationException("Password hashing error"));
 
         var result = await _controller.Login(loginRequest);
@@ -811,9 +803,7 @@ public class AuthControllerV2Tests
             .ReturnsAsync((AuthUser?)null);
         _mockUserRepository.Setup(x => x.GetByEmailAsync(registerRequest.Email))
             .ReturnsAsync((AuthUser?)null);
-        _mockPasswordService.Setup(x => x.GenerateRandomSalt())
-            .Returns(TestConstants.TestSalt);
-        _mockPasswordService.Setup(x => x.HashPassword(registerRequest.Password, TestConstants.TestSalt))
+        _mockPasswordService.Setup(x => x.HashPassword(registerRequest.Password))
             .Returns(TestConstants.HashedPassword);
         _mockUserRepository.Setup(x => x.CreateAsync(It.IsAny<AuthUser>()))
             .ReturnsAsync(createdUser);
@@ -835,8 +825,8 @@ public class AuthControllerV2Tests
             .ReturnsAsync((AuthUser?)null);
         _mockUserRepository.Setup(x => x.GetByEmailAsync(registerRequest.Email))
             .ReturnsAsync((AuthUser?)null);
-        _mockPasswordService.Setup(x => x.GenerateRandomSalt())
-            .Throws(new InvalidOperationException("Salt generation error"));
+        _mockPasswordService.Setup(x => x.HashPassword(It.IsAny<string>()))
+            .Throws(new InvalidOperationException("Password hashing error"));
 
         var result = await _controller.Register(registerRequest);
 

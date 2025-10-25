@@ -14,10 +14,8 @@ public class InMemoryUserRepositoryTests
     {
         _mockPasswordService = new Mock<IPasswordHashingService>();
 
-        _mockPasswordService.Setup(x => x.GenerateRandomSalt())
-            .Returns("test-salt-base64");
-        _mockPasswordService.Setup(x => x.HashPassword(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns("hashed-password");
+        _mockPasswordService.Setup(x => x.HashPassword(It.IsAny<string>()))
+            .Returns("100000;dGVzdC1zYWx0LWJhc2U2NA==;aGFzaGVkLXBhc3N3b3Jk");
 
         _repository = new InMemoryUserRepository(_mockPasswordService.Object);
     }
@@ -109,8 +107,7 @@ public class InMemoryUserRepositoryTests
             Role = AuthUserRole.Viewer,
             FirstName = "New",
             LastName = "User",
-            PasswordHash = "dummy-hash",
-            Salt = "dummy-salt",
+            PasswordHash = "100000;dGVzdC1zYWx0;ZHVtbXktaGFzaA==",
             IsActive = true
         };
 
@@ -139,8 +136,7 @@ public class InMemoryUserRepositoryTests
             Role = AuthUserRole.Viewer,
             FirstName = "Test",
             LastName = "User",
-            PasswordHash = "dummy-hash",
-            Salt = "dummy-salt",
+            PasswordHash = "100000;dGVzdC1zYWx0;ZHVtbXktaGFzaA==",
             IsActive = true
         };
 
@@ -159,8 +155,7 @@ public class InMemoryUserRepositoryTests
             Role = AuthUserRole.Viewer,
             FirstName = "Test",
             LastName = "User",
-            PasswordHash = "dummy-hash",
-            Salt = "dummy-salt",
+            PasswordHash = "100000;dGVzdC1zYWx0;ZHVtbXktaGFzaA==",
             IsActive = true
         };
 
@@ -243,8 +238,7 @@ public class InMemoryUserRepositoryTests
             Role = AuthUserRole.Viewer,
             FirstName = "Test",
             LastName = "User1",
-            PasswordHash = "hash1",
-            Salt = "salt1",
+            PasswordHash = "100000;dGVzdC1zYWx0MTsx",
             IsActive = true
         };
 
@@ -255,8 +249,7 @@ public class InMemoryUserRepositoryTests
             Role = AuthUserRole.Viewer,
             FirstName = "Test",
             LastName = "User2",
-            PasswordHash = "hash2",
-            Salt = "salt2",
+            PasswordHash = "100000;dGVzdC1zYWx0Mjsy",
             IsActive = true
         };
 
