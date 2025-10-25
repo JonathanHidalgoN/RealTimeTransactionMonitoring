@@ -8,8 +8,8 @@ output "default_hostname" {
   value       = azurerm_static_web_app.main.default_host_name
 }
 
-output "api_key" {
-  description = "Static Web App API key for deployment"
+output "deployment_token" {
+  description = "Static Web App deployment token"
   value       = azurerm_static_web_app.main.api_key
   sensitive   = true
 }

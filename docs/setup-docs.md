@@ -99,7 +99,6 @@ dotnet test tests/integration/FinancialMonitoring.IntegrationTests/
    # - AZURE_SUBSCRIPTION_ID: Your Azure subscription ID
    # - AZURE_LOCATION: Azure region (e.g., "eastus", "westus2")
    # - RESOURCE_GROUP_NAME: Name for your resource group
-   # - API_KEY: Secure API key for authentication
    ```
 
 ### Automated Cloud Deployment
@@ -166,7 +165,7 @@ The cloud deployment provisions:
 - **Azure Key Vault** for secure secret management
 - **Application Insights** for monitoring and observability
 - **Azure Active Directory** for workload identity
-- **API Key authentication** for API security
+- **JWT/OAuth 2.0 authentication** for API security
 
 #### Frontend & Networking
 - **Azure Static Web Apps** for Blazor WebAssembly hosting

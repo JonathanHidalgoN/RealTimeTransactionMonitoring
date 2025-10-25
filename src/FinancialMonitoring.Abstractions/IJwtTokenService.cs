@@ -24,7 +24,8 @@ public interface IJwtTokenService
     /// <summary>
     /// Generates a new refresh token
     /// </summary>
-    string GenerateRefreshToken();
+    /// <param name="userId">Optional user ID to associate with the refresh token</param>
+    string GenerateRefreshToken(int? userId = null);
 
     /// <summary>
     /// Validates a refresh token and returns the associated user ID

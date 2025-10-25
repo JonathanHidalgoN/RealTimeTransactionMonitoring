@@ -16,10 +16,6 @@ public class InMemoryUserRepository : IUserRepository
     {
         _passwordHashingService = passwordHashingService;
 
-        var adminSalt = _passwordHashingService.GenerateRandomSalt();
-        var analystSalt = _passwordHashingService.GenerateRandomSalt();
-        var viewerSalt = _passwordHashingService.GenerateRandomSalt();
-
         _users = new List<AuthUser>
         {
             new()
@@ -27,8 +23,7 @@ public class InMemoryUserRepository : IUserRepository
                 Id = 1,
                 Username = "admin",
                 Email = "admin@financialmonitoring.com",
-                Salt = adminSalt,
-                PasswordHash = _passwordHashingService.HashPassword("Admin123!", adminSalt),
+                PasswordHash = _passwordHashingService.HashPassword("Admin123!"),
                 Role = AuthUserRole.Admin,
                 FirstName = "System",
                 LastName = "Administrator",
@@ -40,8 +35,7 @@ public class InMemoryUserRepository : IUserRepository
                 Id = 2,
                 Username = "analyst",
                 Email = "analyst@financialmonitoring.com",
-                Salt = analystSalt,
-                PasswordHash = _passwordHashingService.HashPassword("Analyst123!", analystSalt),
+                PasswordHash = _passwordHashingService.HashPassword("Analyst123!"),
                 Role = AuthUserRole.Analyst,
                 FirstName = "Financial",
                 LastName = "Analyst",
@@ -53,8 +47,7 @@ public class InMemoryUserRepository : IUserRepository
                 Id = 3,
                 Username = "viewer",
                 Email = "viewer@financialmonitoring.com",
-                Salt = viewerSalt,
-                PasswordHash = _passwordHashingService.HashPassword("Viewer123!", viewerSalt),
+                PasswordHash = _passwordHashingService.HashPassword("Viewer123!"),
                 Role = AuthUserRole.Viewer,
                 FirstName = "Report",
                 LastName = "Viewer",

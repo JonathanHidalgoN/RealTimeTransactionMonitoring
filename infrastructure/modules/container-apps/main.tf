@@ -82,11 +82,6 @@ resource "azurerm_container_app" "api" {
         name  = "Cors__AllowedOrigins__0"
         value = var.frontend_url
       }
-
-      env {
-        name        = "ApiSettings__ApiKey"
-        secret_name = "api-key"
-      }
     }
   }
 
@@ -119,11 +114,6 @@ resource "azurerm_container_app" "api" {
   secret {
     name  = "app-insights-connection-string"
     value = var.app_insights_connection_string
-  }
-
-  secret {
-    name  = "api-key"
-    value = var.api_key
   }
 
   tags = var.tags

@@ -158,12 +158,6 @@ public class ApiV2BasicTest : IAsyncLifetime
     {
         var response = await _client.GetAsync("/api/v2/transactions");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-
-        using var apiKeyClient = new HttpClient { BaseAddress = _client.BaseAddress };
-        apiKeyClient.DefaultRequestHeaders.Add("X-Api-Key", _config.Api.ApiKey);
-
-        var apiKeyResponse = await apiKeyClient.GetAsync("/api/v2/transactions");
-        Assert.Equal(HttpStatusCode.Unauthorized, apiKeyResponse.StatusCode);
     }
 
     /// <summary>

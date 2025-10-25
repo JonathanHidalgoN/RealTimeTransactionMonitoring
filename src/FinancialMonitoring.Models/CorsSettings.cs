@@ -15,7 +15,7 @@ public class CorsSettings
     /// <summary>
     /// List of allowed HTTP headers for CORS requests
     /// </summary>
-    public string[] AllowedHeaders { get; set; } = new[] { AppConstants.ApiKeyHeader };
+    public string[] AllowedHeaders { get; set; } = new[] { "Authorization", "Content-Type" };
 
     /// <summary>
     /// List of allowed HTTP methods for CORS requests

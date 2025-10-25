@@ -39,9 +39,9 @@ output "acr_name" {
   value       = data.terraform_remote_state.shared.outputs.acr_name
 }
 
-output "frontend_api_key" {
-  description = "Static Web App API key for deployment"
-  value       = module.frontend.api_key
+output "frontend_deployment_token" {
+  description = "Static Web App deployment token"
+  value       = module.frontend.deployment_token
   sensitive   = true
 }
 
@@ -53,12 +53,6 @@ output "container_app_environment" {
 output "key_vault_uri" {
   description = "Key Vault URI"
   value       = module.security.key_vault_uri
-}
-
-output "api_key" {
-  description = "API Key for client applications (from Key Vault)"
-  value       = module.security.api_key
-  sensitive   = true
 }
 
 output "static_web_app_name" {

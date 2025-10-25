@@ -62,8 +62,8 @@ The source code is organized in the `src/` directory with the following componen
 #### **FinancialMonitoring.Api/**
 - **Purpose**: REST API service for querying transactions and analytics
 - **Key Components**:
-  - `Controllers/`: REST endpoints (`TransactionsController`, `AnalyticsController`)
-  - `Authentication/`: API key authentication handlers
+  - `Controllers/`: REST endpoints (`TransactionsController`, `AnalyticsController`, `AuthController`, `OAuthController`)
+  - `Authentication/`: JWT/OAuth 2.0 authentication
   - `Middleware/`: Security headers, correlation ID, global exception handling
   - `Validation/`: Request validation using FluentValidation
   - `HealthChecks/`: Health monitoring endpoints
@@ -127,7 +127,7 @@ The source code is organized in the `src/` directory with the following componen
 - Comprehensive logging and correlation IDs
 
 ### Security
-- API key authentication
+- JWT/OAuth 2.0 authentication with access and refresh tokens
 - Rate limiting
 - Security headers middleware
 - Input validation and sanitization

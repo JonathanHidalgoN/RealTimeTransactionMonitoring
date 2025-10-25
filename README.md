@@ -157,7 +157,7 @@ Real-time monitoring dashboard built with Blazor WebAssembly:
 
 ### Security & Monitoring
 - **Azure AD Workload Identity**: Passwordless authentication
-- **API Key Authentication**: Secure REST API access
+- **JWT/OAuth 2.0 Authentication**: Secure REST API access with token-based authentication
 - **Application Insights**: Distributed tracing and monitoring
 - **Azure Key Vault**: Centralized secret management
 

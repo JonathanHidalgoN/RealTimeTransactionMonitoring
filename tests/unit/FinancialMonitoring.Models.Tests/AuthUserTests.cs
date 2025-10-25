@@ -16,8 +16,7 @@ public class AuthUserTests
             Email = "test@example.com",
             FirstName = "Test",
             LastName = "User",
-            PasswordHash = "hashed-password",
-            Salt = "salt-value"
+            PasswordHash = "100000;dGVzdC1zYWx0;aGFzaGVkLXBhc3N3b3Jk"
         };
 
         var validationContext = new ValidationContext(user);
@@ -38,8 +37,7 @@ public class AuthUserTests
             Email = "test@example.com",
             FirstName = "Test",
             LastName = "User",
-            PasswordHash = "hashed-password",
-            Salt = "salt-value"
+            PasswordHash = "100000;dGVzdC1zYWx0;aGFzaGVkLXBhc3N3b3Jk"
         };
 
         var validationContext = new ValidationContext(user);
@@ -60,8 +58,7 @@ public class AuthUserTests
             Email = "test@example.com",
             FirstName = null,
             LastName = "User",
-            PasswordHash = "hashed-password",
-            Salt = "salt-value"
+            PasswordHash = "100000;dGVzdC1zYWx0;aGFzaGVkLXBhc3N3b3Jk"
         };
 
         var validationContext = new ValidationContext(user);
@@ -84,32 +81,7 @@ public class AuthUserTests
             Email = "test@example.com",
             FirstName = "Test",
             LastName = "User",
-            PasswordHash = passwordHash,
-            Salt = "salt-value"
-        };
-
-        var validationContext = new ValidationContext(user);
-        var validationResults = new List<ValidationResult>();
-
-        var isValid = Validator.TryValidateObject(user, validationContext, validationResults, true);
-
-        Assert.False(isValid);
-        Assert.Contains(validationResults, vr => vr.ErrorMessage != null);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData(" ")]
-    public void AuthUser_WithInvalidSalt_FailsValidation(string salt)
-    {
-        var user = new AuthUser
-        {
-            Username = "testuser",
-            Email = "test@example.com",
-            FirstName = "Test",
-            LastName = "User",
-            PasswordHash = "hashed-password",
-            Salt = salt
+            PasswordHash = passwordHash
         };
 
         var validationContext = new ValidationContext(user);
@@ -146,8 +118,7 @@ public class AuthUserTests
             Email = "test@example.com",
             FirstName = "Test",
             LastName = "User",
-            PasswordHash = "hashed-password",
-            Salt = "salt-value",
+            PasswordHash = "100000;dGVzdC1zYWx0;aGFzaGVkLXBhc3N3b3Jk",
             Role = role
         };
 

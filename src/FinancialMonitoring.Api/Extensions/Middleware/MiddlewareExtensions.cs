@@ -15,7 +15,7 @@ public static class MiddlewareExtensions
             app.UseSwaggerUI();
         }
 
-        if (!app.Environment.IsDevelopment())
+        if (app.Environment.IsProduction())
         {
             app.UseHttpsRedirection();
         }

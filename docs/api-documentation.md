@@ -11,7 +11,7 @@ The Financial Monitoring API is a RESTful web service that provides endpoints fo
 ## API Features
 
 ### Security & Performance
-- **API Key Authentication**: Simple and secure authentication mechanism
+- **JWT/OAuth 2.0 Authentication**: Token-based authentication with access and refresh tokens
 - **Rate Limiting**: IP-based throttling to prevent abuse
 - **Output Caching**: Intelligent response caching for improved performance
 - **Security Headers**: Comprehensive security headers for protection
@@ -52,21 +52,47 @@ graph LR
 3. **Global Exception Handling**: Catches and formats unhandled exceptions
 4. **CORS**: Handles cross-origin requests from web applications
 5. **Rate Limiting**: Enforces request rate limits per IP address
-6. **Authentication**: Validates API key authentication
+6. **Authentication**: Validates JWT Bearer tokens
 7. **Output Cache**: Caches responses based on configured policies
 
 ## Authentication
 
-The API uses API Key authentication. Include the API key in the request header:
+The API uses JWT (JSON Web Token) Bearer authentication with OAuth 2.0 support.
+
+### Getting Started
+
+1. **User Authentication** (Password Grant):
+   ```http
+   POST /api/v2/auth/login
+   Content-Type: application/json
+
+   {
+     "username": "your-username",
+     "password": "your-password"
+   }
+   ```
+
+2. **OAuth Client Credentials** (Machine-to-Machine):
+   ```http
+   POST /api/v2/oauth/token
+   Content-Type: application/x-www-form-urlencoded
+
+   grant_type=client_credentials&client_id=your-client-id&client_secret=your-client-secret
+   ```
+
+### Using Access Tokens
+
+Include the access token in the Authorization header:
 
 ```http
-X-Api-Key: your-api-key-here
+Authorization: Bearer your-access-token-here
 ```
 
 **Authentication Requirements:**
-- All endpoints require a valid API key
-- API keys are validated against the configured key in Azure Key Vault
-- Invalid or missing keys return `401 Unauthorized`
+- V2 endpoints require a valid JWT Bearer token
+- Access tokens expire after 15 minutes (default)
+- Refresh tokens can be used to obtain new access tokens (7 day expiry)
+- Invalid or missing tokens return `401 Unauthorized`
 
 ## Rate Limits
 
@@ -116,7 +142,7 @@ The API uses URL path versioning:
 ### HTTP Status Codes
 - `200 OK`: Successful request
 - `400 Bad Request`: Invalid request parameters or validation errors
-- `401 Unauthorized`: Missing or invalid API key
+- `401 Unauthorized`: Missing or invalid JWT token
 - `404 Not Found`: Requested resource not found
 - `429 Too Many Requests`: Rate limit exceeded
 - `500 Internal Server Error`: Server-side error
@@ -126,7 +152,7 @@ The API uses URL path versioning:
 ### Get All Transactions
 Retrieves a paginated list of all transactions with optional filtering.
 
-**Endpoint:** `GET /api/v1.0/transactions`
+**Endpoint:** `GET /api/v2/transactions`
 
 **Query Parameters:**
 - `pageNumber` (integer): Page number (default: 1, min: 1)
@@ -138,8 +164,8 @@ Retrieves a paginated list of all transactions with optional filtering.
 
 **Example Request:**
 ```http
-GET /api/v1.0/transactions?pageNumber=1&pageSize=20
-X-Api-Key: your-api-key-here
+GET /api/v2/transactions?pageNumber=1&pageSize=20
+Authorization: Bearer your-access-token-here
 ```
 
 **Example Response:**
@@ -182,7 +208,7 @@ X-Api-Key: your-api-key-here
 ### Get Transaction by ID
 Retrieves a specific transaction by its unique identifier.
 
-**Endpoint:** `GET /api/v1.0/transactions/{id}`
+**Endpoint:** `GET /api/v2/transactions/{id}`
 
 **Path Parameters:**
 - `id` (string): Transaction ID (validated format)
@@ -193,14 +219,14 @@ Retrieves a specific transaction by its unique identifier.
 
 **Example Request:**
 ```http
-GET /api/v1.0/transactions/txn_123456
-X-Api-Key: your-api-key-here
+GET /api/v2/transactions/txn_123456
+Authorization: Bearer your-access-token-here
 ```
 
 ### Get Anomalous Transactions
 Retrieves a paginated list of transactions flagged as anomalous.
 
-**Endpoint:** `GET /api/v1.0/transactions/anomalies`
+**Endpoint:** `GET /api/v2/transactions/anomalies`
 
 **Query Parameters:**
 - `pageNumber` (integer): Page number (default: 1, min: 1)
@@ -212,14 +238,14 @@ Retrieves a paginated list of transactions flagged as anomalous.
 
 **Example Request:**
 ```http
-GET /api/v1.0/transactions/anomalies?pageNumber=1&pageSize=10
-X-Api-Key: your-api-key-here
+GET /api/v2/transactions/anomalies?pageNumber=1&pageSize=10
+Authorization: Bearer your-access-token-here
 ```
 
 ### Search Transactions
 Performs advanced transaction search with filtering criteria.
 
-**Endpoint:** `POST /api/v1.0/transactions/search`
+**Endpoint:** `POST /api/v2/transactions/search`
 
 **Request Body:** `TransactionSearchRequest`
 
@@ -229,9 +255,9 @@ Performs advanced transaction search with filtering criteria.
 
 **Example Request:**
 ```http
-POST /api/v1.0/transactions/search
+POST /api/v2/transactions/search
 Content-Type: application/json
-X-Api-Key: your-api-key-here
+Authorization: Bearer your-access-token-here
 
 {
   "pageNumber": 1,
@@ -251,7 +277,7 @@ X-Api-Key: your-api-key-here
 ### Get Transaction Analytics Overview
 Retrieves global transaction analytics and statistics.
 
-**Endpoint:** `GET /api/v1.0/analytics/overview`
+**Endpoint:** `GET /api/v2/analytics/overview`
 
 **Response:** `ApiResponse<TransactionAnalytics>`
 
@@ -281,7 +307,7 @@ Retrieves global transaction analytics and statistics.
 ### Get Transaction Time Series
 Retrieves time series data for transaction counts over a specified period.
 
-**Endpoint:** `GET /api/v1.0/analytics/timeseries/transactions`
+**Endpoint:** `GET /api/v2/analytics/timeseries/transactions`
 
 **Query Parameters:**
 - `hours` (integer): Hours to look back (default: 24, range: 1-168)
@@ -291,8 +317,8 @@ Retrieves time series data for transaction counts over a specified period.
 
 **Example Request:**
 ```http
-GET /api/v1.0/analytics/timeseries/transactions?hours=48&intervalMinutes=60
-X-Api-Key: your-api-key-here
+GET /api/v2/analytics/timeseries/transactions?hours=48&intervalMinutes=60
+Authorization: Bearer your-access-token-here
 ```
 
 **Example Response:**
@@ -319,7 +345,7 @@ X-Api-Key: your-api-key-here
 ### Get Anomaly Time Series
 Retrieves time series data for anomaly counts over a specified period.
 
-**Endpoint:** `GET /api/v1.0/analytics/timeseries/anomalies`
+**Endpoint:** `GET /api/v2/analytics/timeseries/anomalies`
 
 **Query Parameters:**
 - `hours` (integer): Hours to look back (default: 24, range: 1-168)
@@ -330,7 +356,7 @@ Retrieves time series data for anomaly counts over a specified period.
 ### Get Top Merchants
 Retrieves analytics data for top merchants by transaction volume.
 
-**Endpoint:** `GET /api/v1.0/analytics/merchants/top`
+**Endpoint:** `GET /api/v2/analytics/merchants/top`
 
 **Query Parameters:**
 - `count` (integer): Number of merchants to return (default: 10, range: 1-50)
@@ -358,7 +384,7 @@ Retrieves analytics data for top merchants by transaction volume.
 ### Get Merchant Category Analytics
 Retrieves analytics data grouped by merchant category.
 
-**Endpoint:** `GET /api/v1.0/analytics/merchants/categories`
+**Endpoint:** `GET /api/v2/analytics/merchants/categories`
 
 **Response:** `ApiResponse<List<MerchantAnalytics>>`
 

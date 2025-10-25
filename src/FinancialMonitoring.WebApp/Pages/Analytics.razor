@@ -3,10 +3,12 @@
 @using FinancialMonitoring.WebApp.Services
 @using FinancialMonitoring.Models.Analytics
 @using System.Globalization
+@using FinancialMonitoring.WebApp.Components
 @inject ApiClientService ApiClient
 
 <PageTitle>Advanced Analytics</PageTitle>
 
+<AuthenticationRequired>
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="pa-4">
     <MudText Typo="Typo.h3" GutterBottom="true" Class="mb-6">
         <MudIcon Icon="@Icons.Material.Filled.Analytics" Class="mr-3" />
@@ -194,6 +196,7 @@
         </MudCard>
     }
 </MudContainer>
+</AuthenticationRequired>
 
 @code {
     private bool _isLoading = true;

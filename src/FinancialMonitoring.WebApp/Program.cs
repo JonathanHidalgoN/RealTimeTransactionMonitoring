@@ -5,7 +5,6 @@ using MudBlazor.Services;
 using System.Net.Http;
 using FinancialMonitoring.WebApp.Services;
 using System.Globalization;
-using FinancialMonitoring.Models;
 
 public class Program
 {
@@ -22,11 +21,23 @@ public class Program
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
+        // Configure base HttpClient with API URL
+        var apiBaseUrl = builder.Configuration["ApiBaseUrl"]
+            ?? throw new InvalidOperationException("ApiBaseUrl configuration is missing");
+
+        builder.Services.AddScoped(sp => new HttpClient
+        {
+            BaseAddress = new Uri(apiBaseUrl)
+        });
+
+        // Register AuthService as scoped (tokens are persisted in localStorage, not in the service)
+        builder.Services.AddScoped<AuthService>();
+
+        // Configure HttpClient for API calls (JWT token added per-request in ApiClientService)
         builder.Services.AddHttpClient<ApiClientService>(client =>
         {
-            client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]!);
-
-            client.DefaultRequestHeaders.Add(AppConstants.ApiKeyHeader, builder.Configuration["ApiKey"]);
+            client.BaseAddress = new Uri(apiBaseUrl);
+            // Note: Authorization header is set per-request in ApiClientService using AuthService
         });
 
         builder.Services.AddMudServices();

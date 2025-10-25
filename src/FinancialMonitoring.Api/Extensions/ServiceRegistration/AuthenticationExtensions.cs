@@ -1,8 +1,6 @@
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using FinancialMonitoring.Api.Authentication;
 using FinancialMonitoring.Models;
 
 namespace FinancialMonitoring.Api.Extensions.ServiceRegistration;
@@ -23,10 +21,7 @@ public static class AuthenticationExtensions
 
         var jwtSettings = configuration.GetSection(AppConstants.JwtSettingsConfigPrefix).Get<JwtSettings>() ?? new JwtSettings();
 
-        services.AddAuthentication()
-            .AddScheme<AuthenticationSchemeOptions, SecureApiKeyAuthenticationHandler>(
-                SecureApiKeyAuthenticationDefaults.SchemeName,
-                options => { })
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -40,6 +35,14 @@ public static class AuthenticationExtensions
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
                     ClockSkew = TimeSpan.FromMinutes(jwtSettings.ClockSkewMinutes)
                 };
+
+                logger.LogInformation("JWT Authentication Configuration: ValidateIssuer={ValidateIssuer}, ValidateAudience={ValidateAudience}, ValidateLifetime={ValidateLifetime}, Issuer={Issuer}, Audience={Audience}, ClockSkewMinutes={ClockSkewMinutes}",
+                    jwtSettings.ValidateIssuer,
+                    jwtSettings.ValidateAudience,
+                    jwtSettings.ValidateLifetime,
+                    jwtSettings.Issuer,
+                    jwtSettings.Audience,
+                    jwtSettings.ClockSkewMinutes);
 
                 options.Events = new JwtBearerEvents
                 {

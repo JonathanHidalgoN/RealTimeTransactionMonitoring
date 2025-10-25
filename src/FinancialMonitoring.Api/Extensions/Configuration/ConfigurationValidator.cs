@@ -14,7 +14,6 @@ public static class ConfigurationValidator
 
         var errors = new List<string>();
 
-        ValidateSection<ApiSettings>(configuration, AppConstants.ApiSettingsConfigPrefix, errors);
         ValidateSection<CacheSettings>(configuration, AppConstants.CacheSettingsConfigPrefix, errors);
         ValidateSection<ResponseCacheSettings>(configuration, AppConstants.ResponseCacheSettingsConfigPrefix, errors);
         ValidateSection<RateLimitSettings>(configuration, AppConstants.RateLimitSettingsConfigPrefix, errors);

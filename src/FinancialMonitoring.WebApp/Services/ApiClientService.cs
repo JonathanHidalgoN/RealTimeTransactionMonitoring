@@ -1,25 +1,51 @@
 using FinancialMonitoring.Models;
 using FinancialMonitoring.Models.Analytics;
 using System.Net.Http.Json;
+using System.Net.Http.Headers;
+using Microsoft.AspNetCore.Components;
 
 namespace FinancialMonitoring.WebApp.Services;
 
 public class ApiClientService
 {
     private readonly HttpClient _httpClient;
+    private readonly AuthService _authService;
+    private readonly NavigationManager _navigationManager;
 
-    public ApiClientService(HttpClient httpClient)
+    public ApiClientService(HttpClient httpClient, AuthService authService, NavigationManager navigationManager)
     {
         _httpClient = httpClient;
+        _authService = authService;
+        _navigationManager = navigationManager;
+    }
+
+    private async Task<HttpClient> GetAuthenticatedClientAsync()
+    {
+        var token = await _authService.GetAccessTokenAsync();
+
+        if (string.IsNullOrEmpty(token))
+        {
+            // Redirect to login if no valid token
+            _navigationManager.NavigateTo("/login");
+            throw new UnauthorizedAccessException("No valid authentication token");
+        }
+
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return _httpClient;
     }
 
     public async Task<PagedResult<Transaction>?> GetTransactionsAsync(int pageNumber = 1, int pageSize = 20)
     {
-        var requestUri = $"{AppConstants.Routes.GetTransactionsPath()}?pageNumber={pageNumber}&pageSize={pageSize}";
+        var requestUri = $"/api/v2/transactions?pageNumber={pageNumber}&pageSize={pageSize}";
         try
         {
-            var apiResponse = await _httpClient.GetFromJsonAsync<ApiResponse<PagedResult<Transaction>>>(requestUri);
+            var client = await GetAuthenticatedClientAsync();
+            var apiResponse = await client.GetFromJsonAsync<ApiResponse<PagedResult<Transaction>>>(requestUri);
             return apiResponse?.Data;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
         }
         catch (Exception ex)
         {
@@ -30,11 +56,16 @@ public class ApiClientService
 
     public async Task<PagedResult<Transaction>?> GetAnomaliesAsync(int pageNumber = 1, int pageSize = 20)
     {
-        var requestUri = $"{AppConstants.Routes.GetAnomaliesPath()}?pageNumber={pageNumber}&pageSize={pageSize}";
+        var requestUri = $"/api/v2/transactions/anomalies?pageNumber={pageNumber}&pageSize={pageSize}";
         try
         {
-            var apiResponse = await _httpClient.GetFromJsonAsync<ApiResponse<PagedResult<Transaction>>>(requestUri);
+            var client = await GetAuthenticatedClientAsync();
+            var apiResponse = await client.GetFromJsonAsync<ApiResponse<PagedResult<Transaction>>>(requestUri);
             return apiResponse?.Data;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
         }
         catch (Exception ex)
         {
@@ -47,11 +78,16 @@ public class ApiClientService
 
     public async Task<TransactionAnalytics?> GetTransactionAnalyticsAsync()
     {
-        var requestUri = "/api/v1/analytics/overview";
+        var requestUri = "/api/v2/analytics/overview";
         try
         {
-            var apiResponse = await _httpClient.GetFromJsonAsync<ApiResponse<TransactionAnalytics>>(requestUri);
+            var client = await GetAuthenticatedClientAsync();
+            var apiResponse = await client.GetFromJsonAsync<ApiResponse<TransactionAnalytics>>(requestUri);
             return apiResponse?.Data;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
         }
         catch (Exception ex)
         {
@@ -62,11 +98,16 @@ public class ApiClientService
 
     public async Task<List<TimeSeriesDataPoint>?> GetTransactionTimeSeriesAsync(int hours = 24, int intervalMinutes = 60)
     {
-        var requestUri = $"/api/v1/analytics/timeseries/transactions?hours={hours}&intervalMinutes={intervalMinutes}";
+        var requestUri = $"/api/v2/analytics/timeseries/transactions?hours={hours}&intervalMinutes={intervalMinutes}";
         try
         {
-            var apiResponse = await _httpClient.GetFromJsonAsync<ApiResponse<List<TimeSeriesDataPoint>>>(requestUri);
+            var client = await GetAuthenticatedClientAsync();
+            var apiResponse = await client.GetFromJsonAsync<ApiResponse<List<TimeSeriesDataPoint>>>(requestUri);
             return apiResponse?.Data;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
         }
         catch (Exception ex)
         {
@@ -77,11 +118,16 @@ public class ApiClientService
 
     public async Task<List<TimeSeriesDataPoint>?> GetAnomalyTimeSeriesAsync(int hours = 24, int intervalMinutes = 60)
     {
-        var requestUri = $"/api/v1/analytics/timeseries/anomalies?hours={hours}&intervalMinutes={intervalMinutes}";
+        var requestUri = $"/api/v2/analytics/timeseries/anomalies?hours={hours}&intervalMinutes={intervalMinutes}";
         try
         {
-            var apiResponse = await _httpClient.GetFromJsonAsync<ApiResponse<List<TimeSeriesDataPoint>>>(requestUri);
+            var client = await GetAuthenticatedClientAsync();
+            var apiResponse = await client.GetFromJsonAsync<ApiResponse<List<TimeSeriesDataPoint>>>(requestUri);
             return apiResponse?.Data;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
         }
         catch (Exception ex)
         {

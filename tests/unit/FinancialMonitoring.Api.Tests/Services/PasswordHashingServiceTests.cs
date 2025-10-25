@@ -15,51 +15,11 @@ public class PasswordHashingServiceTests
     }
 
     [Fact]
-    public void GenerateRandomSalt_ReturnsNonEmptyString()
+    public void HashPassword_WithPassword_ReturnsHashedPassword()
     {
-
-        var salt = _service.GenerateRandomSalt();
-
-
-        Assert.NotNull(salt);
-        Assert.NotEmpty(salt);
-    }
-
-    [Fact]
-    public void GenerateRandomSalt_ReturnsDifferentSaltsEachTime()
-    {
-
-        var salt1 = _service.GenerateRandomSalt();
-        var salt2 = _service.GenerateRandomSalt();
-        var salt3 = _service.GenerateRandomSalt();
-
-
-        Assert.NotEqual(salt1, salt2);
-        Assert.NotEqual(salt2, salt3);
-        Assert.NotEqual(salt1, salt3);
-    }
-
-    [Fact]
-    public void GenerateRandomSalt_ReturnsBase64String()
-    {
-
-        var salt = _service.GenerateRandomSalt();
-
-
-        var bytes = Convert.FromBase64String(salt);
-        Assert.NotEmpty(bytes);
-    }
-
-    [Fact]
-    public void HashPassword_WithPasswordAndSalt_ReturnsHashedPassword()
-    {
-
         var password = "TestPassword123!";
-        var salt = _service.GenerateRandomSalt();
 
-
-        var hash = _service.HashPassword(password, salt);
-
+        var hash = _service.HashPassword(password);
 
         Assert.NotNull(hash);
         Assert.NotEmpty(hash);
@@ -67,47 +27,42 @@ public class PasswordHashingServiceTests
     }
 
     [Fact]
-    public void HashPassword_WithSamePasswordAndSalt_ReturnsSameHash()
+    public void HashPassword_WithSamePassword_ReturnsDifferentHashes()
     {
-
         var password = "TestPassword123!";
-        var salt = _service.GenerateRandomSalt();
 
-
-        var hash1 = _service.HashPassword(password, salt);
-        var hash2 = _service.HashPassword(password, salt);
-
-
-        Assert.Equal(hash1, hash2);
-    }
-
-    [Fact]
-    public void HashPassword_WithSamePasswordDifferentSalt_ReturnsDifferentHashes()
-    {
-
-        var password = "TestPassword123!";
-        var salt1 = _service.GenerateRandomSalt();
-        var salt2 = _service.GenerateRandomSalt();
-
-
-        var hash1 = _service.HashPassword(password, salt1);
-        var hash2 = _service.HashPassword(password, salt2);
-
+        var hash1 = _service.HashPassword(password);
+        var hash2 = _service.HashPassword(password);
 
         Assert.NotEqual(hash1, hash2);
     }
 
     [Fact]
+    public void HashPassword_ContainsSaltInformation()
+    {
+        var password = "TestPassword123!";
+
+        var hash = _service.HashPassword(password);
+
+        var parts = hash.Split(';');
+        Assert.Equal(3, parts.Length);
+        Assert.True(int.TryParse(parts[0], out var iterations));
+        Assert.True(iterations > 0);
+
+        var saltBytes = Convert.FromBase64String(parts[1]);
+        Assert.NotEmpty(saltBytes);
+
+        var hashBytes = Convert.FromBase64String(parts[2]);
+        Assert.NotEmpty(hashBytes);
+    }
+
+    [Fact]
     public void VerifyPassword_WithCorrectPassword_ReturnsTrue()
     {
-
         var password = "TestPassword123!";
-        var salt = _service.GenerateRandomSalt();
-        var hash = _service.HashPassword(password, salt);
+        var hash = _service.HashPassword(password);
 
-
-        var result = _service.VerifyPassword(password, hash, salt);
-
+        var result = _service.VerifyPassword(password, hash);
 
         Assert.True(result);
     }
@@ -115,31 +70,22 @@ public class PasswordHashingServiceTests
     [Fact]
     public void VerifyPassword_WithIncorrectPassword_ReturnsFalse()
     {
-
         var password = "TestPassword123!";
         var wrongPassword = "WrongPassword456!";
-        var salt = _service.GenerateRandomSalt();
-        var hash = _service.HashPassword(password, salt);
+        var hash = _service.HashPassword(password);
 
-
-        var result = _service.VerifyPassword(wrongPassword, hash, salt);
-
+        var result = _service.VerifyPassword(wrongPassword, hash);
 
         Assert.False(result);
     }
 
     [Fact]
-    public void VerifyPassword_WithIncorrectSalt_ReturnsFalse()
+    public void VerifyPassword_WithInvalidHashFormat_ReturnsFalse()
     {
-
         var password = "TestPassword123!";
-        var salt1 = _service.GenerateRandomSalt();
-        var salt2 = _service.GenerateRandomSalt();
-        var hash = _service.HashPassword(password, salt1);
+        var invalidHash = "invalid-hash-format";
 
-
-        var result = _service.VerifyPassword(password, hash, salt2);
-
+        var result = _service.VerifyPassword(password, invalidHash);
 
         Assert.False(result);
     }
@@ -150,22 +96,7 @@ public class PasswordHashingServiceTests
     [InlineData(null)]
     public void HashPassword_WithInvalidPassword_ThrowsArgumentException(string? invalidPassword)
     {
-
-        var salt = _service.GenerateRandomSalt();
-
-        Assert.Throws<ArgumentException>(() => _service.HashPassword(invalidPassword!, salt));
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData(" ")]
-    [InlineData(null)]
-    public void HashPassword_WithInvalidSalt_ThrowsArgumentException(string? invalidSalt)
-    {
-
-        var password = "TestPassword123!";
-
-        Assert.Throws<ArgumentException>(() => _service.HashPassword(password, invalidSalt!));
+        Assert.Throws<ArgumentException>(() => _service.HashPassword(invalidPassword!));
     }
 
     [Theory]
@@ -174,32 +105,39 @@ public class PasswordHashingServiceTests
     [InlineData(null)]
     public void VerifyPassword_WithInvalidPassword_ThrowsArgumentException(string? invalidPassword)
     {
-
-        var salt = _service.GenerateRandomSalt();
         var hash = "dummy-hash";
 
-        Assert.Throws<ArgumentException>(() => _service.VerifyPassword(invalidPassword!, hash, salt));
+        Assert.Throws<ArgumentException>(() => _service.VerifyPassword(invalidPassword!, hash));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData(null)]
+    public void VerifyPassword_WithInvalidHash_ThrowsArgumentException(string? invalidHash)
+    {
+        var password = "TestPassword123!";
+
+        Assert.Throws<ArgumentException>(() => _service.VerifyPassword(password, invalidHash!));
     }
 
     [Fact]
-    public void HashPassword_GeneratesConsistentLengthHashes()
+    public void HashPassword_GeneratesConsistentFormatHashes()
     {
-
         var passwords = new[] { "short", "a-much-longer-password-with-special-chars-123!", "pwd" };
-        var salt = _service.GenerateRandomSalt();
 
+        var hashes = passwords.Select(p => _service.HashPassword(p)).ToArray();
 
-        var hashes = passwords.Select(p => _service.HashPassword(p, salt)).ToArray();
-
-
-        var firstHashLength = hashes[0].Length;
-        Assert.All(hashes, hash => Assert.Equal(firstHashLength, hash.Length));
+        Assert.All(hashes, hash =>
+        {
+            var parts = hash.Split(';');
+            Assert.Equal(3, parts.Length);
+        });
     }
 
     [Fact]
     public void PasswordHashingService_SupportsVariousPasswordComplexities()
     {
-
         var testCases = new[]
         {
             "simple",
@@ -210,14 +148,10 @@ public class PasswordHashingServiceTests
             new string('a', 100)
         };
 
-        var salt = _service.GenerateRandomSalt();
-
         foreach (var password in testCases)
         {
-
-            var hash = _service.HashPassword(password, salt);
-            var isValid = _service.VerifyPassword(password, hash, salt);
-
+            var hash = _service.HashPassword(password);
+            var isValid = _service.VerifyPassword(password, hash);
 
             Assert.NotNull(hash);
             Assert.NotEmpty(hash);

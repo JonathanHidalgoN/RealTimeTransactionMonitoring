@@ -31,7 +31,6 @@ public class HealthCheckTests : IClassFixture<WebApplicationFactory<Program>>
             {
                 configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    { "ApiSettings:ApiKey", "test-api-key-123" },
                     { "JwtSettings:SecretKey", "test-secret-key-that-is-very-long-for-hmac-sha256" },
                     { "JwtSettings:Issuer", "TestIssuer" },
                     { "JwtSettings:Audience", "TestAudience" },
