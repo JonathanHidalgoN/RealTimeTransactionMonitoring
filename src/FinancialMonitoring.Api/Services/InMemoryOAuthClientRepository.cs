@@ -1,3 +1,4 @@
+using FinancialMonitoring.Abstractions;
 using FinancialMonitoring.Abstractions.Persistence;
 using FinancialMonitoring.Models.OAuth;
 using System.Collections.Concurrent;
@@ -13,9 +14,11 @@ public class InMemoryOAuthClientRepository : IOAuthClientRepository
     private readonly ConcurrentDictionary<int, OAuthClient> _clients = new();
     private readonly ConcurrentDictionary<string, int> _clientIdIndex = new();
     private int _nextId = 1;
+    private readonly IPasswordHashingService _passwordHashingService;
 
-    public InMemoryOAuthClientRepository()
+    public InMemoryOAuthClientRepository(IPasswordHashingService passwordHashingService)
     {
+        _passwordHashingService = passwordHashingService;
         SeedDefaultClients();
     }
 
@@ -74,7 +77,7 @@ public class InMemoryOAuthClientRepository : IOAuthClientRepository
         {
             Id = 1,
             ClientId = "default-client",
-            ClientSecret = "hashed-secret-placeholder",
+            ClientSecret = _passwordHashingService.HashPassword("default-secret"),
             Name = "Default Development Client",
             Description = "Default OAuth client for development and testing",
             AllowedScopes = "read,write,analytics",
