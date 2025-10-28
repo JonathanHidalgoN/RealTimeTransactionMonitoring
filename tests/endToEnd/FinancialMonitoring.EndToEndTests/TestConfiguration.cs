@@ -26,8 +26,7 @@ public class IntegrationTestConfiguration
         {
             Api = new ApiConfiguration
             {
-                BaseUrl = GetEnvVar("ApiBaseUrl", "http://financialmonitoring-api-test:8080"),
-                ApiKey = GetEnvVar("ApiKey", "integration-test-key")
+                BaseUrl = GetEnvVar("ApiBaseUrl", "http://financialmonitoring-api-test:8080")
             },
             Kafka = new KafkaConfiguration
             {
@@ -50,8 +49,8 @@ public class IntegrationTestConfiguration
             },
             OAuth2 = new OAuth2Configuration
             {
-                ClientId = GetEnvVar("OAuth_ClientId", "test-client"),
-                ClientSecret = GetEnvVar("OAuth_ClientSecret", "test-secret")
+                ClientId = GetEnvVar("OAuth_ClientId", "default-client"),
+                ClientSecret = GetEnvVar("OAuth_ClientSecret", "default-secret")
             },
             Environment = new EnvironmentConfiguration
             {
@@ -68,12 +67,6 @@ public class IntegrationTestConfiguration
     public IntegrationTestConfiguration WithApiUrl(string baseUrl)
     {
         Api.BaseUrl = baseUrl;
-        return this;
-    }
-
-    public IntegrationTestConfiguration WithApiKey(string apiKey)
-    {
-        Api.ApiKey = apiKey;
         return this;
     }
 
@@ -168,9 +161,6 @@ public class ApiConfiguration
 {
     [Required]
     public string BaseUrl { get; set; } = string.Empty;
-
-    [Required]
-    public string ApiKey { get; set; } = string.Empty;
 }
 
 public class KafkaConfiguration

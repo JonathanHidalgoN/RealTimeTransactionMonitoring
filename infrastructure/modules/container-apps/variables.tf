@@ -108,9 +108,3 @@ variable "frontend_url" {
   description = "Frontend URL for CORS configuration"
   type        = string
 }
-
-variable "api_key" {
-  description = "API Key for authentication"
-  type        = string
-  sensitive   = true
-}

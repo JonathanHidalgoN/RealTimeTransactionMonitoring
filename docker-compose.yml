@@ -136,7 +136,6 @@ services:
       AZURE_CLIENT_SECRET: "${AZURE_CLIENT_SECRET}"
       AZURE_TENANT_ID: "${AZURE_TENANT_ID}"
       APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://localhost/;LiveEndpoint=https://localhost/"
-      ApiSettings__ApiKey: "${API_KEY}"
       MongoDb__ConnectionString: "mongodb://admin:password123@mongodb:27017"
       MongoDb__DatabaseName: "FinancialMonitoring"
       MongoDb__CollectionName: "transactions"

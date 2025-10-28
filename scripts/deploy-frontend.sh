@@ -57,17 +57,11 @@ echo "Getting configuration from Terraform..."
 cd "$ENV_DIR"
 
 API_URL=$(terraform output -raw api_url 2>/dev/null || true)
-API_KEY=$(terraform output -raw api_key 2>/dev/null || true)
-DEPLOYMENT_TOKEN=$(terraform output -raw frontend_api_key 2>/dev/null || true)
+DEPLOYMENT_TOKEN=$(terraform output -raw frontend_deployment_token 2>/dev/null || true)
 
 if [ -z "$API_URL" ]; then
     echo -e "${RED}ERROR: Could not retrieve api_url from Terraform${NC}"
     echo "Make sure infrastructure is deployed: cd $ENV_DIR && terraform apply"
-    exit 1
-fi
-
-if [ -z "$API_KEY" ]; then
-    echo -e "${RED}ERROR: Could not retrieve api_key from Terraform${NC}"
     exit 1
 fi
 
@@ -103,11 +97,9 @@ if [ ! -f "$APPSETTINGS_FILE" ]; then
 fi
 
 sed -i "s|__ApiBaseUrl__|$API_URL|g" "$APPSETTINGS_FILE"
-sed -i "s|__ApiKey__|$API_KEY|g" "$APPSETTINGS_FILE"
 
 echo -e "${GREEN}Configuration updated${NC}"
 echo "  API URL: $API_URL"
-echo "  API Key: [REDACTED]"
 echo ""
 
 echo -e "${YELLOW}Deploying to Azure Static Web App...${NC}"

@@ -13,7 +13,6 @@ public static class AppConstants
     public const string EventHubsConfigPrefix = "EventHubs";
     public const string MongoDbConfigPrefix = "MongoDb";
     public const string KafkaDefaultName = "Kafka";
-    public const string ApiSettingsConfigPrefix = "ApiSettings";
     public const string CacheSettingsConfigPrefix = "CacheSettings";
     public const string ResponseCacheSettingsConfigPrefix = "ResponseCacheSettings";
     public const string RateLimitSettingsConfigPrefix = "RateLimitSettings";
@@ -24,7 +23,7 @@ public static class AppConstants
     public const string runTimeEnvVarName = "DOTNET_ENVIRONMENT";
 
     // API Versioning
-    public const string ApiVersion = "1.0";
+    public const string ApiVersion = "2.0";
 
     // Default Ports
     public const int DefaultApiPort = 5100;
@@ -38,7 +37,6 @@ public static class AppConstants
 
     // HTTP Headers
     public const string CorrelationIdHeader = "X-Correlation-Id";
-    public const string ApiKeyHeader = "X-Api-Key";
     public const string ApiVersionHeader = "X-Version";
 
     // API Routes

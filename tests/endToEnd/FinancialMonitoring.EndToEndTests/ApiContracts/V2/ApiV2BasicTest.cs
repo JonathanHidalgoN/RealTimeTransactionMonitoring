@@ -54,10 +54,10 @@ public class ApiV2BasicTest : IAsyncLifetime
 
         var formData = new FormUrlEncodedContent(new[]
         {
-            new KeyValuePair<string, string>("GrantType", "client_credentials"),
-            new KeyValuePair<string, string>("ClientId", _config.OAuth2.ClientId),
-            new KeyValuePair<string, string>("ClientSecret", _config.OAuth2.ClientSecret),
-            new KeyValuePair<string, string>("Scope", "read write")
+            new KeyValuePair<string, string>("grant_type", "client_credentials"),
+            new KeyValuePair<string, string>("client_id", _config.OAuth2.ClientId),
+            new KeyValuePair<string, string>("client_secret", _config.OAuth2.ClientSecret),
+            new KeyValuePair<string, string>("scope", "read write")
         });
 
         var response = await _client.PostAsync("/api/v2/oauth/token", formData);
@@ -97,9 +97,9 @@ public class ApiV2BasicTest : IAsyncLifetime
     {
         var formData = new FormUrlEncodedContent(new[]
         {
-            new KeyValuePair<string, string>("GrantType", "client_credentials"),
-            new KeyValuePair<string, string>("ClientId", "invalid-client"),
-            new KeyValuePair<string, string>("ClientSecret", "invalid-secret")
+            new KeyValuePair<string, string>("grant_type", "client_credentials"),
+            new KeyValuePair<string, string>("client_id", "invalid-client"),
+            new KeyValuePair<string, string>("client_secret", "invalid-secret")
         });
 
         var response = await _client.PostAsync("/api/v2/oauth/token", formData);
@@ -123,9 +123,9 @@ public class ApiV2BasicTest : IAsyncLifetime
     {
         var formData = new FormUrlEncodedContent(new[]
         {
-            new KeyValuePair<string, string>("GrantType", "client_credentials"),
-            new KeyValuePair<string, string>("ClientId", _config.OAuth2.ClientId),
-            new KeyValuePair<string, string>("ClientSecret", _config.OAuth2.ClientSecret)
+            new KeyValuePair<string, string>("grant_type", "client_credentials"),
+            new KeyValuePair<string, string>("client_id", _config.OAuth2.ClientId),
+            new KeyValuePair<string, string>("client_secret", _config.OAuth2.ClientSecret)
         });
 
         var response = await _client.PostAsync("/api/v2/oauth/token", formData);
@@ -158,12 +158,6 @@ public class ApiV2BasicTest : IAsyncLifetime
     {
         var response = await _client.GetAsync("/api/v2/transactions");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-
-        using var apiKeyClient = new HttpClient { BaseAddress = _client.BaseAddress };
-        apiKeyClient.DefaultRequestHeaders.Add("X-Api-Key", _config.Api.ApiKey);
-
-        var apiKeyResponse = await apiKeyClient.GetAsync("/api/v2/transactions");
-        Assert.Equal(HttpStatusCode.Unauthorized, apiKeyResponse.StatusCode);
     }
 
     /// <summary>
@@ -231,7 +225,7 @@ public class ApiV2BasicTest : IAsyncLifetime
 
         using var userClient = CreateJWTAuthenticatedClient(_accessToken);
 
-        var analyticsResponse = await userClient.GetAsync("/api/v2/analytics/transactions");
+        var analyticsResponse = await userClient.GetAsync("/api/v2/analytics/overview");
         Assert.True(analyticsResponse.IsSuccessStatusCode,
             $"User should be able to access analytics. Status: {analyticsResponse.StatusCode}");
 
@@ -317,7 +311,7 @@ public class ApiV2BasicTest : IAsyncLifetime
         }
 
         using var jwtClient = CreateJWTAuthenticatedClient(_accessToken);
-        var response = await jwtClient.GetAsync("/api/v2/analytics/transactions");
+        var response = await jwtClient.GetAsync("/api/v2/analytics/overview");
 
         if (!response.IsSuccessStatusCode)
         {
@@ -347,10 +341,10 @@ public class ApiV2BasicTest : IAsyncLifetime
     {
         var formData = new FormUrlEncodedContent(new[]
         {
-            new KeyValuePair<string, string>("GrantType", "client_credentials"),
-            new KeyValuePair<string, string>("ClientId", _config.OAuth2.ClientId),
-            new KeyValuePair<string, string>("ClientSecret", _config.OAuth2.ClientSecret),
-            new KeyValuePair<string, string>("Scope", scope)
+            new KeyValuePair<string, string>("grant_type", "client_credentials"),
+            new KeyValuePair<string, string>("client_id", _config.OAuth2.ClientId),
+            new KeyValuePair<string, string>("client_secret", _config.OAuth2.ClientSecret),
+            new KeyValuePair<string, string>("scope", scope)
         });
 
         try

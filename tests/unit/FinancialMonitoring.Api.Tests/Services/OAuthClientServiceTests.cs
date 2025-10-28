@@ -47,7 +47,7 @@ public class OAuthClientServiceV2Tests
             .ReturnsAsync(testClient);
 
         _mockPasswordService
-            .Setup(p => p.VerifyPassword(clientSecret, hashedSecret, "oauth_clients"))
+            .Setup(p => p.VerifyPassword(clientSecret, hashedSecret))
             .Returns(true);
 
         var result = await _service.ValidateClientCredentialsAsync(clientId, clientSecret);
@@ -117,7 +117,7 @@ public class OAuthClientServiceV2Tests
             .ReturnsAsync(testClient);
 
         _mockPasswordService
-            .Setup(p => p.VerifyPassword(clientSecret, hashedSecret, "oauth_clients"))
+            .Setup(p => p.VerifyPassword(clientSecret, hashedSecret))
             .Returns(false);
 
         var result = await _service.ValidateClientCredentialsAsync(clientId, clientSecret);
@@ -204,7 +204,7 @@ public class OAuthClientServiceV2Tests
         var hashedSecret = "hashed-secret";
 
         _mockPasswordService
-            .Setup(p => p.HashPassword(It.IsAny<string>(), "oauth_clients"))
+            .Setup(p => p.HashPassword(It.IsAny<string>()))
             .Returns(hashedSecret);
 
         _mockRepository
@@ -352,7 +352,7 @@ public class OAuthClientServiceV2Tests
             .ReturnsAsync(testClient);
 
         _mockPasswordService
-            .Setup(p => p.VerifyPassword(clientSecret, hashedSecret, "oauth_clients"))
+            .Setup(p => p.VerifyPassword(clientSecret, hashedSecret))
             .Throws(new InvalidOperationException("Hashing error"));
 
         var result = await _service.ValidateClientCredentialsAsync(clientId, clientSecret);
@@ -369,7 +369,7 @@ public class OAuthClientServiceV2Tests
         var hashedSecret = "hashed-secret";
 
         _mockPasswordService
-            .Setup(p => p.HashPassword(It.IsAny<string>(), "oauth_clients"))
+            .Setup(p => p.HashPassword(It.IsAny<string>()))
             .Returns(hashedSecret);
 
         _mockRepository
@@ -388,7 +388,7 @@ public class OAuthClientServiceV2Tests
         var allowedScopes = new[] { "read", "write" };
 
         _mockPasswordService
-            .Setup(p => p.HashPassword(It.IsAny<string>(), "oauth_clients"))
+            .Setup(p => p.HashPassword(It.IsAny<string>()))
             .Throws(new InvalidOperationException("Hashing error"));
 
         await Assert.ThrowsAsync<InvalidOperationException>(

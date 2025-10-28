@@ -1,5 +1,8 @@
 @* src/FinancialMonitoring.WebApp/Components/Layout/MainLayout.razor *@
+@using FinancialMonitoring.WebApp.Services
 @inherits LayoutComponentBase
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
 
 <MudThemeProvider />
 <MudDialogProvider />
@@ -10,7 +13,14 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudText Typo="Typo.h5">Financial Monitoring</MudText>
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
+        @if (isAuthenticated)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Logout"
+                          Color="Color.Inherit"
+                          Edge="Edge.End"
+                          OnClick="HandleLogout"
+                          Title="Logout" />
+        }
     </MudAppBar>
 
     <MudDrawer @bind-Open="_drawerOpen" Elevation="1">
@@ -27,9 +37,21 @@
 
 @code {
     private bool _drawerOpen = true;
+    private bool isAuthenticated = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+    }
 
     private void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        NavigationManager.NavigateTo("/login", forceLoad: true);
     }
 }

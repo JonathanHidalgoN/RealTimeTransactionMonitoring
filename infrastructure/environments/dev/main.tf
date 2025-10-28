@@ -80,7 +80,6 @@ module "container_apps" {
   managed_identity_id            = module.security.managed_identity_id
   managed_identity_client_id     = module.security.managed_identity_client_id
   frontend_url                   = "https://${module.frontend.default_hostname}"
-  api_key                        = module.security.api_key
   tags                           = local.common_tags
 }
 

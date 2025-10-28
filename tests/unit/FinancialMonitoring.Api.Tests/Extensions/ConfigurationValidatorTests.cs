@@ -14,7 +14,6 @@ public class ConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [AppConstants.runTimeEnvVarName] = "Development",
-                ["ApiSettings:ApiKey"] ="test-key",
                 ["CacheSettings:ConnectionString"] ="localhost:6379",
                 ["ResponseCacheSettings:DefaultDuration"] ="300",
                 ["RateLimitSettings:PermitLimit"] ="100",
@@ -43,7 +42,6 @@ public class ConfigurationValidatorTests
             {
                 [AppConstants.runTimeEnvVarName] = "Production",
                 ["KEY_VAULT_URI"] = "https://test-vault.vault.azure.net/",
-                ["ApiSettings:ApiKey"] ="test-key",
                 ["CacheSettings:ConnectionString"] ="production.redis.cache.windows.net",
                 ["ResponseCacheSettings:DefaultDuration"] ="300",
                 ["RateLimitSettings:PermitLimit"] ="100",
@@ -71,13 +69,12 @@ public class ConfigurationValidatorTests
     }
 
     [Fact]
-    public void ValidateConfiguration_WithMissingApiSettings_ShouldThrowWithSpecificError()
+    public void ValidateConfiguration_WithMissingCacheSettings_ShouldThrowWithSpecificError()
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [AppConstants.runTimeEnvVarName] = "Development",
-                ["CacheSettings:ConnectionString"] ="localhost:6379",
                 ["MongoDb:ConnectionString"] ="mongodb://localhost:27017"
             })
             .Build();
@@ -96,7 +93,6 @@ public class ConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [AppConstants.runTimeEnvVarName] = "Production",
-                ["ApiSettings:ApiKey"] ="test-key",
                 ["CacheSettings:ConnectionString"] ="production.redis.cache.windows.net",
                 ["ApplicationInsights:ConnectionString"] = "InstrumentationKey=test-key",
                 ["CosmosDb:AccountEndpoint"] ="https://test.documents.azure.com:443/"
@@ -118,7 +114,7 @@ public class ConfigurationValidatorTests
             {
                 [AppConstants.runTimeEnvVarName] = "Production",
                 ["KEY_VAULT_URI"] = "",
-                ["ApiSettings:ApiKey"] ="test-key"
+                ["CacheSettings:ConnectionString"] ="production.redis.cache.windows.net"
             })
             .Build();
 
@@ -136,7 +132,6 @@ public class ConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [AppConstants.runTimeEnvVarName] = "Development",
-                ["ApiSettings:ApiKey"] ="", // Invalid: empty required field
                 ["CacheSettings:ConnectionString"] ="localhost:6379",
                 ["RateLimitSettings:PermitLimit"] ="-1", // Invalid: negative number
                 ["JwtSettings:SecretKey"] ="short", // Invalid: too short
@@ -157,8 +152,7 @@ public class ConfigurationValidatorTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                [AppConstants.runTimeEnvVarName] = "Development",
-                ["ApiSettings:ApiKey"] ="test-key"
+                [AppConstants.runTimeEnvVarName] = "Development"
                 // Missing Cache, RateLimit, Jwt, Cors, MongoDb sections
             })
             .Build();
@@ -177,7 +171,6 @@ public class ConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [AppConstants.runTimeEnvVarName] = "Development",
-                ["ApiSettings:ApiKey"] ="test-key",
                 ["CacheSettings:ConnectionString"] ="localhost:6379",
                 ["ResponseCacheSettings:DefaultDuration"] ="300",
                 ["RateLimitSettings:PermitLimit"] ="100",
@@ -207,7 +200,6 @@ public class ConfigurationValidatorTests
             {
                 [AppConstants.runTimeEnvVarName] = "Production",
                 ["KEY_VAULT_URI"] = "https://test-vault.vault.azure.net/",
-                ["ApiSettings:ApiKey"] ="test-key",
                 ["CacheSettings:ConnectionString"] ="production.redis.cache.windows.net",
                 ["ResponseCacheSettings:DefaultDuration"] ="300",
                 ["RateLimitSettings:PermitLimit"] ="100",
@@ -242,7 +234,6 @@ public class ConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [AppConstants.runTimeEnvVarName] = "Testing",
-                ["ApiSettings:ApiKey"] ="test-key",
                 ["CacheSettings:ConnectionString"] ="localhost:6379",
                 ["ResponseCacheSettings:DefaultDuration"] ="300",
                 ["RateLimitSettings:PermitLimit"] ="100",
@@ -270,7 +261,6 @@ public class ConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 // No environment variable set - should default to Development
-                ["ApiSettings:ApiKey"] ="test-key",
                 ["CacheSettings:ConnectionString"] ="localhost:6379",
                 ["ResponseCacheSettings:DefaultDuration"] ="300",
                 ["RateLimitSettings:PermitLimit"] ="100",

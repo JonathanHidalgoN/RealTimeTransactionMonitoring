@@ -47,7 +47,7 @@ public class OAuthClientService : IOAuthClientService
                 return null;
             }
 
-            if (!_passwordHashingService.VerifyPassword(clientSecret, client.ClientSecret, "oauth_clients"))
+            if (!_passwordHashingService.VerifyPassword(clientSecret, client.ClientSecret))
             {
                 _logger.LogWarning("Client credentials validation failed: invalid secret for client {ClientId}", clientId);
                 return null;
@@ -109,7 +109,7 @@ public class OAuthClientService : IOAuthClientService
         var clientId = GenerateClientId();
         var clientSecret = GenerateClientSecret();
 
-        var hashedSecret = _passwordHashingService.HashPassword(clientSecret, "oauth_clients");
+        var hashedSecret = _passwordHashingService.HashPassword(clientSecret);
 
         var client = new OAuthClient
         {
@@ -125,11 +125,21 @@ public class OAuthClientService : IOAuthClientService
 
         var createdClient = await _oauthClientRepository.CreateAsync(client);
 
-        createdClient.ClientSecret = clientSecret;
-
         _logger.LogInformation("Created new OAuth client {ClientId} with name '{Name}'", clientId, name);
 
-        return createdClient;
+        // Return a new instance with the plaintext secret (don't modify the stored hashed version)
+        return new OAuthClient
+        {
+            Id = createdClient.Id,
+            ClientId = createdClient.ClientId,
+            ClientSecret = clientSecret,
+            Name = createdClient.Name,
+            Description = createdClient.Description,
+            AllowedScopes = createdClient.AllowedScopes,
+            IsActive = createdClient.IsActive,
+            CreatedAt = createdClient.CreatedAt,
+            UpdatedAt = createdClient.UpdatedAt
+        };
     }
 
     public async Task<IEnumerable<OAuthClient>> GetAllClientsAsync()

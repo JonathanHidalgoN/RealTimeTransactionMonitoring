@@ -5,10 +5,12 @@
 @using FinancialMonitoring.WebApp.Services
 @using FinancialMonitoring.Models.Analytics
 @using System.Globalization
+@using FinancialMonitoring.WebApp.Components
 @inject ApiClientService ApiClient
 
 <PageTitle>Real-Time Financial Monitoring Dashboard</PageTitle>
 
+<AuthenticationRequired>
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="pa-4">
     <MudText Typo="Typo.h3" GutterBottom="true" Class="mb-6">
         <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="mr-3" />
@@ -336,7 +338,7 @@
         </MudText>
     </MudContainer>
 </MudContainer>
-
+</AuthenticationRequired>
 
 @code {
     // --- Fields ---

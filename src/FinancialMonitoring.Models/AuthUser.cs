@@ -23,9 +23,6 @@ public class AuthUser
     public string PasswordHash { get; set; } = string.Empty;
 
     [Required]
-    public string Salt { get; set; } = string.Empty;
-
-    [Required]
     public AuthUserRole Role { get; set; } = AuthUserRole.Viewer;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

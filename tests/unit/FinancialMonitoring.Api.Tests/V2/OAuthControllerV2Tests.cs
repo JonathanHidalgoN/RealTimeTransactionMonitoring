@@ -1,5 +1,6 @@
 using FinancialMonitoring.Abstractions;
 using FinancialMonitoring.Api.Controllers.V2;
+using FinancialMonitoring.Api.Models.OAuth;
 using FinancialMonitoring.Models.OAuth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

@@ -17,11 +17,6 @@ public static class ApplicationServicesExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddOptions<ApiSettings>()
-            .Bind(configuration.GetSection(AppConstants.ApiSettingsConfigPrefix))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
         var portSettings = configuration.BuildPortSettings();
         services.Configure<PortSettings>(options =>
         {
