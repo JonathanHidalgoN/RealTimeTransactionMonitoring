@@ -133,7 +133,8 @@ public class JwtTokenService : IJwtTokenService
             new("client_id", client.ClientId),
             new("sub", client.ClientId),
             new("client_name", client.Name),
-            new("token_type", "client_credentials")
+            new("token_type", "client_credentials"),
+            new(ClaimTypes.Role, AppConstants.AnalystRole) // OAuth clients get Analyst role for API access
         };
 
         // Add standard JWT claims
