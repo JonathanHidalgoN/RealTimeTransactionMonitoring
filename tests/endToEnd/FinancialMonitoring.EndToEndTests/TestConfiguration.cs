@@ -49,8 +49,8 @@ public class IntegrationTestConfiguration
             },
             OAuth2 = new OAuth2Configuration
             {
-                ClientId = GetEnvVar("OAuth_ClientId", "test-client"),
-                ClientSecret = GetEnvVar("OAuth_ClientSecret", "test-secret")
+                ClientId = GetEnvVar("OAuth_ClientId", "default-client"),
+                ClientSecret = GetEnvVar("OAuth_ClientSecret", "default-secret")
             },
             Environment = new EnvironmentConfiguration
             {

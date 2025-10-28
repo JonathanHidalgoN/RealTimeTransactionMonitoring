@@ -148,8 +148,8 @@ services:
       MongoDb__ConnectionString: "mongodb://admin:password123@mongodb-test:27017"
       MongoDb__DatabaseName: "TestFinancialMonitoring"
       MongoDb__CollectionName: "transactions"
-      OAuth_ClientId: "test-client"
-      OAuth_ClientSecret: "test-secret"
+      OAuth_ClientId: "default-client"
+      OAuth_ClientSecret: "default-secret"
       TEST_CATEGORY: ""
       TEST_VERBOSITY: "normal"
     networks:

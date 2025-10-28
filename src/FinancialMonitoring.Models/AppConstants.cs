@@ -23,7 +23,7 @@ public static class AppConstants
     public const string runTimeEnvVarName = "DOTNET_ENVIRONMENT";
 
     // API Versioning
-    public const string ApiVersion = "1.0";
+    public const string ApiVersion = "2.0";
 
     // Default Ports
     public const int DefaultApiPort = 5100;
